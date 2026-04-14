@@ -447,20 +447,19 @@ const barLabelPlugin = {
       chart.data.datasets.forEach((ds,di)=>{
         const meta=chart.getDatasetMeta(di);
         if(meta.hidden) return;
-        const n=meta.data.length;
-        // 포인트 수가 많으면 홀수 인덱스만 표시 (겹침 방지)
-        const step = n>8 ? 2 : 1;
         meta.data.forEach((pt,idx)=>{
-          if(idx % step !== 0) return;
           const v=ds.data[idx];
           if(v===null||v===undefined||v===0) return;
           const isK=currency==='KRW';
+          // y축 max로 % 차트 여부 판별
+          const yAxis=chart.options.scales?.y;
+          const isPercent=yAxis?.max===100||yAxis?.ticks?.callback?.toString().includes('%');
           let label;
-          if(v>1){
-            label=isK?(v>=1e9?(v/1e8).toFixed(0)+'억':(v/1e8).toFixed(1)+'억')
-                      :(v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+(v/1e3).toFixed(0)+'K');
-          } else {
+          if(isPercent){
             label=v.toFixed(0)+'%';
+          } else {
+            label=isK?(v>=1e8?(v/1e8).toFixed(0)+'억':Math.round(v/1e4)+'만')
+                      :(v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+(v/1e3).toFixed(0)+'K');
           }
           ctx.save();
           ctx.font='500 9px -apple-system,sans-serif';
