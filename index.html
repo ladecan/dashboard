@@ -540,39 +540,64 @@ const donutLabelPlugin = {
       const lx2=cx+Math.cos(midAngle)*r2;
       const ly2=cy+Math.sin(midAngle)*r2;
 
-      // Others는 항상 오른쪽으로 꺾기
-      const isLeft = label==='Others' ? false : lx2<cx;
-      const lx3=lx2+(isLeft?-8:8);
       const isK=currency==='KRW';
 
-      // 값 표시: 건수차트→건수, 대수차트→대수, 금액차트→금액(0이면 생략)
+      // 값 표시: 건수차트→건수, 대수차트→대수, 금액차트→금액
       let valStr;
       if(isCountChart){
         valStr=Math.round(v)+'건';
       } else if(isUnitChart){
         valStr=Math.round(v)+'대';
       } else {
-        // 금액 — 0.0억 같이 너무 작으면 %만 표시
-        if(isK){
-          const bil=v/1e8;
-          valStr=bil>=0.1?bil.toFixed(1)+'억':null;
-        } else {
-          valStr=v>=1e5?'$'+(v/1e6).toFixed(1)+'M':null;
-        }
+        if(isK){ const bil=v/1e8; valStr=bil>=0.1?bil.toFixed(1)+'억':null; }
+        else   { valStr=v>=1e5?'$'+(v/1e6).toFixed(1)+'M':null; }
       }
-
       const line1=label;
       const line2=valStr ? valStr+' ('+pct.toFixed(1)+'%)' : '('+pct.toFixed(1)+'%)';
 
-      // 지시선
+      // Others는 항상 오른쪽 위 45도 방향으로 고정
+      let isLeft, lx3, adjustedLy2;
+      if(label==='Others'){
+        const angle=-Math.PI/4;
+        const lx2o=cx+Math.cos(angle)*r2;
+        const ly2o=cy+Math.sin(angle)*r2;
+        lx3=lx2o+12;
+        adjustedLy2=ly2o;
+        const arcColor2=(ds.backgroundColor instanceof Array)?ds.backgroundColor[i]:ds.backgroundColor;
+        ctx.save();
+        ctx.strokeStyle=arcColor2||'#aaa';
+        ctx.lineWidth=1.2;
+        ctx.beginPath();
+        ctx.moveTo(lx1,ly1);
+        ctx.lineTo(lx2o,ly2o);
+        ctx.lineTo(lx3,ly2o);
+        ctx.stroke();
+        ctx.textAlign='left';
+        ctx.textBaseline='bottom';
+        ctx.font='500 10px -apple-system,sans-serif';
+        ctx.fillStyle='#333';
+        ctx.fillText(line1, lx3+3, ly2o-1);
+        ctx.font='400 9px -apple-system,sans-serif';
+        ctx.fillStyle='#666';
+        ctx.textBaseline='top';
+        ctx.fillText(line2, lx3+3, ly2o+2);
+        ctx.restore();
+        return;
+      } else {
+        isLeft=lx2<cx;
+        lx3=lx2+(isLeft?-8:8);
+        adjustedLy2=ly2;
+      }
+
+      // 지시선 (Others 제외)
       const arcColor=(ds.backgroundColor instanceof Array)?ds.backgroundColor[i]:ds.backgroundColor;
       ctx.save();
       ctx.strokeStyle=arcColor||'#aaa';
       ctx.lineWidth=1.2;
       ctx.beginPath();
       ctx.moveTo(lx1,ly1);
-      ctx.lineTo(lx2,ly2);
-      ctx.lineTo(lx3,ly2);
+      ctx.lineTo(lx2,adjustedLy2);
+      ctx.lineTo(lx3,adjustedLy2);
       ctx.stroke();
       // 텍스트 2줄
       ctx.textAlign=isLeft?'right':'left';
@@ -580,11 +605,11 @@ const donutLabelPlugin = {
       ctx.font='500 10px -apple-system,sans-serif';
       ctx.fillStyle='#333';
       const tx=lx3+(isLeft?-3:3);
-      ctx.fillText(line1, tx, ly2-1);
+      ctx.fillText(line1, tx, adjustedLy2-1);
       ctx.font='400 9px -apple-system,sans-serif';
       ctx.fillStyle='#666';
       ctx.textBaseline='top';
-      ctx.fillText(line2, tx, ly2+2);
+      ctx.fillText(line2, tx, adjustedLy2+2);
       ctx.restore();
     });
   }
