@@ -225,7 +225,7 @@ footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-t
       <div class="card">
         <div class="cl">제품별 매출 비중</div>
         <div class="cs" id="cs-prod-donut">선택 기간 기준</div>
-        <div class="cw" style="height:230px"><canvas id="c-prod-donut"></canvas></div>
+        <div class="cw" style="height:280px"><canvas id="c-prod-donut"></canvas></div>
       </div>
       <div class="card">
         <div class="cl">제품별 판매 대수 비중</div>
@@ -306,7 +306,7 @@ footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-t
     <div class="card">
       <div class="cl" id="sr-prod-title">제품별 매출 비중</div>
       <div class="cs" id="sr-prod-sub">전체 담당자 합산</div>
-      <div class="cw" style="height:220px"><canvas id="c-sr-prod-donut"></canvas></div>
+      <div class="cw" style="height:280px"><canvas id="c-sr-prod-donut"></canvas></div>
     </div>
   </div>
 </div>
@@ -963,8 +963,8 @@ function buildProduct(){
   const donutOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{enabled:false}}};
   charts.prodDonut=new Chart(document.getElementById('c-prod-donut'),{
     type:'doughnut',
-    data:{labels:prods,datasets:[{data:prods.map(p=>getProdVal(p)),backgroundColor:prods.map(p=>PROD_COLORS[p]),borderWidth:0,hoverOffset:4}]},
-    options:donutOpts
+    data:{labels:prods,datasets:[{data:prods.map(p=>getProdVal(p)),backgroundColor:prods.map(p=>PROD_COLORS[p]),borderWidth:0,hoverOffset:4,radius:'65%'}]},
+    options:{...mkDonutOpts(), layout:{padding:62}}
   });
   charts.unitDonut=new Chart(document.getElementById('c-unit-donut'),{
     type:'doughnut',
@@ -1297,8 +1297,9 @@ function renderSRProdDonut(drillSR){
   if(charts.srProdDonut){try{charts.srProdDonut.destroy();}catch(e){} delete charts.srProdDonut;}
   charts.srProdDonut=new Chart(document.getElementById('c-sr-prod-donut'),{
     type:'doughnut',
-    data:{labels:PRODS,datasets:[{data:PRODS.map(p=>prodMap[p]),backgroundColor:PCOLS,borderWidth:0,hoverOffset:4}]},
+    data:{labels:PRODS,datasets:[{data:PRODS.map(p=>prodMap[p]),backgroundColor:PCOLS,borderWidth:0,hoverOffset:4,radius:'65%'}]},
     options:{responsive:true,maintainAspectRatio:false,
+      layout:{padding:62},
       plugins:{
         legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:8,color:'#9e9e98'}},
         tooltip:{enabled:false}
