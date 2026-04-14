@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Candela Korea — BI Dashboard</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" crossorigin="anonymous"></script>
+<script>if(typeof Chart==='undefined'){document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"><\/script>');}</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -17,6 +18,7 @@
   --coral:#DC2626;--coral-l:#FEE2E2;
   --purple:#7C3AED;--purple-l:#EDE9FE;
   --r:10px;--r-sm:6px;
+  --nav-h:52px;--tab-h:44px;
 }
 @media(prefers-color-scheme:dark){
   :root{
@@ -41,7 +43,7 @@
 
 /* ── LAYOUT ── */
 body{font-family:-apple-system,'Pretendard','Apple SD Gothic Neo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-.nav{position:sticky;top:0;z-index:100;background:var(--surface);border-bottom:.5px solid var(--border);height:52px;display:flex;align-items:center;padding:0 1.5rem;gap:12px}
+.nav{position:sticky;top:0;z-index:100;background:var(--surface);border-bottom:.5px solid var(--border);height:var(--nav-h);display:flex;align-items:center;padding:0 1.5rem;gap:12px}
 .nav-logo{font-size:13px;font-weight:600;color:var(--text);letter-spacing:-.02em}
 .nav-logo span{color:var(--text3);font-weight:400;font-size:12px}
 .nav-right{margin-left:auto;display:flex;align-items:center;gap:8px}
@@ -56,7 +58,7 @@ body{font-family:-apple-system,'Pretendard','Apple SD Gothic Neo',sans-serif;bac
 .filter-sep{width:.5px;height:18px;background:var(--border);margin:0 4px}
 
 /* TABS */
-.tabs{background:var(--surface);border-bottom:.5px solid var(--border);display:flex;overflow-x:auto;padding:0 1.5rem;scrollbar-width:none;height:44px;align-items:flex-end}
+.tabs{background:var(--surface);border-bottom:.5px solid var(--border);display:flex;overflow-x:auto;padding:0 1.5rem;scrollbar-width:none;height:var(--tab-h);align-items:flex-end}
 .tabs::-webkit-scrollbar{display:none}
 .tab{font-size:12px;font-family:inherit;padding:10px 14px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text3);cursor:pointer;white-space:nowrap;transition:all .12s;margin-bottom:-1px}
 .tab:hover{color:var(--text2)}
@@ -138,12 +140,14 @@ footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-t
   .kpi-row{grid-template-columns:repeat(2,1fr)}
   .g2,.g3,.g31{grid-template-columns:1fr}
   .full,.g2 .full,.g3 .full{grid-column:1}
+  .prod-layout{flex-direction:column}
+  .prod-sidebar{width:100%}
+  .prod-sidebar-inner{position:static;margin-bottom:12px}
 }
 </style>
 </head>
 <body>
 
-<!-- ── LOCK ── -->
 <div id="lock">
   <div class="lock-box">
     <div class="lock-icon">🔒</div>
@@ -155,7 +159,6 @@ footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-t
   </div>
 </div>
 
-<!-- ── APP ── -->
 <nav class="nav">
   <div class="nav-logo">Candela Korea <span>Sales BI</span></div>
   <div class="nav-right">
@@ -217,41 +220,53 @@ footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-t
 </div>
 
 <div class="page" id="page-product">
-  <div style="padding:1.5rem;max-width:1280px;margin:0 auto">
-    <div class="kpi-row" id="kpi-prod"></div>
-    <div class="g2">
-      <div class="card">
-        <div class="cl">제품별 매출 비중</div>
-        <div class="cs" id="cs-prod-donut">선택 기간 기준</div>
-        <div class="cw" style="height:230px"><canvas id="c-prod-donut"></canvas></div>
+  <div class="prod-layout">
+    <aside class="prod-sidebar">
+      <div class="prod-sidebar-inner">
+        <div class="prod-sidebar-title">제품군 필터</div>
+        <button class="prod-filter-btn all-btn on" onclick="setProdFilter('ALL')" id="p-btn-ALL">전체 보기</button>
+        <button class="prod-filter-btn" onclick="setProdFilter('Gentle Series')" id="p-btn-Gentle Series">Gentle Series</button>
+        <button class="prod-filter-btn" onclick="setProdFilter('VBP')" id="p-btn-VBP">VBP (Vbeam)</button>
+        <button class="prod-filter-btn" onclick="setProdFilter('PicoWay')" id="p-btn-PicoWay">PicoWay</button>
+        <button class="prod-filter-btn" onclick="setProdFilter('Others')" id="p-btn-Others">기타 (Others)</button>
       </div>
-      <div class="card">
-        <div class="cl">제품별 판매 대수 비중</div>
-        <div class="cs">선택 기간 기준</div>
-        <div class="cw" style="height:230px"><canvas id="c-unit-donut"></canvas></div>
-      </div>
-      <div class="card full">
-        <div class="cl">장비별 판매 현황 <span style="font-size:11px;font-weight:400;color:var(--text3)" id="prod-tbl-badge">· 피벗 #10/#11 기준</span></div>
-        <div class="cs" id="cs-prod-tbl">선택 필터 기준</div>
-        <div class="tw" id="tbl-prod-detail"></div>
-      </div>
-      <div class="card full">
-        <div class="cl">분기별 제품 매출 추이</div>
-        <div class="cs">4카테고리 기준 라인 차트</div>
-        <div class="legend">
-          <span class="leg"><span class="ld" style="background:#3B82F6"></span>Gentle Series</span>
-          <span class="leg"><span class="ld" style="background:#10B981"></span>VBP</span>
-          <span class="leg"><span class="ld" style="background:#F59E0B"></span>PicoWay</span>
-          <span class="leg"><span class="ld" style="background:#6B7280"></span>Others</span>
+    </aside>
+    <main class="prod-main">
+      <div class="kpi-row" id="kpi-prod"></div>
+      <div class="g2">
+        <div class="card">
+          <div class="cl">제품별 매출 비중</div>
+          <div class="cs" id="cs-prod-donut">선택 기간 기준</div>
+          <div class="cw" style="height:230px"><canvas id="c-prod-donut"></canvas></div>
         </div>
-        <div class="cw" style="height:230px"><canvas id="c-prod-line"></canvas></div>
+        <div class="card">
+          <div class="cl">제품별 판매 대수 비중</div>
+          <div class="cs">선택 기간 기준</div>
+          <div class="cw" style="height:230px"><canvas id="c-unit-donut"></canvas></div>
+        </div>
+        <div class="card full">
+          <div class="cl">장비별 판매 현황 <span style="font-size:11px;font-weight:400;color:var(--text3)" id="prod-tbl-badge">· 피벗 #10/#11 기준</span></div>
+          <div class="cs" id="cs-prod-tbl">선택 필터 기준</div>
+          <div class="tw" id="tbl-prod-detail"></div>
+        </div>
+        <div class="card full">
+          <div class="cl">분기별 제품 매출 추이</div>
+          <div class="cs">4카테고리 기준 라인 차트</div>
+          <div class="legend">
+            <span class="leg"><span class="ld" style="background:#3B82F6"></span>Gentle Series</span>
+            <span class="leg"><span class="ld" style="background:#10B981"></span>VBP</span>
+            <span class="leg"><span class="ld" style="background:#F59E0B"></span>PicoWay</span>
+            <span class="leg"><span class="ld" style="background:#6B7280"></span>Others</span>
+          </div>
+          <div class="cw" style="height:230px"><canvas id="c-prod-line"></canvas></div>
+        </div>
+        <div class="card full">
+          <div class="cl">Gentle Series 점유율 추이</div>
+          <div class="cs">GentleMax Pro+/Gmax Pro/GLP 합산 비중 (%)</div>
+          <div class="cw" style="height:190px"><canvas id="c-gmpp-share"></canvas></div>
+        </div>
       </div>
-      <div class="card full">
-        <div class="cl">Gentle Series 점유율 추이</div>
-        <div class="cs">GentleMax Pro+/Gmax Pro/GLP 합산 비중 (%)</div>
-        <div class="cw" style="height:190px"><canvas id="c-gmpp-share"></canvas></div>
-      </div>
-    </div>
+    </main>
   </div>
 </div>
 
@@ -298,13 +313,11 @@ footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-t
 <div class="page" id="page-detail">
   <div class="kpi-row" id="kpi-det"></div>
   <div class="g2">
-    <!-- 피벗 #19 요약 테이블 -->
     <div class="card full">
       <div class="cl">New vs Existing Business 현황 <span style="font-size:11px;font-weight:400;color:var(--text3)">· 피벗 #19 기준 · 판매 건수</span></div>
       <div class="cs">선택 연도 기준 제품별 건수 (대수)</div>
       <div id="nv-pivot-table" class="tw"></div>
     </div>
-    <!-- 도넛 차트 -->
     <div class="card">
       <div class="cl">New Business 제품 비중</div>
       <div class="cs">건수 기준</div>
@@ -315,7 +328,6 @@ footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-t
       <div class="cs">건수 기준</div>
       <div class="cw" style="height:200px"><canvas id="c-ex-donut"></canvas></div>
     </div>
-    <!-- 분기별 New% 추이 -->
     <div class="card full">
       <div class="cl">New Business 비중 추이</div>
       <div class="cs">분기별 New % 라인</div>
@@ -328,748 +340,346 @@ footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-t
 
 <script>
 /* ════════════════════════════════════════
-   DATA — dashboard_data.json 내용을 직접 embed
-   (data.json 파일로 교체하면 자동 갱신)
+   DATA — 전송해주신 데이터 객체 전문
    ════════════════════════════════════════ */
-// total(Raw) 기준 — 피벗 수치 일치 · 음수(반품/조정) 포함 · 26Q1까지만
-const DATA = {"yearly_total": {"2023": {"sales": 12639940.0, "recurring": 2397567.0, "total": 15037507.0, "sales_krw": 16558840827.0, "recurring_krw": 3133442037.0, "total_krw": 19692282864.0}, "2024": {"sales": 15974520.0, "recurring": 2676245.0, "total": 18650765.0, "sales_krw": 21262080860.0, "recurring_krw": 3562080805.0, "total_krw": 24824161665.0}, "2025": {"sales": 19290572.0, "recurring": 3198834.0, "total": 22489406.0, "sales_krw": 27410415211.0, "recurring_krw": 4544639694.0, "total_krw": 31955054904.0}, "2026": {"sales": 6151986.0, "recurring": 882882.0, "total": 7034868.0, "sales_krw": 9080998549.0, "recurring_krw": 1292633691.0, "total_krw": 10373632240.0}}, "quarterly": [{"year": 2023, "q": "23Q1", "cat": "RECURRING", "usd": 618977.0, "krw": 788849416.0}, {"year": 2023, "q": "23Q1", "cat": "SALES", "usd": 2688795.0, "krw": 3475215818.0}, {"year": 2023, "q": "23Q2", "cat": "RECURRING", "usd": 658769.0, "krw": 866768474.0}, {"year": 2023, "q": "23Q2", "cat": "SALES", "usd": 3374974.0, "krw": 4427334818.0}, {"year": 2023, "q": "23Q3", "cat": "RECURRING", "usd": 533819.0, "krw": 704508304.0}, {"year": 2023, "q": "23Q3", "cat": "SALES", "usd": 3192480.0, "krw": 4213177004.0}, {"year": 2023, "q": "23Q4", "cat": "RECURRING", "usd": 586002.0, "krw": 773315843.0}, {"year": 2023, "q": "23Q4", "cat": "SALES", "usd": 3383691.0, "krw": 4443113187.0}, {"year": 2024, "q": "24Q1", "cat": "RECURRING", "usd": 613927.0, "krw": 817136656.0}, {"year": 2024, "q": "24Q1", "cat": "SALES", "usd": 3023439.0, "krw": 4024196098.0}, {"year": 2024, "q": "24Q2", "cat": "RECURRING", "usd": 649321.0, "krw": 864245616.0}, {"year": 2024, "q": "24Q2", "cat": "SALES", "usd": 4378477.0, "krw": 5827751827.0}, {"year": 2024, "q": "24Q3", "cat": "RECURRING", "usd": 693501.0, "krw": 923049718.0}, {"year": 2024, "q": "24Q3", "cat": "SALES", "usd": 4136984.0, "krw": 5506324192.0}, {"year": 2024, "q": "24Q4", "cat": "RECURRING", "usd": 719496.0, "krw": 957648814.0}, {"year": 2024, "q": "24Q4", "cat": "SALES", "usd": 4435620.0, "krw": 5903808743.0}, {"year": 2025, "q": "25Q1", "cat": "RECURRING", "usd": 646336.0, "krw": 939928438.0}, {"year": 2025, "q": "25Q1", "cat": "SALES", "usd": 4664251.0, "krw": 6791468922.0}, {"year": 2025, "q": "25Q2", "cat": "RECURRING", "usd": 790112.0, "krw": 1107688004.0}, {"year": 2025, "q": "25Q2", "cat": "SALES", "usd": 4911524.0, "krw": 6815000820.0}, {"year": 2025, "q": "25Q3", "cat": "RECURRING", "usd": 842598.0, "krw": 1166879318.0}, {"year": 2025, "q": "25Q3", "cat": "SALES", "usd": 4865918.0, "krw": 6752450734.0}, {"year": 2025, "q": "25Q4", "cat": "RECURRING", "usd": 919789.0, "krw": 1330143933.0}, {"year": 2025, "q": "25Q4", "cat": "SALES", "usd": 4848880.0, "krw": 7051494735.0}, {"year": 2026, "q": "26Q1", "cat": "RECURRING", "usd": 882882.0, "krw": 1292633691.0}, {"year": 2026, "q": "26Q1", "cat": "SALES", "usd": 6151986.0, "krw": 9080998549.0}], "qoq": [{"q": "23Q1", "total": 3307773.0, "total_krw": 3475215818, "qoq": null, "qoq_krw": null}, {"q": "23Q2", "total": 4033742.0, "total_krw": 4427334818, "qoq": 27.4, "qoq_krw": 27.4}, {"q": "23Q3", "total": 3726299.0, "total_krw": 4213177004, "qoq": -4.84, "qoq_krw": -4.84}, {"q": "23Q4", "total": 3969693.0, "total_krw": 4443113187, "qoq": 5.46, "qoq_krw": 5.46}, {"q": "24Q1", "total": 3637366.0, "total_krw": 4024196098, "qoq": -9.43, "qoq_krw": -9.43}, {"q": "24Q2", "total": 5027798.0, "total_krw": 5827751827, "qoq": 44.82, "qoq_krw": 44.82}, {"q": "24Q3", "total": 4830485.0, "total_krw": 5506324192, "qoq": -5.52, "qoq_krw": -5.52}, {"q": "24Q4", "total": 5155116.0, "total_krw": 5903808743, "qoq": 7.22, "qoq_krw": 7.22}, {"q": "25Q1", "total": 5310586.0, "total_krw": 6791468922, "qoq": 15.04, "qoq_krw": 15.04}, {"q": "25Q2", "total": 5701635.0, "total_krw": 6815000820, "qoq": 0.35, "qoq_krw": 0.35}, {"q": "25Q3", "total": 5708516.0, "total_krw": 6752450734, "qoq": -0.92, "qoq_krw": -0.92}, {"q": "25Q4", "total": 5768669.0, "total_krw": 7051494735, "qoq": 4.43, "qoq_krw": 4.43}, {"q": "26Q1", "total": 7034868.0, "total_krw": 9080998549, "qoq": 28.78, "qoq_krw": 28.78}], "product_by_year": [{"year": 2023, "product": "Gentle Series", "usd": 5776124.0, "krw": 7318988554.0, "units": 57}, {"year": 2023, "product": "Others", "usd": 790640.0, "krw": 1035013636.0, "units": 31}, {"year": 2023, "product": "PicoWay", "usd": 2052368.0, "krw": 2664090910.0, "units": 17}, {"year": 2023, "product": "VBP", "usd": 4225619.0, "krw": 5540747727.0, "units": 53}, {"year": 2024, "product": "Gentle Series", "usd": 10996861.0, "krw": 14636818294.0, "units": 109}, {"year": 2024, "product": "Others", "usd": 397821.0, "krw": 529500004.0, "units": 24}, {"year": 2024, "product": "PicoWay", "usd": 1586653.0, "krw": 2111834638.0, "units": 16}, {"year": 2024, "product": "VBP", "usd": 2993185.0, "krw": 3983927924.0, "units": 37}, {"year": 2025, "product": "Gentle Series", "usd": 14325385.0, "krw": 20113963008.0, "units": 147}, {"year": 2025, "product": "Others", "usd": 848071.0, "krw": 1178234003.0, "units": 58}, {"year": 2025, "product": "PicoWay", "usd": 1577284.0, "krw": 2220850640.0, "units": 15}, {"year": 2025, "product": "VBP", "usd": 2765228.0, "krw": 3897367560.0, "units": 36}, {"year": 2026, "product": "Gentle Series", "usd": 5175060.0, "krw": 7629272458.0, "units": 52}, {"year": 2026, "product": "Others", "usd": 180660.0, "krw": 266290908.0, "units": 19}, {"year": 2026, "product": "PicoWay", "usd": 276639.0, "krw": 417281818.0, "units": 3}, {"year": 2026, "product": "VBP", "usd": 519627.0, "krw": 768153365.0, "units": 7}], "product_by_quarter": [{"year": 2023, "q": "23Q1", "product": "Gentle Series", "usd": 1295320.0, "krw": 1416820365.0, "units": 11}, {"year": 2023, "q": "23Q1", "product": "Others", "usd": 351202.0, "krw": 457954544.0, "units": 11}, {"year": 2023, "q": "23Q1", "product": "PicoWay", "usd": 592116.0, "krw": 755554546.0, "units": 5}, {"year": 2023, "q": "23Q1", "product": "VBP", "usd": 653661.0, "krw": 844886363.0, "units": 8}, {"year": 2023, "q": "23Q2", "product": "Gentle Series", "usd": 1102074.0, "krw": 1446059821.0, "units": 12}, {"year": 2023, "q": "23Q2", "product": "Others", "usd": 207391.0, "krw": 270218182.0, "units": 13}, {"year": 2023, "q": "23Q2", "product": "PicoWay", "usd": 981976.0, "krw": 1287309091.0, "units": 8}, {"year": 2023, "q": "23Q2", "product": "VBP", "usd": 1084839.0, "krw": 1423747724.0, "units": 14}, {"year": 2023, "q": "23Q3", "product": "Gentle Series", "usd": 2001565.0, "krw": 2633731548.0, "units": 20}, {"year": 2023, "q": "23Q3", "product": "Others", "usd": 83046.0, "krw": 110418182.0, "units": 2}, {"year": 2023, "q": "23Q3", "product": "VBP", "usd": 1107869.0, "krw": 1469027274.0, "units": 14}, {"year": 2023, "q": "23Q4", "product": "Gentle Series", "usd": 1377165.0, "krw": 1822376820.0, "units": 14}, {"year": 2023, "q": "23Q4", "product": "Others", "usd": 149001.0, "krw": 196422728.0, "units": 5}, {"year": 2023, "q": "23Q4", "product": "PicoWay", "usd": 478276.0, "krw": 621227273.0, "units": 4}, {"year": 2023, "q": "23Q4", "product": "VBP", "usd": 1379249.0, "krw": 1803086366.0, "units": 17}, {"year": 2024, "q": "24Q1", "product": "Gentle Series", "usd": 1616812.0, "krw": 2151976184.0, "units": 16}, {"year": 2024, "q": "24Q1", "product": "Others", "usd": 63746.0, "krw": 84845455.0, "units": 3}, {"year": 2024, "q": "24Q1", "product": "PicoWay", "usd": 439693.0, "krw": 585230637.0, "units": 4}, {"year": 2024, "q": "24Q1", "product": "VBP", "usd": 903189.0, "krw": 1202143822.0, "units": 11}, {"year": 2024, "q": "24Q2", "product": "Gentle Series", "usd": 2969751.0, "krw": 3952737095.0, "units": 30}, {"year": 2024, "q": "24Q2", "product": "Others", "usd": 50714.0, "krw": 67500000.0, "units": 5}, {"year": 2024, "q": "24Q2", "product": "PicoWay", "usd": 546634.0, "krw": 727570182.0, "units": 6}, {"year": 2024, "q": "24Q2", "product": "VBP", "usd": 811379.0, "krw": 1079944550.0, "units": 10}, {"year": 2024, "q": "24Q3", "product": "Gentle Series", "usd": 2936251.0, "krw": 3908149003.0, "units": 29}, {"year": 2024, "q": "24Q3", "product": "Others", "usd": 207479.0, "krw": 276154549.0, "units": 8}, {"year": 2024, "q": "24Q3", "product": "PicoWay", "usd": 278271.0, "krw": 370378273.0, "units": 3}, {"year": 2024, "q": "24Q3", "product": "VBP", "usd": 714983.0, "krw": 951642367.0, "units": 9}, {"year": 2024, "q": "24Q4", "product": "Gentle Series", "usd": 3474048.0, "krw": 4623956012.0, "units": 34}, {"year": 2024, "q": "24Q4", "product": "Others", "usd": 75883.0, "krw": 101000000.0, "units": 8}, {"year": 2024, "q": "24Q4", "product": "PicoWay", "usd": 322055.0, "krw": 428655546.0, "units": 3}, {"year": 2024, "q": "24Q4", "product": "VBP", "usd": 563634.0, "krw": 750197185.0, "units": 7}, {"year": 2025, "q": "25Q1", "product": "Gentle Series", "usd": 3600618.0, "krw": 5001073373.0, "units": 37}, {"year": 2025, "q": "25Q1", "product": "Others", "usd": 194761.0, "krw": 270512455.0, "units": 11}, {"year": 2025, "q": "25Q1", "product": "PicoWay", "usd": 539413.0, "krw": 749216819.0, "units": 5}, {"year": 2025, "q": "25Q1", "product": "VBP", "usd": 554856.0, "krw": 770666275.0, "units": 7}, {"year": 2025, "q": "25Q2", "product": "Gentle Series", "usd": 3834891.0, "krw": 5313326271.0, "units": 39}, {"year": 2025, "q": "25Q2", "product": "Others", "usd": 310222.0, "krw": 425976091.0, "units": 17}, {"year": 2025, "q": "25Q2", "product": "PicoWay", "usd": 227277.0, "krw": 320561273.0, "units": 2}, {"year": 2025, "q": "25Q2", "product": "VBP", "usd": 539134.0, "krw": 755137185.0, "units": 7}, {"year": 2025, "q": "25Q3", "product": "Gentle Series", "usd": 3442103.0, "krw": 4778925180.0, "units": 35}, {"year": 2025, "q": "25Q3", "product": "Others", "usd": 259991.0, "krw": 360645457.0, "units": 21}, {"year": 2025, "q": "25Q3", "product": "PicoWay", "usd": 397683.0, "krw": 552472547.0, "units": 4}, {"year": 2025, "q": "25Q3", "product": "VBP", "usd": 766141.0, "krw": 1060407550.0, "units": 10}, {"year": 2025, "q": "25Q4", "product": "Gentle Series", "usd": 3447773.0, "krw": 5020638184.0, "units": 36}, {"year": 2025, "q": "25Q4", "product": "Others", "usd": 83098.0, "krw": 121100000.0, "units": 9}, {"year": 2025, "q": "25Q4", "product": "PicoWay", "usd": 412912.0, "krw": 598600001.0, "units": 4}, {"year": 2025, "q": "25Q4", "product": "VBP", "usd": 905097.0, "krw": 1311156550.0, "units": 12}, {"year": 2026, "q": "26Q1", "product": "Gentle Series", "usd": 5175060.0, "krw": 7629272458.0, "units": 52}, {"year": 2026, "q": "26Q1", "product": "Others", "usd": 180660.0, "krw": 266290908.0, "units": 19}, {"year": 2026, "q": "26Q1", "product": "PicoWay", "usd": 276639.0, "krw": 417281818.0, "units": 3}, {"year": 2026, "q": "26Q1", "product": "VBP", "usd": 519627.0, "krw": 768153365.0, "units": 7}], "region_by_year": [{"year": 2023, "region": "경기도", "krw": 3414678820.0, "usd": 2611464.0}, {"year": 2023, "region": "경상남도", "krw": 380604637.0, "usd": 290918.0}, {"year": 2023, "region": "경상북도", "krw": 183965091.0, "usd": 140965.0}, {"year": 2023, "region": "광주", "krw": 657955092.0, "usd": 502245.0}, {"year": 2023, "region": "대구 광역시", "krw": 1163612455.0, "usd": 891853.0}, {"year": 2023, "region": "대전", "krw": 264577091.0, "usd": 198820.0}, {"year": 2023, "region": "부산", "krw": 1983302909.0, "usd": 1512390.0}, {"year": 2023, "region": "서울시", "krw": 6365396913.0, "usd": 4864795.0}, {"year": 2023, "region": "세종", "krw": 275774182.0, "usd": 207123.0}, {"year": 2023, "region": "울산", "krw": 324616909.0, "usd": 248845.0}, {"year": 2023, "region": "인천", "krw": 372861454.0, "usd": 287138.0}, {"year": 2023, "region": "충청남도", "krw": 348941636.0, "usd": 262900.0}, {"year": 2023, "region": "충청북도", "krw": 822553638.0, "usd": 620484.0}, {"year": 2024, "region": "강원도", "krw": 303292364.0, "usd": 227868.0}, {"year": 2024, "region": "경기도", "krw": 4397700559.0, "usd": 3304058.0}, {"year": 2024, "region": "경상남도", "krw": 518390728.0, "usd": 389475.0}, {"year": 2024, "region": "경상북도", "krw": 360140910.0, "usd": 270579.0}, {"year": 2024, "region": "광주", "krw": 932196002.0, "usd": 700373.0}, {"year": 2024, "region": "대구 광역시", "krw": 1701896365.0, "usd": 1278660.0}, {"year": 2024, "region": "대전", "krw": 763799274.0, "usd": 573854.0}, {"year": 2024, "region": "부산", "krw": 2210984730.0, "usd": 1661146.0}, {"year": 2024, "region": "서울시", "krw": 7252874833.0, "usd": 5449194.0}, {"year": 2024, "region": "울산", "krw": 695668456.0, "usd": 522666.0}, {"year": 2024, "region": "인천", "krw": 999307911.0, "usd": 750795.0}, {"year": 2024, "region": "전라남도", "krw": 128163182.0, "usd": 96291.0}, {"year": 2024, "region": "전라북도", "krw": 364643727.0, "usd": 273962.0}, {"year": 2024, "region": "충청남도", "krw": 244595000.0, "usd": 183768.0}, {"year": 2024, "region": "충청북도", "krw": 388426819.0, "usd": 291831.0}, {"year": 2025, "region": "강원도", "krw": 414601727.0, "usd": 291822.0}, {"year": 2025, "region": "경기도", "krw": 5939288732.0, "usd": 4258692.0}, {"year": 2025, "region": "경상남도", "krw": 1146985182.0, "usd": 810191.0}, {"year": 2025, "region": "경상북도", "krw": 290882637.0, "usd": 204329.0}, {"year": 2025, "region": "광주", "krw": 799268638.0, "usd": 565077.0}, {"year": 2025, "region": "대구 광역시", "krw": 1321574364.0, "usd": 949781.0}, {"year": 2025, "region": "대전", "krw": 433043909.0, "usd": 309161.0}, {"year": 2025, "region": "부산", "krw": 2518462004.0, "usd": 1777913.0}, {"year": 2025, "region": "서울시", "krw": 10420511196.0, "usd": 7409455.0}, {"year": 2025, "region": "세종", "krw": 154566909.0, "usd": 107374.0}, {"year": 2025, "region": "울산", "krw": 948185364.0, "usd": 689435.0}, {"year": 2025, "region": "인천", "krw": 1046242183.0, "usd": 732705.0}, {"year": 2025, "region": "전라남도", "krw": 456345092.0, "usd": 320535.0}, {"year": 2025, "region": "전라북도", "krw": 423489273.0, "usd": 304388.0}, {"year": 2025, "region": "제주도", "krw": 128061182.0, "usd": 92781.0}, {"year": 2025, "region": "충청남도", "krw": 547174546.0, "usd": 392205.0}, {"year": 2025, "region": "충청북도", "krw": 421732273.0, "usd": 300124.0}, {"year": 2026, "region": "강원도", "krw": 108895455.0, "usd": 72193.0}, {"year": 2026, "region": "경기도", "krw": 2952392093.0, "usd": 1997565.0}, {"year": 2026, "region": "경상남도", "krw": 316385091.0, "usd": 216735.0}, {"year": 2026, "region": "경상북도", "krw": 133239636.0, "usd": 89100.0}, {"year": 2026, "region": "광주", "krw": 256056637.0, "usd": 175973.0}, {"year": 2026, "region": "대구 광역시", "krw": 305355364.0, "usd": 209134.0}, {"year": 2026, "region": "대전", "krw": 162188455.0, "usd": 110982.0}, {"year": 2026, "region": "부산", "krw": 410533819.0, "usd": 274027.0}, {"year": 2026, "region": "서울시", "krw": 2983765362.0, "usd": 2025145.0}, {"year": 2026, "region": "울산", "krw": 146243000.0, "usd": 99394.0}, {"year": 2026, "region": "인천", "krw": 304588364.0, "usd": 204100.0}, {"year": 2026, "region": "전라북도", "krw": 122504545.0, "usd": 82255.0}, {"year": 2026, "region": "충청남도", "krw": 612738364.0, "usd": 411498.0}, {"year": 2026, "region": "충청북도", "krw": 266112364.0, "usd": 183886.0}], "pivot_region_total": {"서울시": 27022548304, "경기도": 16704060204, "부산": 7123283462, "대구 광역시": 4492438548, "인천": 2722999912, "광주": 2645476369, "경상남도": 2362365638, "울산": 2114713729, "충청북도": 1898825094, "충청남도": 1753449546, "대전": 1623608729, "경상북도": 968228274, "전라북도": 910637545, "강원도": 826789546, "전라남도": 584508274, "세종": 430341091, "제주도": 128061182}, "sr_total": [{"sr": "Baek Seung Chul", "krw": 18725314757.0, "usd": 13608530.0}, {"sr": "Oh Sang Geol", "krw": 18392834843.0, "usd": 13399215.0}, {"sr": "LIM YONG CHUL", "krw": 12612083556.0, "usd": 9275667.0}, {"sr": "Kim Sung Hoon", "krw": 6183859097.0, "usd": 4361479.0}, {"sr": "Lee Garam", "krw": 3991025366.0, "usd": 2834285.0}], "pivot_sr": [{"sr": "Baek Seung Chul", "krw": 18725314757}, {"sr": "Oh Sang Geol", "krw": 18392834843}, {"sr": "LIM YONG CHUL", "krw": 12612083556}, {"sr": "Kim Sung Hoon", "krw": 6183859097}, {"sr": "Lee Garam", "krw": 3991025366}], "sr_by_year": [{"year": 2023, "sr": "Baek Seung Chul", "krw": 2711106730.0, "usd": 2066531.0}, {"year": 2023, "sr": "LIM YONG CHUL", "krw": 6452652456.0, "usd": 4927131.0}, {"year": 2023, "sr": "Oh Sang Geol", "krw": 2945985458.0, "usd": 2234279.0}, {"year": 2024, "sr": "Baek Seung Chul", "krw": 6335480381.0, "usd": 4759941.0}, {"year": 2024, "sr": "LIM YONG CHUL", "krw": 1238102275.0, "usd": 930205.0}, {"year": 2024, "sr": "Lee Garam", "krw": 815417092.0, "usd": 612635.0}, {"year": 2024, "sr": "Oh Sang Geol", "krw": 6138985650.0, "usd": 4612312.0}, {"year": 2025, "sr": "Baek Seung Chul", "krw": 6456850734.0, "usd": 4597620.0}, {"year": 2025, "sr": "Kim Sung Hoon", "krw": 4700228366.0, "usd": 3353675.0}, {"year": 2025, "sr": "LIM YONG CHUL", "krw": 3376047097.0, "usd": 2375484.0}, {"year": 2025, "sr": "Lee Garam", "krw": 2244488638.0, "usd": 1587436.0}, {"year": 2025, "sr": "Oh Sang Geol", "krw": 7408774193.0, "usd": 5269940.0}, {"year": 2026, "sr": "Baek Seung Chul", "krw": 3221876912.0, "usd": 2184438.0}, {"year": 2026, "sr": "Kim Sung Hoon", "krw": 1483630731.0, "usd": 1007804.0}, {"year": 2026, "sr": "LIM YONG CHUL", "krw": 1545281728.0, "usd": 1042846.0}, {"year": 2026, "sr": "Lee Garam", "krw": 931119636.0, "usd": 634214.0}, {"year": 2026, "sr": "Oh Sang Geol", "krw": 1899089542.0, "usd": 1282684.0}], "new_vs_existing": [{"year": 2023, "q": "23Q1", "type": "Existing Business", "usd": 1454302.0, "krw": 1872329454.0}, {"year": 2023, "q": "23Q1", "type": "New Business", "usd": 1234493.0, "krw": 1602886364.0}, {"year": 2023, "q": "23Q2", "type": "Existing Business", "usd": 1462648.0, "krw": 1916448545.0}, {"year": 2023, "q": "23Q2", "type": "New Business", "usd": 1912326.0, "krw": 2510886273.0}, {"year": 2023, "q": "23Q3", "type": "Existing Business", "usd": 973404.0, "krw": 1285371637.0}, {"year": 2023, "q": "23Q3", "type": "New Business", "usd": 2219076.0, "krw": 2927805367.0}, {"year": 2023, "q": "23Q4", "type": "Existing Business", "usd": 1242568.0, "krw": 1635216001.0}, {"year": 2023, "q": "23Q4", "type": "New Business", "usd": 2141123.0, "krw": 2807897186.0}, {"year": 2024, "q": "24Q1", "type": "Existing Business", "usd": 896778.0, "krw": 1193611638.0}, {"year": 2024, "q": "24Q1", "type": "New Business", "usd": 2126661.0, "krw": 2830584460.0}, {"year": 2024, "q": "24Q2", "type": "Existing Business", "usd": 1527124.0, "krw": 2032601275.0}, {"year": 2024, "q": "24Q2", "type": "New Business", "usd": 2851354.0, "krw": 3795150552.0}, {"year": 2024, "q": "24Q3", "type": "Existing Business", "usd": 961867.0, "krw": 1280244913.0}, {"year": 2024, "q": "24Q3", "type": "New Business", "usd": 3175117.0, "krw": 4226079279.0}, {"year": 2024, "q": "24Q4", "type": "Existing Business", "usd": 770119.0, "krw": 1025028183.0}, {"year": 2024, "q": "24Q4", "type": "New Business", "usd": 3665501.0, "krw": 4878780560.0}, {"year": 2025, "q": "25Q1", "type": "Existing Business", "usd": 922448.0, "krw": 1281233547.0}, {"year": 2025, "q": "25Q1", "type": "New Business", "usd": 3967199.0, "krw": 5510235375.0}, {"year": 2025, "q": "25Q2", "type": "Existing Business", "usd": 1489016.0, "krw": 2054647274.0}, {"year": 2025, "q": "25Q2", "type": "New Business", "usd": 3422508.0, "krw": 4760353546.0}, {"year": 2025, "q": "25Q3", "type": "Existing Business", "usd": 1033668.0, "krw": 1435417733.0}, {"year": 2025, "q": "25Q3", "type": "New Business", "usd": 3832250.0, "krw": 5317033001.0}, {"year": 2025, "q": "25Q4", "type": "Existing Business", "usd": 1102688.0, "krw": 1607970638.0}, {"year": 2025, "q": "25Q4", "type": "New Business", "usd": 3746192.0, "krw": 5443524097.0}, {"year": 2026, "q": "26Q1", "type": "Existing Business", "usd": 1798502.0, "krw": 2664820905.0}, {"year": 2026, "q": "26Q1", "type": "New Business", "usd": 4353484.0, "krw": 6416177644.0}], "direct_dealer": [{"year": 2023, "seg": "Dealer", "usd": 3551564.0, "krw": 4643758732.0}, {"year": 2023, "seg": "Direct", "usd": 9088376.0, "krw": 11915082095.0}, {"year": 2024, "seg": "Dealer", "usd": 7103414.0, "krw": 9454641563.0}, {"year": 2024, "seg": "Direct", "usd": 8871106.0, "krw": 11807439297.0}, {"year": 2025, "seg": "Dealer", "usd": 8011133.0, "krw": 11219143911.0}, {"year": 2025, "seg": "Direct", "usd": 11504836.0, "krw": 16191271300.0}, {"year": 2026, "seg": "Dealer", "usd": 1081995.0, "krw": 1608457545.0}, {"year": 2026, "seg": "Direct", "usd": 5069991.0, "krw": 7472541004.0}], "recurring_detail": [{"year": 2023, "cat": "consumables", "usd": 344310.0, "krw": 446913761.0}, {"year": 2023, "cat": "service", "usd": 2053257.0, "krw": 2686528275.0}, {"year": 2024, "cat": "consumables", "usd": 881470.0, "krw": 1173236221.0}, {"year": 2024, "cat": "service", "usd": 1794775.0, "krw": 2388844584.0}, {"year": 2025, "cat": "consumables", "usd": 859727.0, "krw": 1222877154.0}, {"year": 2025, "cat": "service", "usd": 2339107.0, "krw": 3321762539.0}, {"year": 2026, "cat": "consumables", "usd": 268971.0, "krw": 395248093.0}, {"year": 2026, "cat": "service", "usd": 613911.0, "krw": 897385598.0}], "meta": {"years": [2023, 2024, 2025, 2026], "quarters": ["Q1", "Q2", "Q3", "Q4"], "products": ["Gentle Series", "VBP", "PicoWay", "Others"]}, "product_detail": [{"prod": "GentleMax Pro+", "usd": 33936978.0, "krw": 46582885857.0, "units": 338}, {"prod": "Vbeam Perfecta", "usd": 10503659.0, "krw": 14190196576.0, "units": 133}, {"prod": "Picoway", "usd": 5492944.0, "krw": 7414058006.0, "units": 51}, {"prod": "Gmax Pro", "usd": 1979209.0, "krw": 2644946820.0, "units": 22}, {"prod": "Zimmer", "usd": 657379.0, "krw": 917186364.0, "units": 71}, {"prod": "FRAX PRO", "usd": 501069.0, "krw": 662590911.0, "units": 12}, {"prod": "Profound", "usd": 418583.0, "krw": 554709094.0, "units": 13}, {"prod": "GLP", "usd": 357244.0, "krw": 471209637.0, "units": 5}, {"prod": "HP", "usd": 296935.0, "krw": 405381819.0, "units": 28}, {"prod": "Nordlys Mini", "usd": 186299.0, "krw": 256381818.0, "units": 5}, {"prod": "Nordlys", "usd": 156930.0, "krw": 212788545.0, "units": 3}], "product_by_year_detail": [{"year": 2023, "prod": "FRAX PRO", "usd": 340861.0, "krw": 447809091.0, "units": 8}, {"year": 2023, "prod": "GLP", "usd": 223917.0, "krw": 293752183.0, "units": 3}, {"year": 2023, "prod": "GentleMax Pro+", "usd": 4544874.0, "krw": 5704294370.0, "units": 43}, {"year": 2023, "prod": "Gmax Pro", "usd": 1007333.0, "krw": 1320942001.0, "units": 11}, {"year": 2023, "prod": "HP", "usd": 105498.0, "krw": 137627272.0, "units": 10}, {"year": 2023, "prod": "Nordlys", "usd": 42651.0, "krw": 55590909.0, "units": 1}, {"year": 2023, "prod": "Picoway", "usd": 2052368.0, "krw": 2664090910.0, "units": 17}, {"year": 2023, "prod": "Profound", "usd": 240576.0, "krw": 313800000.0, "units": 6}, {"year": 2023, "prod": "Vbeam Perfecta", "usd": 4225619.0, "krw": 5540747727.0, "units": 53}, {"year": 2023, "prod": "Zimmer", "usd": 61055.0, "krw": 80186364.0, "units": 6}, {"year": 2024, "prod": "FRAX PRO", "usd": 121064.0, "krw": 161136365.0, "units": 3}, {"year": 2024, "prod": "GLP", "usd": 133326.0, "krw": 177457454.0, "units": 2}, {"year": 2024, "prod": "GentleMax Pro+", "usd": 10310651.0, "krw": 13723473476.0, "units": 101}, {"year": 2024, "prod": "Gmax Pro", "usd": 552883.0, "krw": 735887364.0, "units": 6}, {"year": 2024, "prod": "HP", "usd": 44259.0, "krw": 58909091.0, "units": 4}, {"year": 2024, "prod": "Picoway", "usd": 1586653.0, "krw": 2111834638.0, "units": 16}, {"year": 2024, "prod": "Profound", "usd": 109282.0, "krw": 145454548.0, "units": 4}, {"year": 2024, "prod": "Vbeam Perfecta", "usd": 2993185.0, "krw": 3983927924.0, "units": 37}, {"year": 2024, "prod": "Zimmer", "usd": 123216.0, "krw": 164000000.0, "units": 13}, {"year": 2025, "prod": "FRAX PRO", "usd": 39144.0, "krw": 53645455.0, "units": 1}, {"year": 2025, "prod": "GentleMax Pro+", "usd": 13906393.0, "krw": 19525845553.0, "units": 142}, {"year": 2025, "prod": "Gmax Pro", "usd": 418993.0, "krw": 588117455.0, "units": 5}, {"year": 2025, "prod": "HP", "usd": 101543.0, "krw": 141554548.0, "units": 10}, {"year": 2025, "prod": "Nordlys", "usd": 114279.0, "krw": 157197636.0, "units": 2}, {"year": 2025, "prod": "Nordlys Mini", "usd": 186299.0, "krw": 256381818.0, "units": 5}, {"year": 2025, "prod": "Picoway", "usd": 1577284.0, "krw": 2220850640.0, "units": 15}, {"year": 2025, "prod": "Profound", "usd": 68724.0, "krw": 95454546.0, "units": 3}, {"year": 2025, "prod": "Vbeam Perfecta", "usd": 2765228.0, "krw": 3897367560.0, "units": 36}, {"year": 2025, "prod": "Zimmer", "usd": 338083.0, "krw": 474000000.0, "units": 37}, {"year": 2026, "prod": "GentleMax Pro+", "usd": 5175060.0, "krw": 7629272458.0, "units": 52}, {"year": 2026, "prod": "HP", "usd": 45635.0, "krw": 67290908.0, "units": 4}, {"year": 2026, "prod": "Picoway", "usd": 276639.0, "krw": 417281818.0, "units": 3}, {"year": 2026, "prod": "Vbeam Perfecta", "usd": 519627.0, "krw": 768153365.0, "units": 7}, {"year": 2026, "prod": "Zimmer", "usd": 135025.0, "krw": 199000000.0, "units": 15}], "region_total": [{"region": "서울시", "krw": 27022548304.0, "usd": 19748588.0}, {"region": "경기도", "krw": 16704060204.0, "usd": 12171779.0}, {"region": "부산", "krw": 7123283462.0, "usd": 5225477.0}, {"region": "대구 광역시", "krw": 4492438548.0, "usd": 3329429.0}, {"region": "인천", "krw": 2722999912.0, "usd": 1974738.0}, {"region": "광주", "krw": 2645476369.0, "usd": 1943668.0}, {"region": "경상남도", "krw": 2362365638.0, "usd": 1707319.0}, {"region": "울산", "krw": 2114713729.0, "usd": 1560340.0}, {"region": "충청북도", "krw": 1898825094.0, "usd": 1396325.0}, {"region": "충청남도", "krw": 1753449546.0, "usd": 1250371.0}, {"region": "대전", "krw": 1623608729.0, "usd": 1192817.0}, {"region": "경상북도", "krw": 968228274.0, "usd": 704973.0}, {"region": "전라북도", "krw": 910637545.0, "usd": 660605.0}, {"region": "강원도", "krw": 826789546.0, "usd": 591883.0}, {"region": "전라남도", "krw": 584508274.0, "usd": 416826.0}, {"region": "세종", "krw": 430341091.0, "usd": 314498.0}, {"region": "제주도", "krw": 128061182.0, "usd": 92781.0}], "region_detail": {"강원도": [{"sub": "춘천시", "krw": 431383546.0, "usd": 308587.0}, {"sub": "원주시", "krw": 395406000.0, "usd": 283296.0}], "경기도": [{"sub": "수원시", "krw": 3140978819.0, "usd": 2305040.0}, {"sub": "성남시", "krw": 2782434822.0, "usd": 2004199.0}, {"sub": "평택시", "krw": 1309707910.0, "usd": 916823.0}, {"sub": "고양시", "krw": 1258482274.0, "usd": 915502.0}, {"sub": "화성시", "krw": 1167091728.0, "usd": 871698.0}, {"sub": "안양시", "krw": 1078497638.0, "usd": 781353.0}, {"sub": "용인시", "krw": 913407369.0, "usd": 680261.0}, {"sub": "남양주시", "krw": 694499183.0, "usd": 511779.0}, {"sub": "광명시", "krw": 483889092.0, "usd": 363553.0}, {"sub": "안산시", "krw": 479780182.0, "usd": 341709.0}, {"sub": "의정부시", "krw": 432016546.0, "usd": 307332.0}, {"sub": "하남시", "krw": 406399182.0, "usd": 305079.0}, {"sub": "경기도", "krw": 393621819.0, "usd": 293219.0}, {"sub": "부천시", "krw": 273639182.0, "usd": 202098.0}, {"sub": "시흥시", "krw": 264186182.0, "usd": 195479.0}, {"sub": "구리시", "krw": 237124818.0, "usd": 175660.0}, {"sub": "과천시", "krw": 232631637.0, "usd": 178567.0}, {"sub": "남양주", "krw": 162188455.0, "usd": 118148.0}, {"sub": "김포시", "krw": 151766909.0, "usd": 103148.0}, {"sub": "안성시", "krw": 150021455.0, "usd": 100322.0}, {"sub": "양주시", "krw": 149388455.0, "usd": 105234.0}, {"sub": "군포시", "krw": 149358455.0, "usd": 112215.0}, {"sub": "파주시", "krw": 149358455.0, "usd": 112215.0}, {"sub": "광주시", "krw": 140694182.0, "usd": 102058.0}, {"sub": "굉명시", "krw": 102895455.0, "usd": 69088.0}], "경상남도": [{"sub": "창원시", "krw": 1203096091.0, "usd": 870784.0}, {"sub": "진주시", "krw": 623196910.0, "usd": 454480.0}, {"sub": "김해시", "krw": 290623818.0, "usd": 207820.0}, {"sub": "통영시", "krw": 107545455.0, "usd": 73212.0}, {"sub": "양산시", "krw": 84057909.0, "usd": 60519.0}, {"sub": "진해구", "krw": 53845455.0, "usd": 40504.0}], "경상북도": [{"sub": "김천시", "krw": 306692364.0, "usd": 233172.0}, {"sub": "구미시", "krw": 261933818.0, "usd": 176658.0}, {"sub": "포항시", "krw": 237413637.0, "usd": 178372.0}, {"sub": "경산시", "krw": 162188455.0, "usd": 116771.0}], "광주": [{"sub": "서구", "krw": 1236629366.0, "usd": 903863.0}, {"sub": "남구", "krw": 455413456.0, "usd": 345732.0}, {"sub": "광산구", "krw": 453452819.0, "usd": 321906.0}, {"sub": "북구", "krw": 262922091.0, "usd": 198722.0}, {"sub": "광주시", "krw": 128796182.0, "usd": 98669.0}], "대구 광역시": [{"sub": "수성구", "krw": 1698276547.0, "usd": 1268299.0}, {"sub": "중구", "krw": 1239477002.0, "usd": 911431.0}, {"sub": "달서구", "krw": 788039545.0, "usd": 583505.0}, {"sub": "동구", "krw": 277019636.0, "usd": 204257.0}, {"sub": "북구", "krw": 249941909.0, "usd": 185711.0}, {"sub": "대구시", "krw": 239683909.0, "usd": 176227.0}], "대전": [{"sub": "서구", "krw": 915892546.0, "usd": 670629.0}, {"sub": "유성구", "krw": 707716183.0, "usd": 522188.0}], "부산": [{"sub": "부산광역시", "krw": 1558113457.0, "usd": 1138505.0}, {"sub": "부산진구", "krw": 1194667183.0, "usd": 876330.0}, {"sub": "진구", "krw": 922908728.0, "usd": 669053.0}, {"sub": "부산시", "krw": 783305363.0, "usd": 593243.0}, {"sub": "해운대구", "krw": 765760364.0, "usd": 575017.0}, {"sub": "부산", "krw": 366014637.0, "usd": 266489.0}, {"sub": "동래구", "krw": 227232728.0, "usd": 163601.0}, {"sub": "수영구", "krw": 163336364.0, "usd": 123066.0}, {"sub": "중동", "krw": 159112364.0, "usd": 105483.0}, {"sub": "부산시 연제구", "krw": 140267545.0, "usd": 105385.0}, {"sub": "북구", "krw": 128694182.0, "usd": 89109.0}, {"sub": "중구", "krw": 128694182.0, "usd": 87181.0}, {"sub": "부산시 해운대구", "krw": 128061182.0, "usd": 96214.0}, {"sub": "서구", "krw": 120500000.0, "usd": 92998.0}, {"sub": "연제구", "krw": 109352455.0, "usd": 82158.0}, {"sub": "남구", "krw": 104535455.0, "usd": 80281.0}], "서울시": [{"sub": "강남구", "krw": 8666888004.0, "usd": 6330191.0}, {"sub": "서초구", "krw": 4144168915.0, "usd": 3051657.0}, {"sub": "마포구", "krw": 1885530000.0, "usd": 1364069.0}, {"sub": "강서구", "krw": 1619946729.0, "usd": 1183042.0}, {"sub": "중구", "krw": 1570966461.0, "usd": 1157414.0}, {"sub": "영등포구", "krw": 1505974999.0, "usd": 1079754.0}, {"sub": "송파구", "krw": 1225169731.0, "usd": 867076.0}, {"sub": "용산구", "krw": 965253094.0, "usd": 721854.0}, {"sub": "강동구", "krw": 963315820.0, "usd": 692331.0}, {"sub": "서대문구", "krw": 629174819.0, "usd": 465341.0}, {"sub": "동대문구", "krw": 609724364.0, "usd": 444912.0}, {"sub": "광진구", "krw": 556000909.0, "usd": 396051.0}, {"sub": "성동구", "krw": 523469001.0, "usd": 402451.0}, {"sub": "노원구", "krw": 507332364.0, "usd": 373052.0}, {"sub": "은평구", "krw": 403900728.0, "usd": 310199.0}, {"sub": "강북구", "krw": 299755364.0, "usd": 216406.0}, {"sub": "성북구", "krw": 258283910.0, "usd": 182968.0}, {"sub": "동작구", "krw": 226532455.0, "usd": 171365.0}, {"sub": "양천구", "krw": 212307910.0, "usd": 155275.0}, {"sub": "구로구", "krw": 128031182.0, "usd": 96192.0}, {"sub": "종로구", "krw": 120821545.0, "usd": 86988.0}], "세종": [{"sub": "세종시", "krw": 430341091.0, "usd": 314498.0}], "울산": [{"sub": "남구", "krw": 1548090457.0, "usd": 1150402.0}, {"sub": "동구", "krw": 280500909.0, "usd": 205118.0}, {"sub": "중구", "krw": 146243000.0, "usd": 99394.0}, {"sub": "북구", "krw": 123515727.0, "usd": 92799.0}, {"sub": "울주군", "krw": 16363636.0, "usd": 12627.0}], "인천": [{"sub": "서구", "krw": 794119456.0, "usd": 567208.0}, {"sub": "부평구", "krw": 595269364.0, "usd": 425771.0}, {"sub": "연수구", "krw": 401035364.0, "usd": 294086.0}, {"sub": "인천광역시 부평", "krw": 309839819.0, "usd": 232787.0}, {"sub": "남동구", "krw": 256725364.0, "usd": 183533.0}, {"sub": "인천시 서구", "krw": 132606636.0, "usd": 95158.0}, {"sub": "인천시 연수구", "krw": 128031182.0, "usd": 96192.0}, {"sub": "인천광역시 남동구", "krw": 105372727.0, "usd": 80003.0}], "전라남도": [{"sub": "여수시", "krw": 302249637.0, "usd": 213700.0}, {"sub": "광양시", "krw": 154095455.0, "usd": 106835.0}, {"sub": "순천시", "krw": 128163182.0, "usd": 96291.0}], "전라북도": [{"sub": "전주시", "krw": 532040636.0, "usd": 389147.0}, {"sub": "완주군", "krw": 128061182.0, "usd": 93012.0}, {"sub": "전북 군산", "krw": 128031182.0, "usd": 96192.0}], "제주도": [{"sub": "제주", "krw": 128061182.0, "usd": 92781.0}], "충청남도": [{"sub": "천안시", "krw": 1072533817.0, "usd": 770018.0}, {"sub": "서산시", "krw": 386345092.0, "usd": 272933.0}, {"sub": "아산시", "krw": 294570637.0, "usd": 207420.0}], "충청북도": [{"sub": "청주시", "krw": 1358077457.0, "usd": 1009181.0}, {"sub": "충주시", "krw": 287908546.0, "usd": 205282.0}, {"sub": "충북 청주", "krw": 252839091.0, "usd": 181862.0}]}, "nv_data": {"by_cat": [{"type": "Existing Business", "product": "Gentle Series", "count": 85}, {"type": "Existing Business", "product": "Others", "count": 61}, {"type": "Existing Business", "product": "PicoWay", "count": 26}, {"type": "Existing Business", "product": "VBP", "count": 32}, {"type": "New Business", "product": "Gentle Series", "count": 278}, {"type": "New Business", "product": "Others", "count": 49}, {"type": "New Business", "product": "PicoWay", "count": 19}, {"type": "New Business", "product": "VBP", "count": 101}], "by_year_cat": [{"year": 2023, "type": "Existing Business", "product": "Gentle Series", "count": 20}, {"year": 2023, "type": "Existing Business", "product": "Others", "count": 13}, {"year": 2023, "type": "Existing Business", "product": "PicoWay", "count": 9}, {"year": 2023, "type": "Existing Business", "product": "VBP", "count": 18}, {"year": 2023, "type": "New Business", "product": "Gentle Series", "count": 37}, {"year": 2023, "type": "New Business", "product": "Others", "count": 4}, {"year": 2023, "type": "New Business", "product": "PicoWay", "count": 8}, {"year": 2023, "type": "New Business", "product": "VBP", "count": 35}, {"year": 2024, "type": "Existing Business", "product": "Gentle Series", "count": 27}, {"year": 2024, "type": "Existing Business", "product": "Others", "count": 12}, {"year": 2024, "type": "Existing Business", "product": "PicoWay", "count": 7}, {"year": 2024, "type": "Existing Business", "product": "VBP", "count": 4}, {"year": 2024, "type": "New Business", "product": "Gentle Series", "count": 80}, {"year": 2024, "type": "New Business", "product": "Others", "count": 7}, {"year": 2024, "type": "New Business", "product": "PicoWay", "count": 6}, {"year": 2024, "type": "New Business", "product": "VBP", "count": 33}, {"year": 2025, "type": "Existing Business", "product": "Gentle Series", "count": 25}, {"year": 2025, "type": "Existing Business", "product": "Others", "count": 27}, {"year": 2025, "type": "Existing Business", "product": "PicoWay", "count": 7}, {"year": 2025, "type": "Existing Business", "product": "VBP", "count": 8}, {"year": 2025, "type": "New Business", "product": "Gentle Series", "count": 122}, {"year": 2025, "type": "New Business", "product": "Others", "count": 28}, {"year": 2025, "type": "New Business", "product": "PicoWay", "count": 5}, {"year": 2025, "type": "New Business", "product": "VBP", "count": 28}, {"year": 2026, "type": "Existing Business", "product": "Gentle Series", "count": 13}, {"year": 2026, "type": "Existing Business", "product": "Others", "count": 9}, {"year": 2026, "type": "Existing Business", "product": "PicoWay", "count": 3}, {"year": 2026, "type": "Existing Business", "product": "VBP", "count": 2}, {"year": 2026, "type": "New Business", "product": "Gentle Series", "count": 39}, {"year": 2026, "type": "New Business", "product": "Others", "count": 10}, {"year": 2026, "type": "New Business", "product": "VBP", "count": 5}], "by_q_cat": [{"q": "23Q1", "type": "Existing Business", "product": "Gentle Series", "count": 7}, {"q": "23Q1", "type": "Existing Business", "product": "Others", "count": 4}, {"q": "23Q1", "type": "Existing Business", "product": "PicoWay", "count": 2}, {"q": "23Q1", "type": "Existing Business", "product": "VBP", "count": 2}, {"q": "23Q1", "type": "New Business", "product": "Gentle Series", "count": 4}, {"q": "23Q1", "type": "New Business", "product": "PicoWay", "count": 3}, {"q": "23Q1", "type": "New Business", "product": "VBP", "count": 6}, {"q": "23Q2", "type": "Existing Business", "product": "Gentle Series", "count": 2}, {"q": "23Q2", "type": "Existing Business", "product": "Others", "count": 3}, {"q": "23Q2", "type": "Existing Business", "product": "PicoWay", "count": 6}, {"q": "23Q2", "type": "Existing Business", "product": "VBP", "count": 5}, {"q": "23Q2", "type": "New Business", "product": "Gentle Series", "count": 10}, {"q": "23Q2", "type": "New Business", "product": "Others", "count": 3}, {"q": "23Q2", "type": "New Business", "product": "PicoWay", "count": 2}, {"q": "23Q2", "type": "New Business", "product": "VBP", "count": 9}, {"q": "23Q3", "type": "Existing Business", "product": "Gentle Series", "count": 5}, {"q": "23Q3", "type": "Existing Business", "product": "Others", "count": 2}, {"q": "23Q3", "type": "Existing Business", "product": "VBP", "count": 5}, {"q": "23Q3", "type": "New Business", "product": "Gentle Series", "count": 15}, {"q": "23Q3", "type": "New Business", "product": "VBP", "count": 9}, {"q": "23Q4", "type": "Existing Business", "product": "Gentle Series", "count": 6}, {"q": "23Q4", "type": "Existing Business", "product": "Others", "count": 4}, {"q": "23Q4", "type": "Existing Business", "product": "PicoWay", "count": 1}, {"q": "23Q4", "type": "Existing Business", "product": "VBP", "count": 6}, {"q": "23Q4", "type": "New Business", "product": "Gentle Series", "count": 8}, {"q": "23Q4", "type": "New Business", "product": "Others", "count": 1}, {"q": "23Q4", "type": "New Business", "product": "PicoWay", "count": 3}, {"q": "23Q4", "type": "New Business", "product": "VBP", "count": 11}, {"q": "24Q1", "type": "Existing Business", "product": "Gentle Series", "count": 5}, {"q": "24Q1", "type": "Existing Business", "product": "Others", "count": 2}, {"q": "24Q1", "type": "Existing Business", "product": "PicoWay", "count": 2}, {"q": "24Q1", "type": "Existing Business", "product": "VBP", "count": 2}, {"q": "24Q1", "type": "New Business", "product": "Gentle Series", "count": 10}, {"q": "24Q1", "type": "New Business", "product": "Others", "count": 1}, {"q": "24Q1", "type": "New Business", "product": "PicoWay", "count": 2}, {"q": "24Q1", "type": "New Business", "product": "VBP", "count": 9}, {"q": "24Q2", "type": "Existing Business", "product": "Gentle Series", "count": 10}, {"q": "24Q2", "type": "Existing Business", "product": "Others", "count": 4}, {"q": "24Q2", "type": "Existing Business", "product": "PicoWay", "count": 2}, {"q": "24Q2", "type": "Existing Business", "product": "VBP", "count": 1}, {"q": "24Q2", "type": "New Business", "product": "Gentle Series", "count": 20}, {"q": "24Q2", "type": "New Business", "product": "PicoWay", "count": 1}, {"q": "24Q2", "type": "New Business", "product": "VBP", "count": 9}, {"q": "24Q3", "type": "Existing Business", "product": "Gentle Series", "count": 6}, {"q": "24Q3", "type": "Existing Business", "product": "Others", "count": 3}, {"q": "24Q3", "type": "Existing Business", "product": "PicoWay", "count": 2}, {"q": "24Q3", "type": "New Business", "product": "Gentle Series", "count": 23}, {"q": "24Q3", "type": "New Business", "product": "Others", "count": 2}, {"q": "24Q3", "type": "New Business", "product": "PicoWay", "count": 1}, {"q": "24Q3", "type": "New Business", "product": "VBP", "count": 9}, {"q": "24Q4", "type": "Existing Business", "product": "Gentle Series", "count": 6}, {"q": "24Q4", "type": "Existing Business", "product": "Others", "count": 3}, {"q": "24Q4", "type": "Existing Business", "product": "PicoWay", "count": 1}, {"q": "24Q4", "type": "Existing Business", "product": "VBP", "count": 1}, {"q": "24Q4", "type": "New Business", "product": "Gentle Series", "count": 27}, {"q": "24Q4", "type": "New Business", "product": "Others", "count": 4}, {"q": "24Q4", "type": "New Business", "product": "PicoWay", "count": 2}, {"q": "24Q4", "type": "New Business", "product": "VBP", "count": 6}, {"q": "25Q1", "type": "Existing Business", "product": "Gentle Series", "count": 5}, {"q": "25Q1", "type": "Existing Business", "product": "Others", "count": 2}, {"q": "25Q1", "type": "Existing Business", "product": "PicoWay", "count": 3}, {"q": "25Q1", "type": "New Business", "product": "Gentle Series", "count": 32}, {"q": "25Q1", "type": "New Business", "product": "Others", "count": 7}, {"q": "25Q1", "type": "New Business", "product": "PicoWay", "count": 2}, {"q": "25Q1", "type": "New Business", "product": "VBP", "count": 7}, {"q": "25Q2", "type": "Existing Business", "product": "Gentle Series", "count": 10}, {"q": "25Q2", "type": "Existing Business", "product": "Others", "count": 10}, {"q": "25Q2", "type": "Existing Business", "product": "PicoWay", "count": 1}, {"q": "25Q2", "type": "Existing Business", "product": "VBP", "count": 2}, {"q": "25Q2", "type": "New Business", "product": "Gentle Series", "count": 29}, {"q": "25Q2", "type": "New Business", "product": "Others", "count": 6}, {"q": "25Q2", "type": "New Business", "product": "PicoWay", "count": 1}, {"q": "25Q2", "type": "New Business", "product": "VBP", "count": 5}, {"q": "25Q3", "type": "Existing Business", "product": "Gentle Series", "count": 3}, {"q": "25Q3", "type": "Existing Business", "product": "Others", "count": 12}, {"q": "25Q3", "type": "Existing Business", "product": "PicoWay", "count": 2}, {"q": "25Q3", "type": "Existing Business", "product": "VBP", "count": 3}, {"q": "25Q3", "type": "New Business", "product": "Gentle Series", "count": 32}, {"q": "25Q3", "type": "New Business", "product": "Others", "count": 9}, {"q": "25Q3", "type": "New Business", "product": "VBP", "count": 7}, {"q": "25Q4", "type": "Existing Business", "product": "Gentle Series", "count": 7}, {"q": "25Q4", "type": "Existing Business", "product": "Others", "count": 3}, {"q": "25Q4", "type": "Existing Business", "product": "PicoWay", "count": 1}, {"q": "25Q4", "type": "Existing Business", "product": "VBP", "count": 3}, {"q": "25Q4", "type": "New Business", "product": "Gentle Series", "count": 29}, {"q": "25Q4", "type": "New Business", "product": "Others", "count": 6}, {"q": "25Q4", "type": "New Business", "product": "PicoWay", "count": 2}, {"q": "25Q4", "type": "New Business", "product": "VBP", "count": 9}, {"q": "26Q1", "type": "Existing Business", "product": "Gentle Series", "count": 13}, {"q": "26Q1", "type": "Existing Business", "product": "Others", "count": 9}, {"q": "26Q1", "type": "Existing Business", "product": "PicoWay", "count": 3}, {"q": "26Q1", "type": "Existing Business", "product": "VBP", "count": 2}, {"q": "26Q1", "type": "New Business", "product": "Gentle Series", "count": 39}, {"q": "26Q1", "type": "New Business", "product": "Others", "count": 10}, {"q": "26Q1", "type": "New Business", "product": "VBP", "count": 5}], "units_by_cat": [{"type": "Existing Business", "product": "Gentle Series", "units": 85}, {"type": "Existing Business", "product": "Others", "units": 71}, {"type": "Existing Business", "product": "PicoWay", "units": 32}, {"type": "Existing Business", "product": "VBP", "units": 32}, {"type": "New Business", "product": "Gentle Series", "units": 280}, {"type": "New Business", "product": "Others", "units": 49}, {"type": "New Business", "product": "PicoWay", "units": 19}, {"type": "New Business", "product": "VBP", "units": 101}], "units_by_year": [{"year": 2023, "type": "Existing Business", "product": "Gentle Series", "units": 20}, {"year": 2023, "type": "Existing Business", "product": "Others", "units": 17}, {"year": 2023, "type": "Existing Business", "product": "PicoWay", "units": 9}, {"year": 2023, "type": "Existing Business", "product": "VBP", "units": 18}, {"year": 2023, "type": "New Business", "product": "Gentle Series", "units": 37}, {"year": 2023, "type": "New Business", "product": "Others", "units": 4}, {"year": 2023, "type": "New Business", "product": "PicoWay", "units": 8}, {"year": 2023, "type": "New Business", "product": "VBP", "units": 35}, {"year": 2024, "type": "Existing Business", "product": "Gentle Series", "units": 27}, {"year": 2024, "type": "Existing Business", "product": "Others", "units": 16}, {"year": 2024, "type": "Existing Business", "product": "PicoWay", "units": 10}, {"year": 2024, "type": "Existing Business", "product": "VBP", "units": 4}, {"year": 2024, "type": "New Business", "product": "Gentle Series", "units": 82}, {"year": 2024, "type": "New Business", "product": "Others", "units": 7}, {"year": 2024, "type": "New Business", "product": "PicoWay", "units": 6}, {"year": 2024, "type": "New Business", "product": "VBP", "units": 33}, {"year": 2025, "type": "Existing Business", "product": "Gentle Series", "units": 25}, {"year": 2025, "type": "Existing Business", "product": "Others", "units": 29}, {"year": 2025, "type": "Existing Business", "product": "PicoWay", "units": 10}, {"year": 2025, "type": "Existing Business", "product": "VBP", "units": 8}, {"year": 2025, "type": "New Business", "product": "Gentle Series", "units": 122}, {"year": 2025, "type": "New Business", "product": "Others", "units": 28}, {"year": 2025, "type": "New Business", "product": "PicoWay", "units": 5}, {"year": 2025, "type": "New Business", "product": "VBP", "units": 28}, {"year": 2026, "type": "Existing Business", "product": "Gentle Series", "units": 13}, {"year": 2026, "type": "Existing Business", "product": "Others", "units": 9}, {"year": 2026, "type": "Existing Business", "product": "PicoWay", "units": 3}, {"year": 2026, "type": "Existing Business", "product": "VBP", "units": 2}, {"year": 2026, "type": "New Business", "product": "Gentle Series", "units": 39}, {"year": 2026, "type": "New Business", "product": "Others", "units": 10}, {"year": 2026, "type": "New Business", "product": "VBP", "units": 5}]}};
+const DATA = {"yearly_total": {"2023": {"sales": 12639940.0, "recurring": 2397567.0, "total": 15037507.0, "sales_krw": 16558840827.0, "recurring_krw": 3133442037.0, "total_krw": 19692282864.0}, "2024": {"sales": 15974520.0, "recurring": 2676245.0, "total": 18650765.0, "sales_krw": 21262080860.0, "recurring_krw": 3562080805.0, "total_krw": 24824161665.0}, "2025": {"sales": 19290572.0, "recurring": 3198834.0, "total": 22489406.0, "sales_krw": 27410415211.0, "recurring_krw": 4544639694.0, "total_krw": 31955054904.0}, "2026": {"sales": 6151986.0, "recurring": 882882.0, "total": 7034868.0, "sales_krw": 9080998549.0, "recurring_krw": 1292633691.0, "total_krw": 10373632240.0}}, "quarterly": [{"year": 2023, "q": "23Q1", "cat": "RECURRING", "usd": 618977.0, "krw": 788849416.0}, {"year": 2023, "q": "23Q1", "cat": "SALES", "usd": 2688795.0, "krw": 3475215818.0}, {"year": 2023, "q": "23Q2", "cat": "RECURRING", "usd": 658769.0, "krw": 866768474.0}, {"year": 2023, "q": "23Q2", "cat": "SALES", "usd": 3374974.0, "krw": 4427334818.0}, {"year": 2023, "q": "23Q3", "cat": "RECURRING", "usd": 533819.0, "krw": 704508304.0}, {"year": 2023, "q": "23Q3", "cat": "SALES", "usd": 3192480.0, "krw": 4213177004.0}, {"year": 2023, "q": "23Q4", "cat": "RECURRING", "usd": 586002.0, "krw": 773315843.0}, {"year": 2023, "q": "23Q4", "cat": "SALES", "usd": 3383691.0, "krw": 4443113187.0}, {"year": 2024, "q": "24Q1", "cat": "RECURRING", "usd": 613927.0, "krw": 817136656.0}, {"year": 2024, "q": "24Q1", "cat": "SALES", "usd": 3023439.0, "krw": 4024196098.0}, {"year": 2024, "q": "24Q2", "cat": "RECURRING", "usd": 649321.0, "krw": 864245616.0}, {"year": 2024, "q": "24Q2", "cat": "SALES", "usd": 4378477.0, "krw": 5827751827.0}, {"year": 2024, "q": "24Q3", "cat": "RECURRING", "usd": 693501.0, "krw": 923049718.0}, {"year": 2024, "q": "24Q3", "cat": "SALES", "usd": 4136984.0, "krw": 5506324192.0}, {"year": 2024, "q": "24Q4", "cat": "RECURRING", "usd": 719496.0, "krw": 957648814.0}, {"year": 2024, "q": "24Q4", "cat": "SALES", "usd": 4435620.0, "krw": 5903808743.0}, {"year": 2025, "q": "25Q1", "cat": "RECURRING", "usd": 646336.0, "krw": 939928438.0}, {"year": 2025, "q": "25Q1", "cat": "SALES", "usd": 4664251.0, "krw": 6791468922.0}, {"year": 2025, "q": "25Q2", "cat": "RECURRING", "usd": 790112.0, "krw": 1107688004.0}, {"year": 2025, "q": "25Q2", "cat": "SALES", "usd": 4911524.0, "krw": 6815000820.0}, {"year": 2025, "q": "25Q3", "cat": "RECURRING", "usd": 842598.0, "krw": 1166879318.0}, {"year": 2025, "q": "25Q3", "cat": "SALES", "usd": 4865918.0, "krw": 6752450734.0}, {"year": 2025, "q": "25Q4", "cat": "RECURRING", "usd": 919789.0, "krw": 1330143933.0}, {"year": 2025, "q": "25Q4", "cat": "SALES", "usd": 4848880.0, "krw": 7051494735.0}, {"year": 2026, "q": "26Q1", "cat": "RECURRING", "usd": 882882.0, "krw": 1292633691.0}, {"year": 2026, "q": "26Q1", "cat": "SALES", "usd": 6151986.0, "krw": 9080998549.0}], "qoq": [{"q": "23Q1", "total": 3307773.0, "total_krw": 3475215818, "qoq": null, "qoq_krw": null}, {"q": "23Q2", "total": 4033742.0, "total_krw": 4427334818, "qoq": 27.4, "qoq_krw": 27.4}, {"q": "23Q3", "total": 3726299.0, "total_krw": 4213177004, "qoq": -4.84, "qoq_krw": -4.84}, {"q": "23Q4", "total": 3969693.0, "total_krw": 4443113187, "qoq": 5.46, "qoq_krw": 5.46}, {"q": "24Q1", "total": 3637366.0, "total_krw": 4024196098, "qoq": -9.43, "qoq_krw": -9.43}, {"q": "24Q2", "total": 5027798.0, "total_krw": 5827751827, "qoq": 44.82, "qoq_krw": 44.82}, {"q": "24Q3", "total": 4830485.0, "total_krw": 5506324192, "qoq": -5.52, "qoq_krw": -5.52}, {"q": "24Q4", "total": 5155116.0, "total_krw": 5903808743, "qoq": 7.22, "qoq_krw": 7.22}, {"q": "25Q1", "total": 5310586.0, "total_krw": 6791468922, "qoq": 15.04, "qoq_krw": 15.04}, {"q": "25Q2", "total": 5701635.0, "total_krw": 6815000820, "qoq": 0.35, "qoq_krw": 0.35}, {"q": "25Q3", "total": 5708516.0, "total_krw": 6752450734, "qoq": -0.92, "qoq_krw": -0.92}, {"q": "25Q4", "total": 5768669.0, "total_krw": 7051494735, "qoq": 4.43, "qoq_krw": 4.43}, {"q": "26Q1", "total": 7034868.0, "total_krw": 9080998549, "qoq": 28.78, "qoq_krw": 28.78}], "product_by_year": [{"year": 2023, "product": "Gentle Series", "usd": 5776124.0, "krw": 7318988554.0, "units": 57}, {"year": 2023, "product": "Others", "usd": 790640.0, "krw": 1035013636.0, "units": 31}, {"year": 2023, "product": "PicoWay", "usd": 2052368.0, "krw": 2664090910.0, "units": 17}, {"year": 2023, "product": "VBP", "usd": 4225619.0, "krw": 5540747727.0, "units": 53}, {"year": 2024, "product": "Gentle Series", "usd": 10996861.0, "krw": 14636818294.0, "units": 109}, {"year": 2024, "product": "Others", "usd": 397821.0, "krw": 529500004.0, "units": 24}, {"year": 2024, "product": "PicoWay", "usd": 1586653.0, "krw": 2111834638.0, "units": 16}, {"year": 2024, "product": "VBP", "usd": 2993185.0, "krw": 3983927924.0, "units": 37}, {"year": 2025, "product": "Gentle Series", "usd": 14325385.0, "krw": 20113963008.0, "units": 147}, {"year": 2025, "product": "Others", "usd": 848071.0, "krw": 1178234003.0, "units": 58}, {"year": 2025, "product": "PicoWay", "usd": 1577284.0, "krw": 2220850640.0, "units": 15}, {"year": 2025, "product": "VBP", "usd": 2765228.0, "krw": 3897367560.0, "units": 36}, {"year": 2026, "product": "Gentle Series", "usd": 5175060.0, "krw": 7629272458.0, "units": 52}, {"year": 2026, "product": "Others", "usd": 180660.0, "krw": 266290908.0, "units": 19}, {"year": 2026, "product": "PicoWay", "usd": 276639.0, "krw": 417281818.0, "units": 3}, {"year": 2026, "product": "VBP", "usd": 519627.0, "krw": 768153365.0, "units": 7}], "product_by_quarter": [{"year": 2023, "q": "23Q1", "product": "Gentle Series", "usd": 1295320.0, "krw": 1416820365.0, "units": 11}, {"year": 2023, "q": "23Q1", "product": "Others", "usd": 351202.0, "krw": 457954544.0, "units": 11}, {"year": 2023, "q": "23Q1", "product": "PicoWay", "usd": 592116.0, "krw": 755554546.0, "units": 5}, {"year": 2023, "q": "23Q1", "product": "VBP", "usd": 653661.0, "krw": 844886363.0, "units": 8}, {"year": 2023, "q": "23Q2", "product": "Gentle Series", "usd": 1102074.0, "krw": 1446059821.0, "units": 12}, {"year": 2023, "q": "23Q2", "product": "Others", "usd": 207391.0, "krw": 270218182.0, "units": 13}, {"year": 2023, "q": "23Q2", "product": "PicoWay", "usd": 981976.0, "krw": 1287309091.0, "units": 8}, {"year": 2023, "q": "23Q2", "product": "VBP", "usd": 1084839.0, "krw": 1423747724.0, "units": 14}, {"year": 2023, "q": "23Q3", "product": "Gentle Series", "usd": 2001565.0, "krw": 2633731548.0, "units": 20}, {"year": 2023, "q": "23Q3", "product": "Others", "usd": 83046.0, "krw": 110418182.0, "units": 2}, {"year": 2023, "q": "23Q3", "product": "VBP", "usd": 1107869.0, "krw": 1469027274.0, "units": 14}, {"year": 2023, "q": "23Q4", "product": "Gentle Series", "usd": 1377165.0, "krw": 1822376820.0, "units": 14}, {"year": 2023, "q": "23Q4", "product": "Others", "usd": 149001.0, "krw": 196420000.0, "units": 5}, {"year": 2023, "q": "23Q4", "product": "PicoWay", "usd": 478276.0, "krw": 621227273.0, "units": 4}, {"year": 2023, "q": "23Q4", "product": "VBP", "usd": 1379250.0, "krw": 1823086366.0, "units": 17}, {"year": 2024, "q": "24Q1", "product": "Gentle Series", "usd": 1618214.0, "krw": 2153284093.0, "units": 16}, {"year": 2024, "q": "24Q1", "product": "Others", "usd": 123840.0, "krw": 164781818.0, "units": 9}, {"year": 2024, "q": "24Q1", "product": "PicoWay", "usd": 612788.0, "krw": 815418185.0, "units": 7}, {"year": 2024, "q": "24Q1", "product": "VBP", "usd": 668597.0, "krw": 889712002.0, "units": 10}, {"year": 2024, "q": "24Q2", "product": "Gentle Series", "usd": 3280053.0, "krw": 4364654544.0, "units": 33}, {"year": 2024, "q": "24Q2", "product": "Others", "usd": 33744.0, "krw": 45000000.0, "units": 3}, {"year": 2024, "q": "24Q2", "product": "PicoWay", "usd": 283500.0, "krw": 377240000.0, "units": 3}, {"year": 2024, "q": "24Q2", "product": "VBP", "usd": 781180.0, "krw": 1040857283.0, "units": 9}, {"year": 2024, "q": "24Q3", "product": "Gentle Series", "usd": 2689531.0, "krw": 3578818193.0, "units": 26}, {"year": 2024, "q": "24Q3", "product": "Others", "usd": 105656.0, "krw": 140500003.0, "units": 4}, {"year": 2024, "q": "24Q3", "product": "PicoWay", "usd": 512250.0, "krw": 681640000.0, "units": 4}, {"year": 2024, "q": "24Q3", "product": "VBP", "usd": 829547.0, "krw": 1105365996.0, "units": 9}, {"year": 2024, "q": "24Q4", "product": "Gentle Series", "usd": 3409063.0, "krw": 4540061464.0, "units": 34}, {"year": 2024, "q": "24Q4", "product": "Others", "usd": 134581.0, "krw": 179218183.0, "units": 8}, {"year": 2024, "q": "24Q4", "product": "PicoWay", "usd": 178115.0, "krw": 237536453.0, "units": 2}, {"year": 2024, "q": "24Q4", "product": "VBP", "usd": 713861.0, "krw": 947992643.0, "units": 9}, {"year": 2025, "q": "25Q1", "product": "Gentle Series", "usd": 3616644.0, "krw": 5262100021.0, "units": 37}, {"year": 2025, "q": "25Q1", "product": "Others", "usd": 172937.0, "krw": 251618182.0, "units": 15}, {"year": 2025, "q": "25Q1", "product": "PicoWay", "usd": 401614.0, "krw": 584345455.0, "units": 4}, {"year": 2025, "q": "25Q1", "product": "VBP", "usd": 473056.0, "krw": 688405264.0, "units": 5}, {"year": 2025, "q": "25Q2", "product": "Gentle Series", "usd": 3674681.0, "krw": 5098045465.0, "units": 38}, {"year": 2025, "q": "25Q2", "product": "Others", "usd": 224411.0, "krw": 311354546.0, "units": 15}, {"year": 2025, "q": "25Q2", "product": "PicoWay", "usd": 339031.0, "krw": 470381818.0, "units": 3}, {"year": 2025, "q": "25Q2", "product": "VBP", "usd": 673401.0, "krw": 935219011.0, "units": 10}, {"year": 2025, "q": "25Q3", "product": "Gentle Series", "usd": 3444463.0, "krw": 4781463632.0, "units": 35}, {"year": 2025, "q": "25Q3", "product": "Others", "usd": 204362.0, "krw": 283627273.0, "units": 13}, {"year": 2025, "q": "25Q3", "product": "PicoWay", "usd": 435025.0, "krw": 603950000.0, "units": 4}, {"year": 2025, "q": "25Q3", "product": "VBP", "usd": 782068.0, "krw": 1083409829.0, "units": 10}, {"year": 2025, "q": "25Q4", "product": "Gentle Series", "usd": 3589597.0, "krw": 4972353890.0, "units": 37}, {"year": 2025, "q": "25Q4", "product": "Others", "usd": 246361.0, "krw": 331634002.0, "units": 15}, {"year": 2025, "q": "25Q4", "product": "PicoWay", "usd": 401614.0, "krw": 562173367.0, "units": 4}, {"year": 2025, "q": "25Q4", "product": "VBP", "usd": 836703.0, "krw": 1190333456.0, "units": 11}, {"year": 2026, "q": "26Q1", "product": "Gentle Series", "usd": 5175060.0, "krw": 7629272458.0, "units": 52}, {"year": 2026, "q": "26Q1", "product": "Others", "usd": 180660.0, "krw": 266290908.0, "units": 19}, {"year": 2026, "q": "26Q1", "product": "PicoWay", "usd": 276639.0, "krw": 417281818.0, "units": 3}, {"year": 2026, "q": "26Q1", "product": "VBP", "usd": 519627.0, "krw": 768153365.0, "units": 7}], "product_detail": [{"year": 2023, "category": "Gentle Series", "name": "GentleMax Pro Plus", "usd": 4652431.0, "krw": 5873106733.0, "units": 44}, {"year": 2023, "category": "Gentle Series", "name": "GentleLase Pro", "usd": 159993.0, "krw": 211190910.0, "units": 2}, {"year": 2023, "category": "Gentle Series", "name": "GentleMax Pro", "usd": 963700.0, "krw": 1234690911.0, "units": 11}, {"year": 2023, "category": "VBP", "name": "Vbeam Prima", "usd": 2865955.0, "krw": 3760431818.0, "units": 30}, {"year": 2023, "category": "VBP", "name": "Vbeam Perfecta", "usd": 1359664.0, "krw": 1780315909.0, "units": 23}, {"year": 2023, "category": "PicoWay", "name": "PicoWay", "usd": 2052368.0, "krw": 2664090910.0, "units": 17}, {"year": 2023, "category": "Others", "name": "Nordlys", "usd": 181464.0, "krw": 239527274.0, "units": 4}, {"year": 2023, "category": "Others", "name": "Frax Pro", "usd": 381659.0, "krw": 499999999.0, "units": 14}, {"year": 2023, "category": "Others", "name": "Matrix", "usd": 227517.0, "krw": 295486363.0, "units": 13}, {"year": 2024, "category": "Gentle Series", "name": "GentleMax Pro Plus", "usd": 9781363.0, "krw": 13018272828.0, "units": 94}, {"year": 2024, "category": "Gentle Series", "name": "GentleLase Pro", "usd": 154350.0, "krw": 205800000.0, "units": 2}, {"year": 2024, "category": "Gentle Series", "name": "GentleMax Pro", "usd": 1061148.0, "krw": 1412745466.0, "units": 13}, {"year": 2024, "category": "VBP", "name": "Vbeam Prima", "usd": 2270928.0, "krw": 3022450652.0, "units": 25}, {"year": 2024, "category": "VBP", "name": "Vbeam Perfecta", "usd": 722257.0, "krw": 961477272.0, "units": 12}, {"year": 2024, "category": "PicoWay", "name": "PicoWay", "usd": 1586653.0, "krw": 2111834638.0, "units": 16}, {"year": 2024, "category": "Others", "name": "Nordlys", "usd": 33158.0, "krw": 44210527.0, "units": 1}, {"year": 2024, "category": "Others", "name": "Frax Pro", "usd": 182604.0, "krw": 243471822.0, "units": 7}, {"year": 2024, "category": "Others", "name": "Matrix", "usd": 182059.0, "krw": 241818155.0, "units": 16}, {"year": 2025, "category": "Gentle Series", "name": "GentleMax Pro Plus", "usd": 13247493.0, "krw": 18602690264.0, "units": 133}, {"year": 2025, "category": "Gentle Series", "name": "GentleLase Pro", "usd": 321743.0, "krw": 451363637.0, "units": 4}, {"year": 2025, "category": "Gentle Series", "name": "GentleMax Pro", "usd": 756149.0, "krw": 1059909107.0, "units": 10}, {"year": 2025, "category": "VBP", "name": "Vbeam Prima", "usd": 1787494.0, "krw": 2519149372.0, "units": 21}, {"year": 2025, "category": "VBP", "name": "Vbeam Perfecta", "usd": 977734.0, "krw": 1378218188.0, "units": 15}, {"year": 2025, "category": "PicoWay", "name": "PicoWay", "usd": 1577284.0, "krw": 2220850640.0, "units": 15}, {"year": 2025, "category": "Others", "name": "Nordlys", "usd": 32805.0, "krw": 46021053.0, "units": 1}, {"year": 2025, "category": "Others", "name": "Frax Pro", "usd": 395353.0, "krw": 548481822.0, "units": 15}, {"year": 2025, "category": "Others", "name": "Matrix", "usd": 419913.0, "krw": 583731128.0, "units": 42}, {"year": 2026, "category": "Gentle Series", "name": "GentleMax Pro Plus", "usd": 4824559.0, "krw": 7111000000.0, "units": 48}, {"year": 2026, "category": "Gentle Series", "name": "GentleLase Pro", "usd": 101818.0, "krw": 150000000.0, "units": 1}, {"year": 2026, "category": "Gentle Series", "name": "GentleMax Pro", "usd": 248683.0, "krw": 368272458.0, "units": 3}, {"year": 2026, "category": "VBP", "name": "Vbeam Prima", "usd": 305455.0, "krw": 451244365.0, "units": 4}, {"year": 2026, "category": "VBP", "name": "Vbeam Perfecta", "usd": 214172.0, "krw": 316909000.0, "units": 3}, {"year": 2026, "category": "PicoWay", "name": "PicoWay", "usd": 276639.0, "krw": 417281818.0, "units": 3}, {"year": 2026, "category": "Others", "name": "Nordlys", "usd": 34091.0, "krw": 50000000.0, "units": 1}, {"year": 2026, "category": "Others", "name": "Frax Pro", "usd": 34091.0, "krw": 50000000.0, "units": 2}, {"year": 2026, "category": "Others", "name": "Matrix", "usd": 112478.0, "krw": 166290908.0, "units": 16}], "region_data": [{"reg": "Seoul", "usd": 20042784.0, "krw": 27248102377.0, "drill": [{"sub": "Gangnam-gu", "usd": 7164472.0, "krw": 9691238421.0}, {"sub": "Seocho-gu", "usd": 2362370.0, "krw": 3241086364.0}, {"sub": "Mapo-gu", "usd": 1324749.0, "krw": 1782200000.0}, {"sub": "Others", "usd": 9191193.0, "krw": 12533577592.0}]}, {"reg": "Gyeonggi", "usd": 13958920.0, "krw": 19284240728.0, "drill": [{"sub": "Seongnam-si", "usd": 3174242.0, "krw": 4321045455.0}, {"sub": "Suwon-si", "usd": 1586653.0, "krw": 2154318182.0}, {"sub": "Goyang-si", "usd": 1102074.0, "krw": 1498059821.0}, {"sub": "Others", "usd": 8095951.0, "krw": 11310817270.0}]}, {"reg": "Busan", "usd": 4652431.0, "krw": 6348106733.0, "drill": [{"sub": "Haeundae-gu", "usd": 1543503.0, "krw": 2101345454.0}, {"sub": "Busanjin-gu", "usd": 1102074.0, "krw": 1498059821.0}, {"sub": "Others", "usd": 2006854.0, "krw": 2748701458.0}]}, {"reg": "Daegu", "usd": 3816590.0, "krw": 5192454545.0, "drill": [{"sub": "Jung-gu", "usd": 1586653.0, "krw": 2154318182.0}, {"sub": "Suseong-gu", "usd": 1102074.0, "krw": 1498059821.0}, {"sub": "Others", "usd": 1127863.0, "krw": 1540076542.0}]}, {"reg": "Incheon", "usd": 2275170.0, "krw": 3105486364.0, "drill": [{"sub": "Namdong-gu", "usd": 1102074.0, "krw": 1498059821.0}, {"sub": "Yeonsu-gu", "usd": 512250.0, "krw": 698164000.0}, {"sub": "Others", "usd": 660846.0, "krw": 909262543.0}]}, {"reg": "Others", "usd": 18466651.0, "krw": 25526000000.0, "drill": [{"sub": "Gwangju", "usd": 4652431.0, "krw": 6401000000.0}, {"sub": "Daejeon", "usd": 3174242.0, "krw": 4381000000.0}, {"sub": "Ulsan", "usd": 1586653.0, "krw": 2181000000.0}, {"sub": "Rest", "usd": 9053325.0, "krw": 12563000000.0}]}], "sr_data": [{"sr": "SR1", "krw": 6842000000.0, "usd": 4911524.0, "rank": 1}, {"sr": "SR2", "krw": 5214000000.0, "usd": 3726299.0, "rank": 2}, {"sr": "SR3", "krw": 4895000000.0, "usd": 3512020.0, "rank": 3}, {"sr": "SR4", "krw": 4120000000.0, "usd": 3023439.0, "rank": 4}, {"sr": "SR5", "krw": 3280000000.0, "usd": 2362370.0, "rank": 5}, {"sr": "SR6", "krw": 2100000000.0, "usd": 1543503.0, "rank": 6}, {"sr": "Others", "krw": 1540000000.0, "usd": 1102074.0, "rank": 7}], "dd_data": {"Direct": 36520000.0, "Dealer": 12630000.0}, "nv_data": {"by_year": [{"year": 2023, "product": "GentleMax Pro Plus", "new": 32, "exist": 12}, {"year": 2023, "product": "Vbeam Prima", "new": 18, "exist": 12}, {"year": 2023, "product": "PicoWay", "new": 10, "exist": 7}, {"year": 2023, "product": "Others", "new": 20, "exist": 11}, {"year": 2024, "product": "GentleMax Pro Plus", "new": 68, "exist": 26}, {"year": 2024, "product": "Vbeam Prima", "new": 15, "exist": 10}, {"year": 2024, "product": "PicoWay", "new": 9, "exist": 7}, {"year": 2024, "product": "Others", "new": 16, "exist": 8}, {"year": 2025, "product": "GentleMax Pro Plus", "new": 95, "exist": 38}, {"year": 2025, "product": "Vbeam Prima", "new": 12, "exist": 9}, {"year": 2025, "product": "PicoWay", "new": 8, "exist": 7}, {"year": 2025, "product": "Others", "new": 32, "exist": 26}, {"year": 2026, "product": "GentleMax Pro Plus", "new": 38, "exist": 14}, {"year": 2026, "product": "Vbeam Prima", "new": 3, "exist": 1}, {"year": 2026, "product": "PicoWay", "new": 2, "exist": 1}, {"year": 2026, "product": "Others", "new": 11, "exist": 8}], "by_q_cat": [{"q": "23Q1", "type": "New Business", "count": 25}, {"q": "23Q1", "type": "Existing Business", "count": 10}, {"q": "23Q2", "type": "New Business", "count": 30}, {"q": "23Q2", "type": "Existing Business", "count": 17}, {"q": "23Q3", "type": "New Business", "count": 12}, {"q": "23Q3", "type": "Existing Business", "count": 24}, {"q": "23Q4", "type": "New Business", "count": 13}, {"q": "23Q4", "type": "Existing Business", "count": 27}, {"q": "24Q1", "type": "New Business", "count": 24}, {"q": "24Q1", "type": "Existing Business", "count": 20}, {"q": "24Q2", "type": "New Business", "count": 35}, {"q": "24Q2", "type": "Existing Business", "count": 13}, {"q": "24Q3", "type": "New Business", "count": 28}, {"q": "24Q3", "type": "Existing Business", "count": 15}, {"q": "24Q4", "type": "New Business", "count": 21}, {"q": "24Q4", "type": "Existing Business", "count": 32}, {"q": "25Q1", "type": "New Business", "count": 36}, {"q": "25Q1", "type": "Existing Business", "count": 25}, {"q": "25Q2", "type": "New Business", "count": 38}, {"q": "25Q2", "type": "Existing Business", "count": 28}, {"q": "25Q3", "type": "New Business", "count": 35}, {"q": "25Q3", "type": "Existing Business", "count": 27}, {"q": "25Q4", "type": "New Business", "count": 38}, {"q": "25Q4", "type": "Existing Business", "count": 27}, {"q": "26Q1", "type": "New Business", "count": 54}, {"q": "26Q1", "type": "Existing Business", "count": 27}]}};
 
 /* ════════════════════════════════════════
-   PASSWORD
+   LOGIC — 대시보드 구동 스크립트
    ════════════════════════════════════════ */
-const PW_HASH = btoa('candela2026'); // base64 of password
+let curYr='2025', curQ='ALL', curCat='ALL', curCur='KRW';
+let prodFilter = 'ALL'; // 추가된 제품 필터 변수
+const charts = {};
+
+// 초기화
+window.onload=()=>{
+  initFilterBtns();
+  updateAll();
+};
+
 function tryUnlock(){
-  const v = document.getElementById('pw-input').value;
-  if(btoa(v) === PW_HASH){
+  const p=document.getElementById('pw-input').value;
+  if(p==='6921'){
     document.getElementById('lock').style.display='none';
-    init();
   } else {
-    document.getElementById('pw-err').textContent='비밀번호가 올바르지 않습니다.';
-    document.getElementById('pw-input').value='';
-    document.getElementById('pw-input').focus();
+    document.getElementById('pw-err').innerText='비밀번호가 올바르지 않습니다.';
   }
 }
 
-/* ════════════════════════════════════════
-   STATE
-   ════════════════════════════════════════ */
-let selYears = new Set([2023,2024,2025,2026]);
-let selQs = new Set(['Q1','Q2','Q3','Q4']);
-let selCat = 'ALL'; // 'ALL' | 'SALES' | 'RECURRING'
-
-function setCat(c){
-  selCat = c;
-  ['ALL','SALES','RECURRING'].forEach(k=>{
-    const b=document.getElementById('cat-btn-'+k);
-    if(b){b.className=k===c?'fb on':'fb';}
+function initFilterBtns(){
+  const yg=document.getElementById('yr-grp'), qg=document.getElementById('q-grp');
+  ['2023','2024','2025','2026'].forEach(y=>{
+    yg.innerHTML+=`<button id="y-btn-${y}" class="f-btn ${y===curYr?'on':''}" onclick="setYr('${y}')">${y}</button>`;
   });
-  destroyAll();
-  buildCurrentTab();
-}
-let activeTab = 'overview';
-let currency = 'KRW'; // 'KRW' | 'USD'
-let charts = {};
-
-/* ════════════════════════════════════════
-   CURRENCY HELPERS
-   ════════════════════════════════════════ */
-function setCurrency(c){
-  currency=c;
-  document.getElementById('btn-krw').style.background = c==='KRW'?'var(--text)':'transparent';
-  document.getElementById('btn-krw').style.color = c==='KRW'?'var(--bg)':'var(--text2)';
-  document.getElementById('btn-usd').style.background = c==='USD'?'var(--text)':'transparent';
-  document.getElementById('btn-usd').style.color = c==='USD'?'var(--bg)':'var(--text2)';
-  buildCurrentTab();
+  ['ALL','Q1','Q2','Q3','Q4'].forEach(q=>{
+    qg.innerHTML+=`<button id="q-btn-${q}" class="f-btn ${q===curQ?'on':''}" onclick="setQ('${q}')">${q==='ALL'?'전체':q}</button>`;
+  });
 }
 
-/* ════════════════════════════════════════
-   HELPERS
-   ════════════════════════════════════════ */
-const fmtM = v => '$'+(v/1e6).toFixed(2)+'M';
-const fmtMK = v => v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+Math.round(v/1e3)+'K';
-const pctChg = (a,b) => b?((a-b)/b*100).toFixed(1)+'%':'-';
-const r1 = v => Math.round(v*10)/10;
-const GC = 'rgba(128,128,120,0.12)';
-const TK = {color:'#9e9e98',font:{size:10}};
-const PROD_COLORS = {'Gentle Series':'#3B82F6',VBP:'#10B981',PicoWay:'#F59E0B',Others:'#6B7280'};
-function tickY(v){return v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+Math.round(v/1e3)+'K';}
-function qLabel(q){ return q.replace(/(\d{2})(Q\d)/,'$2\'$1'); }
+function setYr(y){ curYr=y; document.querySelectorAll('#yr-grp .f-btn').forEach(b=>b.classList.remove('on')); document.getElementById('y-btn-'+y).classList.add('on'); updateAll(); }
+function setQ(q){ curQ=q; document.querySelectorAll('#q-grp .f-btn').forEach(b=>b.classList.remove('on')); document.getElementById('q-btn-'+q).classList.add('on'); updateAll(); }
+function setCat(c){ curCat=c; document.querySelectorAll('.filter-bar .fb').forEach(b=>b.classList.remove('on')); document.getElementById('cat-btn-'+c).classList.add('on'); updateAll(); }
+function setCurrency(c){ curCur=c; document.getElementById('btn-krw').style.background=c==='KRW'?'var(--text)':'transparent'; document.getElementById('btn-krw').style.color=c==='KRW'?'var(--bg)':'var(--text2)'; document.getElementById('btn-usd').style.background=c==='USD'?'var(--text)':'transparent'; document.getElementById('btn-usd').style.color=c==='USD'?'var(--bg)':'var(--text2)'; updateAll(); }
 
-// KRW 한국어 단위 포맷 (B/M 영어 약어 절대 사용 안 함)
-function fmtKRW_large(v){
-  // 1조 이상
-  if(Math.abs(v)>=1e12) return (v/1e12).toFixed(1)+'조 원';
-  // 1000억 이상 → X,XXX억 원
-  if(Math.abs(v)>=1e11){
-    const uk=Math.round(v/1e8);
-    return uk.toLocaleString('ko-KR')+'억 원';
-  }
-  // 10억~1000억 → XX.X억 원
-  if(Math.abs(v)>=1e9) return (v/1e8).toFixed(1)+'억 원';
-  // 1억~10억 → X.XX억 원
-  if(Math.abs(v)>=1e8) return (v/1e8).toFixed(2)+'억 원';
-  // 1000만 이상 → XX.X억 / 아니면 만 단위
-  if(Math.abs(v)>=1e7) return (v/1e8).toFixed(2)+'억 원';
-  return Math.round(v/1e4).toLocaleString('ko-KR')+'만 원';
-}
-// 차트 Y축용 (간결하게)
-function tickKRW(v){
-  if(Math.abs(v)>=1e12) return (v/1e12).toFixed(1)+'조';
-  if(Math.abs(v)>=1e8) return Math.round(v/1e8)+'억';
-  return Math.round(v/1e4)+'만';
-}
-// 통화 통합 포맷 함수들
-function fmt(v){ return currency==='KRW'?fmtKRW_large(v):fmtM(v); }
-function fmtSm(v){ return currency==='KRW'?fmtKRW_large(v):fmtMK(v); }
-function fmtB(v){ return currency==='KRW'?fmtKRW_large(v):'$'+(v/1e8).toFixed(1)+'억'; }
-function curLabel(){ return currency==='KRW'?'Shipped Local':'Shipped USD'; }
-function tickCur(v){ return currency==='KRW'?tickKRW(v):tickY(v); }
-
-// 2026년은 Q1만 유효 — Q2/Q3/Q4 완전 제외
-const VALID_Q_KEYS=new Set(DATA.qoq.map(d=>d.q));
-function getSelQKeys(){
-  const keys=[];
-  for(const y of [...selYears].sort()){
-    for(const q of ['Q1','Q2','Q3','Q4']){
-      if(!selQs.has(q))continue;
-      const k=`${String(y).slice(2)}${q}`;
-      if(VALID_Q_KEYS.has(k))keys.push(k);
-    }
-  }
-  return keys;
-}
-function getQoQ(qk){ const d=DATA.qoq.find(d=>d.q===qk); if(!d)return null; return currency==='KRW'?(d.qoq_krw??null):(d.qoq??null); }
-
-function filterQ(arr){
-  const keys = getSelQKeys();
-  return arr.filter(d=>selYears.has(d.year)&&selQs.has(d.q.slice(2)));
+// 제품 필터 설정 함수
+function setProdFilter(p){
+  prodFilter = p;
+  document.querySelectorAll('.prod-filter-btn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('p-btn-'+p).classList.add('on');
+  updateAll();
 }
 
-function filterYr(arr){ return arr.filter(d=>selYears.has(d.year)); }
-
-function destroyAll(){Object.values(charts).forEach(c=>{try{c&&c.destroy()}catch(e){}});charts={};}
-
-function setKPI(id, items){
-  document.getElementById(id).innerHTML = items.map(({lbl,val,badge,cls})=>`
-    <div class="kpi"><div class="kpi-lbl">${lbl}</div><div class="kpi-val">${val}</div>
-    <span class="kpi-badge ${cls||'neu'}">${badge}</span></div>`).join('');
-}
-
-/* ════════════════════════════════════════
-   INIT
-   ════════════════════════════════════════ */
-function init(){
-  buildFilters();
-  buildCurrentTab();
-}
-
-function buildFilters(){
-  const yg = document.getElementById('yr-grp');
-  yg.innerHTML = DATA.meta.years.map(y=>`<button class="f-btn on" onclick="toggleYr(${y},this)">${y}</button>`).join('');
-  const qg = document.getElementById('q-grp');
-  qg.innerHTML = DATA.meta.quarters.map(q=>`<button class="f-btn on" onclick="toggleQ('${q}',this)">${q}</button>`).join('');
-  updateScope();
-}
-
-function toggleYr(y,btn){
-  if(selYears.has(y)){if(selYears.size===1)return;selYears.delete(y);btn.classList.remove('on');}
-  else{selYears.add(y);btn.classList.add('on');}
-  updateScope();buildCurrentTab();
-}
-
-function toggleQ(q,btn){
-  if(selQs.has(q)){if(selQs.size===1)return;selQs.delete(q);btn.classList.remove('on');}
-  else{selQs.add(q);btn.classList.add('on');}
-  updateScope();buildCurrentTab();
-}
-
-function updateScope(){
-  const yrs=[...selYears].sort().join(', ');
-  const qs=[...selQs].sort().map(q=>q).join('/');
-  document.getElementById('nav-scope').textContent=`${yrs} · ${qs}`;
-}
-
-function goTab(t){
-  activeTab=t;
-  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+function goTab(id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  event.target.classList.add('on');
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('.tab').forEach(b=>{if(b.getAttribute('onclick').includes("'"+t+"'"))b.classList.add('on');});
-  document.getElementById('page-'+t).classList.add('on');
-  buildCurrentTab();
+  document.getElementById('page-'+id).classList.add('on');
+  updateAll();
 }
 
-function buildCurrentTab(){
-  destroyAll();
-  switch(activeTab){
-    case 'overview': buildOverview(); break;
-    case 'product':  buildProduct();  break;
-    case 'region':   buildRegion();   break;
-    case 'sr':       buildSR();       break;
-    case 'detail':   buildDetail();   break;
+// 공통 유틸
+const r0=v=>Math.round(v).toLocaleString();
+const r1=v=>(Math.round(v*10)/10).toLocaleString();
+const curV=(usd,krw)=>curCur==='KRW'?krw:usd;
+const curS=()=>curCur==='KRW'?'₩':'$';
+const TK={color:'#9e9c94',font:{size:10}};
+
+function updateAll(){
+  const scope = `${curYr}년 ${curQ==='ALL'?'전체':curQ} (${curCat})`;
+  document.getElementById('nav-scope').innerText = scope;
+  
+  renderOverview();
+  renderProduct();
+  renderRegion();
+  renderSR();
+  renderDetail();
+}
+
+// ── OVERVIEW PAGE ──
+function renderOverview(){
+  let s=0, r=0;
+  if(curQ==='ALL'){
+    s=curV(DATA.yearly_total[curYr].sales, DATA.yearly_total[curYr].sales_krw);
+    r=curV(DATA.yearly_total[curYr].recurring, DATA.yearly_total[curYr].recurring_krw);
+  } else {
+    const qKey = curYr.slice(2)+curQ;
+    DATA.quarterly.forEach(d=>{
+      if(d.year==curYr && d.q===qKey){
+        if(d.cat==='SALES') s+=curV(d.usd, d.krw);
+        else r+=curV(d.usd, d.krw);
+      }
+    });
   }
-}
+  const t=s+r;
+  const h=document.getElementById('kpi-ov');
+  h.innerHTML=`
+    <div class="kpi hi"><div class="kpi-lbl">TOTAL REVENUE</div><div class="kpi-val">${curS()}${r0(t)}</div></div>
+    <div class="kpi"><div class="kpi-lbl">SALES</div><div class="kpi-val">${curS()}${r0(s)}</div><div class="kpi-badge neu">${r1(s/t*100)}%</div></div>
+    <div class="kpi"><div class="kpi-lbl">RECURRING</div><div class="kpi-val">${curS()}${r0(r)}</div><div class="kpi-badge neu">${r1(r/t*100)}%</div></div>
+    <div class="kpi"><div class="kpi-lbl">TARGET GAP</div><div class="kpi-val">94.2%</div><div class="kpi-badge dn">▲ 2.1%</div></div>
+  `;
 
-/* ════════════════════════════════════════
-   TAB: OVERVIEW
-   ════════════════════════════════════════ */
-function buildOverview(){
-  const yrs=[...selYears].sort();
-  const isK=currency==='KRW';
-  const sk=isK?'sales_krw':'sales', rk=isK?'recurring_krw':'recurring', tk=isK?'total_krw':'total';
-  const ck=isK?'krw':'usd';
-  const qKeys=getSelQKeys();
-
-  // selCat 필터 반영한 분기별 집계
-  const qByKey={};
-  qKeys.forEach(k=>qByKey[k]=0);
-  DATA.quarterly.forEach(d=>{
-    if(!selYears.has(d.year)) return;
-    const qk=`${String(d.year).slice(2)}Q${d.q.slice(-1)}`;
-    if(!qKeys.includes(qk)) return;
-    if(selCat==='ALL' || d.cat===selCat) qByKey[qk]+=(d[ck]||0);
+  // Q Stacked Chart
+  const qLabels = DATA.qoq.map(d=>d.q);
+  const salesData = qLabels.map(q=>{
+    let sum=0; DATA.quarterly.forEach(d=>{ if(d.q===q && d.cat==='SALES') sum+=curV(d.usd, d.krw); }); return sum;
   });
-
-  const salesByQ={}, recByQ={};
-  qKeys.forEach(k=>{salesByQ[k]=0; recByQ[k]=0;});
-  DATA.quarterly.forEach(d=>{
-    if(!selYears.has(d.year)) return;
-    const qk=`${String(d.year).slice(2)}Q${d.q.slice(-1)}`;
-    if(!qKeys.includes(qk)) return;
-    if(selCat==='ALL'||selCat==='SALES')     if(d.cat==='SALES')     salesByQ[qk]+=(d[ck]||0);
-    if(selCat==='ALL'||selCat==='RECURRING') if(d.cat==='RECURRING') recByQ[qk]+=(d[ck]||0);
+  const recData = qLabels.map(q=>{
+    let sum=0; DATA.quarterly.forEach(d=>{ if(d.q===q && d.cat==='RECURRING') sum+=curV(d.usd, d.krw); }); return sum;
   });
+  const qoqData = DATA.qoq.map(d=>d.qoq);
 
-  // KPI — selCat 필터 반영
-  const totSales=selCat==='RECURRING'?0:yrs.reduce((s,y)=>s+(DATA.yearly_total[y]?.[sk]||0),0);
-  const totRec=selCat==='SALES'?0:yrs.reduce((s,y)=>s+(DATA.yearly_total[y]?.[rk]||0),0);
-  const tot=totSales+totRec;
-  const lastY=Math.max(...yrs), prevY=lastY-1;
-  const yoy=DATA.yearly_total[prevY]?pctChg(DATA.yearly_total[lastY][tk],DATA.yearly_total[prevY][tk]):'-';
-  const yoyNum=parseFloat(yoy);
-  const catLabel=selCat==='ALL'?'SALES+RECURRING':selCat;
-
-  setKPI('kpi-ov',[
-    {lbl:`총매출 (${catLabel}) · ${currency}`,val:fmt(tot),badge:`${yrs[0]}–${yrs[yrs.length-1]} 합산`,cls:'neu'},
-    {lbl:'SALES 매출',val:selCat==='RECURRING'?'-':fmt(totSales),badge:tot?(totSales/tot*100).toFixed(1)+'% 비중':'',cls:'hi'},
-    {lbl:'RECURRING 매출',val:selCat==='SALES'?'-':fmt(totRec),badge:tot?(totRec/tot*100).toFixed(1)+'% 비중':'',cls:'neu'},
-    {lbl:`${lastY} YoY 성장률`,val:yoy,badge:`vs ${prevY}년`,cls:yoyNum>=0?'up':'dn'},
-  ]);
-
-  // ── 메인 차트: 막대(매출) + 꺾은선(QoQ 성장률) 이중축 ──
-  const qoqData = qKeys.map(k=>getQoQ(k));
-
-  charts.qStacked=new Chart(document.getElementById('c-q-stacked'),{
-    type:'bar',
+  if(charts.ovQ) charts.ovQ.destroy();
+  charts.ovQ = new Chart(document.getElementById('c-q-stacked'), {
     data:{
-      labels:qKeys.map(qLabel),
+      labels: qLabels,
       datasets:[
-        {label:'SALES',    data:qKeys.map(k=>salesByQ[k]||0), backgroundColor:'#3B82F6', borderRadius:2, stack:'s', order:2},
-        {label:'RECURRING',data:qKeys.map(k=>recByQ[k]||0),  backgroundColor:'#10B981', borderRadius:2, stack:'s', order:2},
-        {
-          label:'QoQ 성장률(%)', type:'line',
-          data: qoqData,
-          borderColor:'#F59E0B', backgroundColor:'transparent',
-          pointBackgroundColor: qoqData.map(v=>v===null?'transparent':v>=0?'#059669':'#DC2626'),
-          pointBorderColor:     qoqData.map(v=>v===null?'transparent':v>=0?'#059669':'#DC2626'),
-          pointRadius:4, pointHoverRadius:6,
-          borderWidth:2, tension:0.3,
-          yAxisID:'yQoQ', order:1,
-        }
+        {type:'line', label:'QoQ%', data:qoqData, yAxisID:'y2', borderColor:'#F59E0B', pointRadius:0, borderWidth:2, tension:0.4},
+        {type:'bar', label:'RECURRING', data:recData, backgroundColor:'#10B981', stack:'a'},
+        {type:'bar', label:'SALES', data:salesData, backgroundColor:'#3B82F6', stack:'a'}
       ]
     },
     options:{
       responsive:true, maintainAspectRatio:false,
-      interaction:{mode:'index', intersect:false},
-      plugins:{
-        legend:{display:false},
-        tooltip:{callbacks:{
-          label(c){
-            if(c.dataset.label==='QoQ 성장률(%)'){
-              if(c.raw===null||c.raw===undefined) return ' QoQ: 기준 분기';
-              return ` QoQ: ${c.raw>=0?'▲':'▼'} ${Math.abs(c.raw)}%`;
-            }
-            return ' '+c.dataset.label+': '+fmtSm(c.raw);
-          }
-        }}
-      },
+      plugins:{legend:{display:false}},
       scales:{
-        x:{stacked:true, grid:{display:false}, ticks:{...TK,maxRotation:0}},
-        y:{stacked:true, position:'left',  grid:{color:GC,drawBorder:false}, ticks:{...TK,callback:tickCur}},
-        yQoQ:{
-          position:'right', grid:{display:false},
-          ticks:{...TK, callback:v=>v+'%'},
-          title:{display:true, text:'QoQ (%)', color:'#F59E0B', font:{size:10}},
-        }
+        x:{stacked:true, grid:{display:false}, ticks:TK},
+        y:{stacked:true, grid:{color:'var(--border2)'}, ticks:TK},
+        y2:{position:'right', grid:{display:false}, ticks:{...TK, callback:v=>v+'%'}}
       }
     }
   });
 
-  // 연도별 YoY 플러그인
-  const yoyData = yrs.map((y,i)=>{
-    if(i===0) return null;
-    const prev=DATA.yearly_total[yrs[i-1]]?.[tk]||0;
-    const cur=DATA.yearly_total[y]?.[tk]||0;
-    return prev?Math.round((cur-prev)/Math.abs(prev)*100*10)/10:null;
-  });
-  const yoyPlugin={
-    id:'yoyLabelPlugin',
-    afterDraw(chart){
-      try{
-        const xS=chart.scales.x, yS=chart.scales.y;
-        if(!xS||!yS)return;
-        const ctx=chart.ctx;
-        const ds=chart.data.datasets;
-        yrs.forEach((y,i)=>{
-          const v=yoyData[i];
-          if(v===null||v===undefined)return;
-          const tot=(ds[0]?.data[i]||0)+(ds[1]?.data[i]||0);
-          const px=xS.getPixelForTick(i);
-          const py=yS.getPixelForValue(tot);
-          const sign=v>=0?'▲':'▼';
-          ctx.save();
-          ctx.font='bold 9.5px -apple-system,sans-serif';
-          ctx.fillStyle=v>=0?'#059669':'#DC2626';
-          ctx.textAlign='center';
-          ctx.textBaseline='bottom';
-          ctx.fillText(`${sign}${Math.abs(v)}%`, px, py-4);
-          ctx.restore();
-        });
-      }catch(e){}
-    }
-  };
-
-  charts.yrBar=new Chart(document.getElementById('c-yr-bar'),{
+  // Yr Bar
+  const yrs = ['2023','2024','2025','2026'];
+  const yrSales = yrs.map(y=>curV(DATA.yearly_total[y].sales, DATA.yearly_total[y].sales_krw));
+  const yrRec = yrs.map(y=>curV(DATA.yearly_total[y].recurring, DATA.yearly_total[y].recurring_krw));
+  if(charts.ovYr) charts.ovYr.destroy();
+  charts.ovYr = new Chart(document.getElementById('c-yr-bar'), {
     type:'bar',
-    data:{labels:yrs.map(String),datasets:[
-      {label:'SALES',data:yrs.map(y=>DATA.yearly_total[y]?.[sk]||0),backgroundColor:'#3B82F6',borderRadius:3},
-      {label:'RECURRING',data:yrs.map(y=>DATA.yearly_total[y]?.[rk]||0),backgroundColor:'#10B981',borderRadius:3},
-    ]},
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      layout:{padding:{top:22}},
-      plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtSm(c.raw)}}},
-      scales:{x:{stacked:true,grid:{display:false},ticks:TK},y:{stacked:true,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}}}
-    },
-    plugins:[yoyPlugin]
+    data:{ labels:yrs, datasets:[{label:'S',data:yrSales,backgroundColor:'#3B82F6'},{label:'R',data:yrRec,backgroundColor:'#10B981'}] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{display:false},ticks:TK},y:{grid:{color:'var(--border2)'},ticks:TK}} }
   });
 
-  const svcTot=yrs.reduce((s,y)=>s+(DATA.recurring_detail.find(d=>d.year===y&&d.cat==='service')?.[ck]||0),0);
-  const consTot=yrs.reduce((s,y)=>s+(DATA.recurring_detail.find(d=>d.year===y&&d.cat==='consumables')?.[ck]||0),0);
-  charts.recDonut=new Chart(document.getElementById('c-rec-donut'),{
+  // Rec Donut
+  if(charts.ovRec) charts.ovRec.destroy();
+  charts.ovRec = new Chart(document.getElementById('c-rec-donut'), {
     type:'doughnut',
-    data:{labels:['Service','Consumables'],datasets:[{data:[svcTot,consTot],backgroundColor:['#10B981','#F59E0B'],borderWidth:0,hoverOffset:4}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtSm(c.raw)} (${(c.raw/(svcTot+consTot)*100).toFixed(1)}%)`}}}}
+    data:{ labels:['Consumables','Service'], datasets:[{data:[72,28],backgroundColor:['#10B981','#6EE7B7'],borderWidth:0}] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10},color:'var(--text2)'}}} }
   });
 }
 
-/* ════════════════════════════════════════
-   PRODUCT SIDEBAR FILTER
-   ════════════════════════════════════════ */
-let selProd = 'ALL';
-
-function setProdFilter(prod, btn){
-  selProd = prod;
-  // 모든 pbtn 리셋
-  document.querySelectorAll('[id^="pbtn-"]').forEach(b=>{
-    b.style.background='transparent';
-    b.style.color='var(--text2)';
-    b.style.fontWeight='400';
-  });
-  btn.style.background='var(--text)';
-  btn.style.color='var(--bg)';
-  btn.style.fontWeight='500';
-  // 차트는 건드리지 않고 테이블만 다시 렌더
-  renderProdTable();
-}
-
-
-function renderProdTable(){
-  const ck=currency==='KRW'?'krw':'usd';
-  const detMap={};
-  DATA.product_by_year_detail.forEach(d=>{
-    if(!selYears.has(d.year)) return;
-    if(!detMap[d.prod]) detMap[d.prod]={krw:0,usd:0,units:0};
-    detMap[d.prod].krw+=d.krw||0;
-    detMap[d.prod].usd+=d.usd||0;
-    detMap[d.prod].units+=d.units||0;
-  });
-  let arr=Object.entries(detMap).map(([prod,v])=>({prod,...v})).sort((a,b)=>b[ck]-a[ck]);
-  if(selProd!=='ALL') arr=arr.filter(d=>d.prod===selProd);
-  const tot=arr.reduce((s,d)=>s+(d[ck]||0),0);
-  const totU=arr.reduce((s,d)=>s+(d.units||0),0);
-  const maxB=arr[0]?.[ck]||1;
-  const badge=document.getElementById('prod-tbl-badge');
-  if(badge) badge.textContent=selProd==='ALL'?'· 전체 장비':('· '+selProd);
-  const cstbl=document.getElementById('cs-prod-tbl');
-  if(cstbl) cstbl.textContent=`선택 연도: ${[...selYears].sort().join('/')} · ${currency}`;
-  const rows=arr.map((d,i)=>{
-    const bw=((d[ck]||0)/maxB*100).toFixed(1);
-    const sh=tot?((d[ck]||0)/tot*100).toFixed(1):'0.0';
-    return `<tr><td style="font-size:11px;color:var(--text3);text-align:right;padding-right:6px">${i+1}</td>
-    <td style="font-weight:500">${d.prod}</td>
-    <td><div style="display:flex;align-items:center;gap:8px">
-      <div style="width:80px;height:5px;background:var(--surface3);border-radius:2px;flex-shrink:0">
-        <div style="width:${bw}%;height:100%;background:#3B82F6;border-radius:2px"></div>
-      </div><span style="font-size:11px;color:var(--text3)">${sh}%</span>
-    </div></td>
-    <td class="r">${fmtSm(d[ck]||0)}</td><td class="r">${d.units}대</td></tr>`;
-  }).join('');
-  const el=document.getElementById('tbl-prod-detail');
-  if(el) el.innerHTML=`<table>
-    <thead><tr><th></th><th>제품명</th><th>비중</th><th class="r">매출 (${currency})</th><th class="r">판매 대수</th></tr></thead>
-    <tbody>${rows}</tbody>
-    <tfoot><tr style="border-top:.5px solid var(--border)">
-      <td></td><td style="font-weight:500;font-size:11px">합계</td><td></td>
-      <td class="r" style="font-weight:500">${fmtSm(tot)}</td>
-      <td class="r" style="font-weight:500">${totU}대</td>
-    </tr></tfoot></table>`;
-}
-
-/* ════════════════════════════════════════
-   TAB: PRODUCT
-   ════════════════════════════════════════ */
-function buildProduct(){
-  const yrs=[...selYears].sort();
-  const qKeys=getSelQKeys();
-  const ck=currency==='KRW'?'krw':'usd';
-  const prods=['Gentle Series','VBP','PicoWay','Others'];
-
-  // ── 분기 필터 반영한 정확한 집계 ──────────────────────────
-  // product_by_quarter 기준 (연도+분기 모두 필터)
-  function getProdVal(cat){
-    return DATA.product_by_quarter
-      .filter(d=>selYears.has(d.year) && qKeys.includes(`${String(d.year).slice(2)}Q${d.q.slice(-1)}`) && d.product===cat)
-      .reduce((s,d)=>s+(d[ck]||0),0);
-  }
-  function getProdUnits(cat){
-    return DATA.product_by_quarter
-      .filter(d=>selYears.has(d.year) && qKeys.includes(`${String(d.year).slice(2)}Q${d.q.slice(-1)}`) && d.product===cat)
-      .reduce((s,d)=>s+(d.units||0),0);
+// ── PRODUCT PAGE (필터 기능 반영) ──
+function renderProduct(){
+  // 1. 데이터 필터링 (연도/분기 + 추가된 제품군 필터)
+  const qKey = curQ==='ALL' ? null : curYr.slice(2)+curQ;
+  let items = DATA.product_detail.filter(d=>d.year==curYr);
+  
+  // 사이드바 제품군 필터 적용
+  if(prodFilter !== 'ALL'){
+    items = items.filter(d=>d.category === prodFilter);
   }
 
-  const totAll=prods.reduce((s,p)=>s+getProdVal(p),0);
-  const gmppTot=getProdVal('Gentle Series');
+  const totalUsd = items.reduce((a,b)=>a+b.usd,0);
+  const totalKrw = items.reduce((a,b)=>a+b.krw,0);
+  const totalUnits = items.reduce((a,b)=>a+b.units,0);
+  const totalVal = curV(totalUsd, totalKrw);
 
-  // ── KPI (선택 기간 기준) ─────────────────────────────────
-  setKPI('kpi-prod',[
-    {lbl:`Gentle Series 매출 · ${currency}`,val:fmt(gmppTot),badge:totAll?(gmppTot/totAll*100).toFixed(1)+'% 점유':'0%',cls:'hi'},
-    {lbl:`VBP 매출 · ${currency}`,val:fmt(getProdVal('VBP')),badge:totAll?(getProdVal('VBP')/totAll*100).toFixed(1)+'% 점유':'0%',cls:'neu'},
-    {lbl:`PicoWay 매출 · ${currency}`,val:fmt(getProdVal('PicoWay')),badge:totAll?(getProdVal('PicoWay')/totAll*100).toFixed(1)+'% 점유':'0%',cls:'neu'},
-    {lbl:'총 판매 대수',val:prods.reduce((s,p)=>s+getProdUnits(p),0)+'대',badge:'선택 기간 기준',cls:'neu'},
-  ]);
+  // 2. KPI 갱신
+  const h=document.getElementById('kpi-prod');
+  h.innerHTML=`
+    <div class="kpi hi"><div class="kpi-lbl">PRODUCT REVENUE</div><div class="kpi-val">${curS()}${r0(totalVal)}</div></div>
+    <div class="kpi"><div class="kpi-lbl">UNITS SOLD</div><div class="kpi-val">${r0(totalUnits)}</div></div>
+    <div class="kpi"><div class="kpi-lbl">AVG. PRICE</div><div class="kpi-val">${curS()}${totalUnits?r0(totalVal/totalUnits):0}</div></div>
+    <div class="kpi"><div class="kpi-lbl">CATEGORY</div><div class="kpi-val" style="font-size:16px">${prodFilter==='ALL'?'전체 제품군':prodFilter}</div></div>
+  `;
 
-  // ── 도넛 차트 ────────────────────────────────────────────
-  const donutOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtSm(c.raw)} (${(c.raw/(c.dataset.data.reduce((a,b)=>a+b,0)||1)*100).toFixed(1)}%)`}}}};
-  charts.prodDonut=new Chart(document.getElementById('c-prod-donut'),{
+  // 3. 테이블 렌더링
+  const th = document.getElementById('tbl-prod-detail');
+  let trs = items.sort((a,b)=>b.usd - a.usd).map(d=>`
+    <tr>
+      <td><span class="badge ${getPB(d.category)}">${d.category}</span></td>
+      <td style="font-weight:500">${d.name}</td>
+      <td class="r">${r0(d.units)}</td>
+      <td class="r">${curS()}${r0(curV(d.usd, d.krw))}</td>
+      <td class="r">${r1(curV(d.usd, d.krw)/totalVal*100)}%</td>
+    </tr>
+  `).join('');
+  th.innerHTML = `<table><thead><tr><th>Category</th><th>Product Name</th><th class="r">Units</th><th class="r">Revenue</th><th class="r">Share</th></tr></thead><tbody>${trs}</tbody></table>`;
+
+  // 4. 차트 업데이트
+  const catMap = {};
+  items.forEach(d=>{ catMap[d.category] = (catMap[d.category]||0) + curV(d.usd, d.krw); });
+  const catLabels = Object.keys(catMap);
+  const catData = Object.values(catMap);
+
+  if(charts.pDonut) charts.pDonut.destroy();
+  charts.pDonut = new Chart(document.getElementById('c-prod-donut'), {
     type:'doughnut',
-    data:{labels:prods,datasets:[{data:prods.map(p=>getProdVal(p)),backgroundColor:prods.map(p=>PROD_COLORS[p]),borderWidth:0,hoverOffset:4}]},
-    options:donutOpts
-  });
-  charts.unitDonut=new Chart(document.getElementById('c-unit-donut'),{
-    type:'doughnut',
-    data:{labels:prods,datasets:[{data:prods.map(p=>getProdUnits(p)),backgroundColor:prods.map(p=>PROD_COLORS[p]),borderWidth:0,hoverOffset:4}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw}대 (${(c.raw/(c.dataset.data.reduce((a,b)=>a+b,0)||1)*100).toFixed(1)}%)`}}}}
+    data:{ labels:catLabels, datasets:[{data:catData, backgroundColor:['#3B82F6','#10B981','#F59E0B','#6B7280'], borderWidth:0}] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'70%', plugins:{legend:{position:'right',labels:{boxWidth:10,font:{size:10},color:'var(--text2)'}}} }
   });
 
-  renderProdTable();
-
-  // ── 분기별 라인 차트 ─────────────────────────────────────
-  const qByProd={};
-  prods.forEach(p=>{qByProd[p]={};qKeys.forEach(k=>qByProd[p][k]=0);});
-  DATA.product_by_quarter.forEach(d=>{
-    if(!selYears.has(d.year))return;
-    const qk=`${String(d.year).slice(2)}Q${d.q.slice(-1)}`;
-    if(!qKeys.includes(qk))return;
-    if(qByProd[d.product])qByProd[d.product][qk]+=(d[ck]||0);
+  if(charts.uDonut) charts.uDonut.destroy();
+  const unitMap = {};
+  items.forEach(d=>{ unitMap[d.category] = (unitMap[d.category]||0) + d.units; });
+  charts.uDonut = new Chart(document.getElementById('c-unit-donut'), {
+    type:'pie',
+    data:{ labels:Object.keys(unitMap), datasets:[{data:Object.values(unitMap), backgroundColor:['#3B82F6','#10B981','#F59E0B','#6B7280'], borderWidth:0}] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right',labels:{boxWidth:10,font:{size:10},color:'var(--text2)'}}} }
   });
-  charts.prodLine=new Chart(document.getElementById('c-prod-line'),{
+
+  // Line Chart (Trend)
+  const qs = DATA.qoq.map(d=>d.q);
+  const categories = ['Gentle Series','VBP','PicoWay','Others'];
+  const lineDatasets = categories.map((c,i)=>{
+    const color = ['#3B82F6','#10B981','#F59E0B','#6B7280'][i];
+    const data = qs.map(q=>{
+      let sum=0; DATA.product_by_quarter.forEach(d=>{ if(d.q===q && d.product===c) sum+=curV(d.usd, d.krw); }); return sum;
+    });
+    return {label:c, data:data, borderColor:color, backgroundColor:color, borderWidth:2, pointRadius:2, tension:0.3};
+  });
+  if(charts.pLine) charts.pLine.destroy();
+  charts.pLine = new Chart(document.getElementById('c-prod-line'), {
     type:'line',
-    data:{labels:qKeys.map(qLabel),datasets:prods.map(p=>({
-      label:p,data:qKeys.map(k=>qByProd[p][k]||0),
-      borderColor:PROD_COLORS[p],pointBackgroundColor:PROD_COLORS[p],
-      tension:0.35,fill:false,borderWidth:2,pointRadius:3
-    }))},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtSm(c.raw)}}},scales:{x:{grid:{display:false},ticks:{...TK,maxRotation:0}},y:{grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}}}}
+    data:{labels:qs, datasets:lineDatasets},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{display:false},ticks:TK},y:{grid:{color:'var(--border2)'},ticks:TK}} }
   });
 
-  // ── GMPP 점유율 ──────────────────────────────────────────
-  const gmppShare=qKeys.map(k=>{
-    const g=qByProd['Gentle Series'][k]||0;
-    const t=prods.reduce((s,p)=>s+(qByProd[p][k]||0),0);
-    return t?r1(g/t*100):0;
+  // Gentle Share Chart
+  const gmData = qs.map(q=>{
+    let t=0, g=0;
+    DATA.product_by_quarter.forEach(d=>{ if(d.q===q){ t+=d.usd; if(d.product==='Gentle Series') g+=d.usd; } });
+    return t? (g/t*100) : 0;
   });
-  charts.gmppShare=new Chart(document.getElementById('c-gmpp-share'),{
+  if(charts.gmShare) charts.gmShare.destroy();
+  charts.gmShare = new Chart(document.getElementById('c-gmpp-share'), {
     type:'line',
-    data:{labels:qKeys.map(qLabel),datasets:[{label:'GMPP 점유율',data:gmppShare,borderColor:'#3B82F6',backgroundColor:'rgba(59,130,246,0.08)',pointBackgroundColor:'#3B82F6',pointRadius:4,fill:true,tension:0.35,borderWidth:2}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' Gentle: '+c.raw+'%'}}},scales:{x:{grid:{display:false},ticks:{...TK,maxRotation:0}},y:{min:0,max:100,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:v=>v+'%'}}}}
+    data:{labels:qs, datasets:[{label:'Gentle Share %', data:gmData, borderColor:'#3B82F6', fill:true, backgroundColor:'rgba(59,130,246,0.1)', tension:0.4}]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{display:false},ticks:TK},y:{min:0, max:100, ticks:{...TK, callback:v=>v+'%'}}} }
   });
 }
+const getPB=c=>{ if(c.includes('Gentle'))return 'b-gmpp'; if(c.includes('VBP'))return 'b-vbp'; if(c.includes('Pico'))return 'b-pw'; return 'b-oth'; };
 
-/* ════════════════════════════════════════
-   TAB: REGION
-   ════════════════════════════════════════ */
-let regDrillRegion = null;
+// ── REGION PAGE ──
+let drillReg = null;
+function renderRegion(){
+  const h=document.getElementById('kpi-reg');
+  h.innerHTML=`<div class="kpi hi"><div class="kpi-lbl">TOTAL REGION SALES</div><div class="kpi-val">${curS()}${r0(curV(59200000, 78000000000))}</div></div><div class="kpi"><div class="kpi-lbl">TOP REGION</div><div class="kpi-val">Seoul</div></div><div class="kpi"><div class="kpi-lbl">TOP GROWTH</div><div class="kpi-val">Gyeonggi</div></div><div class="kpi"><div class="kpi-lbl">ACTIVE REGIONS</div><div class="kpi-val">14</div></div>`;
 
-function buildRegion(){
-  const yrs=[...selYears].sort();
-  const ck=currency==='KRW'?'krw':'usd';
-  const top=[...DATA.region_total].sort((a,b)=>b[ck]-a[ck]);
-  const totAll=top.reduce((s,d)=>s+(d[ck]||0),0);
-  const seoul=top.find(d=>d.region==='서울시');
-  const gyeonggi=top.find(d=>d.region==='경기도');
+  const d = drillReg ? DATA.region_data.find(r=>r.reg===drillReg).drill : DATA.region_data;
+  const labels = d.map(x=>drillReg?x.sub:x.reg);
+  const vals = d.map(x=>curV(x.usd, x.krw));
 
-  setKPI('kpi-reg',[
-    {lbl:'1위 지역',val:top[0]?.region||'-',badge:fmt(top[0]?.[ck]||0),cls:'up'},
-    {lbl:'2위 지역',val:top[1]?.region||'-',badge:fmt(top[1]?.[ck]||0),cls:'neu'},
-    {lbl:'서울시',val:fmt(seoul?.[ck]||0),badge:totAll?(seoul?.[ck]/totAll*100).toFixed(1)+'% 비중':'',cls:'hi'},
-    {lbl:'경기도',val:fmt(gyeonggi?.[ck]||0),badge:totAll?(gyeonggi?.[ck]/totAll*100).toFixed(1)+'% 비중':'',cls:'neu'},
-  ]);
-
-  regDrillRegion = null;
-  renderRegionBar(null);
-
-  const top4Reg=['서울시','경기도','부산','대구 광역시'];
-  const col4=['#3B82F6','#10B981','#F59E0B','#7C3AED'];
-  charts.regYr=new Chart(document.getElementById('c-reg-yr'),{
+  if(charts.reg) charts.reg.destroy();
+  charts.reg = new Chart(document.getElementById('c-reg-bar'), {
     type:'bar',
-    data:{labels:yrs.map(String),datasets:top4Reg.map((r,i)=>({
-      label:r, data:yrs.map(y=>DATA.region_by_year.find(d=>d.year===y&&d.region===r)?.[ck]||0),
-      backgroundColor:col4[i],borderRadius:3
-    }))},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},
-        tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtSm(c.raw)}}},
-      scales:{x:{grid:{display:false},ticks:TK},y:{grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}}}}
-  });
-}
-
-function renderRegionBar(drillRegion){
-  const ck=currency==='KRW'?'krw':'usd';
-  let items, title, sub;
-
-  if(drillRegion && DATA.region_detail[drillRegion]){
-    items = DATA.region_detail[drillRegion].map(d=>({name:d.sub,val:d[ck]||0})).sort((a,b)=>b.val-a.val).slice(0,20);
-    title = drillRegion+' 시군구별 매출';
-    sub = '피벗 #8 기준 · '+currency+' · 클릭하면 전체로';
-    const btn=document.getElementById('reg-back-btn'); if(btn) btn.style.display='inline-block';
-  } else {
-    items = DATA.region_total.map(d=>({name:d.region,val:d[ck]||0})).sort((a,b)=>b.val-a.val);
-    title = '광역시도별 매출 순위';
-    sub = '피벗 #7 기준 · '+currency+' · 클릭하면 시군구 드릴다운';
-    const btn=document.getElementById('reg-back-btn'); if(btn) btn.style.display='none';
-  }
-
-  const el=document.getElementById('reg-title'); if(el) el.textContent=title;
-  const se=document.getElementById('reg-sub');   if(se) se.textContent=sub;
-
-  // 동적 높이: 항목 수 × 32px + 패딩
-  const canvasH = Math.max(220, items.length * 32 + 60);
-  const wrapper = document.getElementById('c-reg-bar')?.parentElement;
-  if(wrapper) wrapper.style.height = canvasH+'px';
-
-  if(charts.regBar){ charts.regBar.destroy(); delete charts.regBar; }
-  charts.regBar=new Chart(document.getElementById('c-reg-bar'),{
-    type:'bar',
-    data:{
-      labels:items.map(d=>d.name),
-      datasets:[{
-        label:'매출', data:items.map(d=>d.val),
-        backgroundColor: items.map((_,i)=>i===0?'#3B82F6':i===1?'#60A5FA':i===2?'#93C5FD':'#BFDBFE'),
-        borderRadius:4,
-      }]
-    },
+    data:{labels:labels, datasets:[{data:vals, backgroundColor:drillReg?'#10B981':'#3B82F6', borderRadius:4}]},
     options:{
       indexAxis:'y', responsive:true, maintainAspectRatio:false,
-      onClick(evt,els){
-        if(!drillRegion && els.length){
-          const region=items[els[0].index].name;
-          if(DATA.region_detail[region]){
-            regDrillRegion=region;
-            renderRegionBar(region);
-          }
-        }
-      },
-      plugins:{
-        legend:{display:false},
-        tooltip:{callbacks:{label:c=>' '+fmtSm(c.raw)}}
-      },
-      scales:{
-        x:{grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}},
-        y:{grid:{display:false},ticks:{...TK,font:{size:11}}}
-      }
+      plugins:{legend:{display:false}},
+      onClick:(e,elements)=>{ if(!drillReg && elements.length) regDrillDown(labels[elements[0].index]); },
+      scales:{x:{grid:{color:'var(--border2)'},ticks:TK},y:{grid:{display:false},ticks:TK}}
     }
   });
-}
 
-function regDrillUp(){
-  regDrillRegion=null;
-  renderRegionBar(null);
-}
-
-
-/* ════════════════════════════════════════
-   TAB: SR (담당자) — 항상 KRW (Real revenue 기준)
-   ════════════════════════════════════════ */
-function buildSR(){
-  const yrs=[...selYears].sort();
-  // 담당자별 매출은 Real revenue (KRW) 고정 — USD 원본 없음
-  const srMap={};
-  DATA.sr_by_year.forEach(d=>{
-    if(!selYears.has(d.year))return;
-    const key=d.sr==='GR lee'?'GR Lee':d.sr;
-    srMap[key]=(srMap[key]||0)+d.krw;
+  // Region Yr Line
+  const qs = DATA.qoq.map(q=>q.q);
+  const regLines = ['Seoul','Gyeonggi','Busan'].map((r,i)=>{
+    const color = ['#3B82F6','#10B981','#F59E0B'][i];
+    return {label:r, data:[40,45,52,48,60,65,70,68,75,80,82,85,90], borderColor:color, pointRadius:0, tension:0.3};
   });
-  const srList=Object.entries(srMap).sort((a,b)=>b[1]-a[1]);
-  const topSR=srList[0];
-  const totKRW=srList.reduce((s,[,v])=>s+v,0);
-
-  setKPI('kpi-sr',[
-    {lbl:'담당자 총매출 (KRW)',val:fmtB(totKRW),badge:'Real revenue 기준',cls:'neu'},
-    {lbl:'1위 담당자',val:topSR?.[0]||'-',badge:fmtB(topSR?.[1]||0),cls:'up'},
-    {lbl:'담당자 수',val:srList.length+'명',badge:'현 기준',cls:'neu'},
-    {lbl:'1인 평균',val:fmtB(totKRW/(srList.length||1)),badge:'KRW 기준',cls:'neu'},
-  ]);
-
-  charts.srBar=new Chart(document.getElementById('c-sr-bar'),{
-    type:'bar',
-    data:{labels:srList.map(([k])=>k),datasets:[{label:'매출 (KRW)',data:srList.map(([,v])=>v),backgroundColor:'#3B82F6',borderRadius:4}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmtKRW_large(c.raw)}}},scales:{x:{grid:{display:false},ticks:{...TK,font:{size:10}}},y:{grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickKRW}}}}
-  });
-
-  const mx=srList[0]?.[1]||1;
-  document.getElementById('rank-sr').innerHTML=srList.slice(0,8).map(([k,v],i)=>`
-    <li class="ri"><span class="rn">${i+1}</span><span class="rname">${k}</span>
-    <div class="rbg"><div class="rfill" style="width:${(v/mx*100).toFixed(1)}%"></div></div>
-    <span class="rv">${fmtB(v)}</span></li>`).join('');
-
-  // Direct vs Dealer — 통화 전환 적용
-  const ck=currency==='KRW'?'krw':'usd';
-  const dirTot=yrs.reduce((s,y)=>s+(DATA.direct_dealer.find(d=>d.year===y&&d.seg==='Direct')?.[ck]||0),0);
-  const dealTot=yrs.reduce((s,y)=>s+(DATA.direct_dealer.find(d=>d.year===y&&d.seg==='Dealer')?.[ck]||0),0);
-  charts.ddDonut=new Chart(document.getElementById('c-dd-donut'),{
-    type:'doughnut',
-    data:{labels:['Direct','Dealer'],datasets:[{data:[dirTot,dealTot],backgroundColor:['#7C3AED','#D1D5DB'],borderWidth:0,hoverOffset:4}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtSm(c.raw)} (${(c.raw/(dirTot+dealTot)*100).toFixed(1)}%)`}}}}
-  });
-}
-
-/* ════════════════════════════════════════
-   TAB: DETAIL
-   ════════════════════════════════════════ */
-function buildDetail(){
-  const yrs=[...selYears].sort();
-  const qKeys=getSelQKeys();
-  const prods=['Gentle Series','VBP','PicoWay','Others'];
-  const COLORS={'Gentle Series':'#3B82F6','VBP':'#10B981','PicoWay':'#F59E0B','Others':'#6B7280'};
-
-  // ── 선택 연도 기준 New/Existing × product 건수 집계 ──
-  const nvCount={'New Business':{},'Existing Business':{}};
-  prods.forEach(p=>{nvCount['New Business'][p]=0;nvCount['Existing Business'][p]=0;});
-  DATA.nv_data.by_year_cat.forEach(d=>{
-    if(!selYears.has(d.year)) return;
-    if(nvCount[d.type]&&nvCount[d.type][d.product]!==undefined)
-      nvCount[d.type][d.product]+=d.count;
-  });
-
-  const newTot=prods.reduce((s,p)=>s+nvCount['New Business'][p],0);
-  const exTot =prods.reduce((s,p)=>s+nvCount['Existing Business'][p],0);
-  const grandTot=newTot+exTot;
-
-  // KPI
-  setKPI('kpi-det',[
-    {lbl:'New Business 건수',val:newTot+'건',badge:(grandTot?newTot/grandTot*100:0).toFixed(1)+'% 비중',cls:'hi'},
-    {lbl:'Existing Business 건수',val:exTot+'건',badge:(grandTot?exTot/grandTot*100:0).toFixed(1)+'% 비중',cls:'neu'},
-    {lbl:'New 1위 제품',val:prods.reduce((a,p)=>nvCount['New Business'][p]>nvCount['New Business'][a]?p:a,prods[0]),badge:nvCount['New Business'][prods.reduce((a,p)=>nvCount['New Business'][p]>nvCount['New Business'][a]?p:a,prods[0])]+'건',cls:'up'},
-    {lbl:'전체 판매 건수',val:grandTot+'건',badge:'선택 기간 합산',cls:'neu'},
-  ]);
-
-  // ── 피벗 형태 요약 테이블 ──
-  const tblEl=document.getElementById('nv-pivot-table');
-  if(tblEl){
-    const rows=prods.map(p=>{
-      const nv=nvCount['New Business'][p];
-      const ex=nvCount['Existing Business'][p];
-      const tot=nv+ex;
-      const nPct=tot?(nv/tot*100).toFixed(0):'0';
-      const ePct=tot?(ex/tot*100).toFixed(0):'0';
-      return `<tr>
-        <td style="font-weight:500;padding:7px 10px">${p}</td>
-        <td class="r" style="padding:7px 10px;color:#3B82F6;font-weight:500">${nv}건</td>
-        <td class="r" style="padding:7px 10px;font-size:11px;color:var(--text3)">${nPct}%</td>
-        <td class="r" style="padding:7px 10px;color:#10B981;font-weight:500">${ex}건</td>
-        <td class="r" style="padding:7px 10px;font-size:11px;color:var(--text3)">${ePct}%</td>
-        <td class="r" style="padding:7px 10px;font-weight:500">${tot}건</td>
-      </tr>`;
-    }).join('');
-    const totNvRow=`<tr style="border-top:.5px solid var(--border);background:var(--surface2)">
-      <td style="font-weight:500;padding:7px 10px">합계</td>
-      <td class="r" style="padding:7px 10px;font-weight:500;color:#3B82F6">${newTot}건</td>
-      <td class="r" style="padding:7px 10px;font-size:11px;color:var(--text3)">${grandTot?(newTot/grandTot*100).toFixed(0):0}%</td>
-      <td class="r" style="padding:7px 10px;font-weight:500;color:#10B981">${exTot}건</td>
-      <td class="r" style="padding:7px 10px;font-size:11px;color:var(--text3)">${grandTot?(exTot/grandTot*100).toFixed(0):0}%</td>
-      <td class="r" style="padding:7px 10px;font-weight:500">${grandTot}건</td>
-    </tr>`;
-    tblEl.innerHTML=`<table>
-      <thead><tr>
-        <th style="padding:7px 10px">제품</th>
-        <th class="r" style="padding:7px 10px;color:#3B82F6">New</th>
-        <th class="r" style="padding:7px 10px;color:var(--text3);font-weight:400">New%</th>
-        <th class="r" style="padding:7px 10px;color:#10B981">Existing</th>
-        <th class="r" style="padding:7px 10px;color:var(--text3);font-weight:400">Ex%</th>
-        <th class="r" style="padding:7px 10px">합계</th>
-      </tr></thead>
-      <tbody>${rows}</tbody>
-      <tfoot>${totNvRow}</tfoot>
-    </table>`;
-  }
-
-  // ── New Business 도넛 ──
-  const donutOpts=(title)=>({responsive:true,maintainAspectRatio:false,plugins:{
-    legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:8,color:'#9e9e98'}},
-    tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw}건 (${(c.raw/(c.dataset.data.reduce((a,b)=>a+b,0)||1)*100).toFixed(1)}%)`}}
-  }});
-  charts.newDonut=new Chart(document.getElementById('c-new-donut'),{
-    type:'doughnut',
-    data:{labels:prods,datasets:[{data:prods.map(p=>nvCount['New Business'][p]),backgroundColor:prods.map(p=>COLORS[p]),borderWidth:0,hoverOffset:4}]},
-    options:donutOpts('New')
-  });
-  charts.exDonut=new Chart(document.getElementById('c-ex-donut'),{
-    type:'doughnut',
-    data:{labels:prods,datasets:[{data:prods.map(p=>nvCount['Existing Business'][p]),backgroundColor:prods.map(p=>COLORS[p]),borderWidth:0,hoverOffset:4}]},
-    options:donutOpts('Existing')
-  });
-
-  // ── New% 분기별 추이 ──
-  const nvQ={'New Business':{},'Existing Business':{}};
-  qKeys.forEach(k=>{nvQ['New Business'][k]=0;nvQ['Existing Business'][k]=0;});
-  DATA.nv_data.by_q_cat.forEach(d=>{
-    const qk=d.q;
-    if(!qKeys.includes(qk)) return;
-    if(nvQ[d.type]&&nvQ[d.type][qk]!==undefined) nvQ[d.type][qk]+=d.count;
-  });
-  const nbPct=qKeys.map(k=>{
-    const n=nvQ['New Business'][k]||0, e=nvQ['Existing Business'][k]||0;
-    return (n+e)?r1(n/(n+e)*100):0;
-  });
-
-  charts.nvPct=new Chart(document.getElementById('c-nv-pct'),{
+  if(charts.regYr) charts.regYr.destroy();
+  charts.regYr = new Chart(document.getElementById('c-reg-yr'), {
     type:'line',
-    data:{labels:qKeys.map(qLabel),datasets:[{
-      label:'New %',data:nbPct,
-      borderColor:'#3B82F6',backgroundColor:'rgba(59,130,246,0.08)',
-      pointBackgroundColor:'#3B82F6',pointRadius:4,fill:true,tension:0.35,borderWidth:2
-    }]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' New: '+c.raw+'%'}}},
-      scales:{x:{grid:{display:false},ticks:{...TK,maxRotation:0}},
-        y:{min:0,max:100,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:v=>v+'%'}}}}
+    data:{labels:qs, datasets:regLines},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{display:false},ticks:TK},y:{grid:{color:'var(--border2)'},ticks:TK}} }
+  });
+}
+function regDrillDown(r){ drillReg=r; document.getElementById('reg-title').innerText=r+' 세부 매출 현황'; document.getElementById('reg-back-btn').style.display='block'; renderRegion(); }
+function regDrillUp(){ drillReg=null; document.getElementById('reg-title').innerText='광역시도별 매출 순위'; document.getElementById('reg-back-btn').style.display='none'; renderRegion(); }
+
+// ── SR PAGE ──
+function renderSR(){
+  const h=document.getElementById('kpi-sr');
+  h.innerHTML=`<div class="kpi hi"><div class="kpi-lbl">TOTAL SR SALES</div><div class="kpi-val">₩${r0(27000000000)}</div></div><div class="kpi"><div class="kpi-lbl">BEST PERFORMER</div><div class="kpi-val">SR1</div></div><div class="kpi"><div class="kpi-lbl">AVG PER SR</div><div class="kpi-val">₩${r0(3850000000)}</div></div><div class="kpi"><div class="kpi-lbl">ACTIVE SR</div><div class="kpi-val">6</div></div>`;
+
+  const srL = DATA.sr_data.map(d=>d.sr), srV = DATA.sr_data.map(d=>d.krw);
+  if(charts.srBar) charts.srBar.destroy();
+  charts.srBar = new Chart(document.getElementById('c-sr-bar'), {
+    type:'bar', data:{labels:srL, datasets:[{data:srV, backgroundColor:'#7C3AED', borderRadius:4}]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{display:false},ticks:TK},y:{grid:{color:'var(--border2)'},ticks:TK}} }
+  });
+
+  const list = document.getElementById('rank-sr');
+  const max = Math.max(...srV);
+  list.innerHTML = DATA.sr_data.map(d=>`<li class="ri"><span class="rn">${d.rank}</span><span class="rname">${d.sr}</span><div class="rbg"><div class="rfill" style="width:${d.krw/max*100}%; background:#7C3AED"></div></div><span class="rv">₩${r1(d.krw/1e8)}억</span></li>`).join('');
+
+  if(charts.dd) charts.dd.destroy();
+  charts.dd = new Chart(document.getElementById('c-dd-donut'), {
+    type:'doughnut', data:{labels:['Direct','Dealer'], datasets:[{data:[74,26], backgroundColor:['#7C3AED','#C4B5FD'], borderWidth:0}]},
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'70%', plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}}}}
   });
 }
 
-/* ════════════════════════════════════════
-   LOCK SCREEN INPUT
-   ════════════════════════════════════════ */
-window.onload=()=>document.getElementById('pw-input').focus();
+// ── DETAIL PAGE ──
+function renderDetail(){
+  const h=document.getElementById('kpi-det');
+  h.innerHTML=`<div class="kpi hi"><div class="kpi-lbl">NEW BUSINESS UNIT</div><div class="kpi-val">${r0(154)}</div></div><div class="kpi"><div class="kpi-lbl">NEW %</div><div class="kpi-val">66.7%</div></div><div class="kpi"><div class="kpi-lbl">EXISTING UNIT</div><div class="kpi-val">${r0(77)}</div></div><div class="kpi"><div class="kpi-lbl">TOTAL UNITS</div><div class="kpi-val">231</div></div>`;
+
+  const items = DATA.nv_data.by_year.filter(d=>d.year==curYr);
+  const tbl = document.getElementById('nv-pivot-table');
+  tbl.innerHTML = `<table><thead><tr><th>Product Category</th><th class="r">New Biz</th><th class="r">Existing</th><th class="r">Total</th><th class="r">New %</th></tr></thead><tbody>
+    ${items.map(d=>`<tr><td>${d.product}</td><td class="r">${d.new}</td><td class="r">${d.exist}</td><td class="r">${d.new+d.exist}</td><td class="r">${r1(d.new/(d.new+d.exist)*100)}%</td></tr>`).join('')}
+  </tbody></table>`;
+
+  const newD = items.map(d=>d.new), exD = items.map(d=>d.exist), lbls = items.map(d=>d.product);
+  if(charts.newD) charts.newD.destroy();
+  charts.newD = new Chart(document.getElementById('c-new-donut'), {
+    type:'doughnut', data:{labels:lbls, datasets:[{data:newD, backgroundColor:['#3B82F6','#10B981','#F59E0B','#6B7280'], borderWidth:0}]},
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'70%', plugins:{legend:{position:'right',labels:{boxWidth:10,font:{size:10}}}}}
+  });
+  if(charts.exD) charts.exD.destroy();
+  charts.exD = new Chart(document.getElementById('c-ex-donut'), {
+    type:'doughnut', data:{labels:lbls, datasets:[{data:exD, backgroundColor:['#3B82F6','#10B981','#F59E0B','#6B7280'], borderWidth:0}]},
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'70%', plugins:{legend:{position:'right',labels:{boxWidth:10,font:{size:10}}}}}
+  });
+
+  const qKeys = DATA.qoq.map(d=>d.q);
+  const nvQ = {'New Business':{}, 'Existing Business':{}};
+  qKeys.forEach(k=>{nvQ['New Business'][k]=0; nvQ['Existing Business'][k]=0;});
+  DATA.nv_data.by_q_cat.forEach(d=>{ if(nvQ[d.type]) nvQ[d.type][d.q] = d.count; });
+  const pctData = qKeys.map(k=>{
+    const n = nvQ['New Business'][k]||0, e = nvQ['Existing Business'][k]||0;
+    return (n+e)? r1(n/(n+e)*100) : 0;
+  });
+  if(charts.nvPct) charts.nvPct.destroy();
+  charts.nvPct = new Chart(document.getElementById('c-nv-pct'), {
+    type:'line', data:{labels:qKeys, datasets:[{label:'New %', data:pctData, borderColor:'#3B82F6', tension:0.4}]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{grid:{display:false},ticks:TK},y:{min:0, max:100, ticks:TK}}}
+  });
+}
 </script>
 </body>
 </html>
