@@ -250,27 +250,31 @@ footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-t
 
 <div class="page" id="page-region">
   <div class="kpi-row" id="kpi-reg"></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-    <!-- 한국 지도 -->
-    <div class="card" style="grid-column:1/2">
-      <div class="cl">지역별 매출 지도</div>
-      <div class="cs" id="map-title">광역 클릭 시 시군구 드릴다운</div>
-      <div id="korea-map" style="width:100%;height:420px;position:relative;overflow:hidden"></div>
-    </div>
-    <!-- 드릴다운 순위 -->
-    <div class="card" style="grid-column:2/3">
+  <div style="display:grid;grid-template-columns:1fr 220px;gap:12px;margin-bottom:12px">
+    <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <div class="cl" id="rank-title">광역별 매출 순위</div>
+        <div>
+          <div class="cl" id="map-title">지역별 매출 지도</div>
+          <div class="cs" id="map-sub">광역 클릭 → 시군구 드릴다운</div>
+        </div>
         <button id="back-btn" onclick="mapDrillUp()" style="display:none;font-size:11px;font-family:inherit;padding:3px 10px;border:.5px solid var(--border);border-radius:999px;background:transparent;color:var(--text2);cursor:pointer">← 전체</button>
       </div>
-      <div class="cs" id="rank-sub">피벗 #7 기준 · KRW</div>
-      <ul class="rank-list" id="rank-reg" style="max-height:380px;overflow-y:auto"></ul>
+      <div style="position:relative">
+        <svg id="korea-map-svg" viewBox="100 0 430 900" width="100%" style="display:block;cursor:pointer"></svg>
+        <div id="map-tooltip" style="display:none;position:absolute;background:var(--surface);border:.5px solid var(--border);border-radius:8px;padding:7px 11px;font-size:11px;pointer-events:none;z-index:10;min-width:110px"></div>
+      </div>
     </div>
-    <!-- 연도별 추이 -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div class="cl" id="rank-title">광역 순위</div>
+      </div>
+      <div class="cs" id="rank-sub">피벗 #7 기준</div>
+      <div id="rank-reg" style="margin-top:8px;overflow-y:auto;max-height:400px"></div>
+    </div>
     <div class="card" style="grid-column:1/-1">
       <div class="cl">주요 지역 연도별 추이</div>
-      <div class="cs">서울/경기/부산/대구 비교</div>
-      <div class="cw" style="height:220px"><canvas id="c-reg-yr"></canvas></div>
+      <div class="cs">서울 / 경기 / 부산 / 대구</div>
+      <div class="cw" style="height:200px"><canvas id="c-reg-yr"></canvas></div>
     </div>
   </div>
 </div>
@@ -773,60 +777,58 @@ function buildProduct(){
 }
 
 /* ════════════════════════════════════════
-   TAB: REGION — 한국 지도 + 드릴다운
+   TAB: REGION — 한국 지도 드릴다운
    ════════════════════════════════════════ */
-// 광역별 한국 지도 SVG 좌표 (간략화된 도형)
-const KOREA_REGIONS = {
-  '서울시':   {x:200,y:148,w:38,h:30,label:'서울'},
-  '경기도':   {x:160,y:130,w:90,h:80,label:'경기'},
-  '인천':     {x:148,y:152,w:36,h:32,label:'인천'},
-  '강원도':   {x:258,y:100,w:90,h:90,label:'강원'},
-  '충청북도': {x:210,y:210,w:72,h:60,label:'충북'},
-  '충청남도': {x:148,y:215,w:66,h:65,label:'충남'},
-  '세종':     {x:190,y:218,w:24,h:22,label:'세종'},
-  '대전':     {x:196,y:240,w:28,h:26,label:'대전'},
-  '경상북도': {x:290,y:195,w:86,h:90,label:'경북'},
-  '대구 광역시':{x:298,y:272,w:36,h:32,label:'대구'},
-  '전라북도': {x:178,y:288,w:70,h:60,label:'전북'},
-  '경상남도': {x:268,y:312,w:80,h:68,label:'경남'},
-  '광주':     {x:178,y:348,w:34,h:30,label:'광주'},
-  '전라남도': {x:156,y:348,w:80,h:80,label:'전남'},
-  '부산':     {x:318,y:348,w:38,h:34,label:'부산'},
-  '울산':     {x:330,y:315,w:32,h:34,label:'울산'},
-  '제주도':   {x:194,y:442,w:60,h:38,label:'제주'},
+// 실제 지리 기반 한국 광역시도 SVG path (viewBox 120 220 310 460)
+const MAP_PATHS = {
+  '경기도':       {path:'M163,63 L307,63 L326,126 L316,190 L288,221 L269,253 L221,268 L173,253 L144,190 L153,126 Z', cx:230, cy:165},
+  '서울시':       {path:'M204,158 L256,158 L256,202 L204,202 Z', cx:230, cy:180},
+  '인천':         {path:'M153,142 L201,142 L201,213 L168,213 L144,190 Z', cx:170, cy:174},
+  '강원도':       {path:'M302,16 L480,16 L480,261 L384,268 L326,261 L302,205 Z', cx:368, cy:149},
+  '충청북도':     {path:'M259,229 L379,229 L379,379 L259,379 Z', cx:307, cy:289},
+  '세종':         {path:'M249,324 L274,324 L274,351 L249,351 Z', cx:262, cy:337},
+  '대전':         {path:'M257,347 L284,347 L284,395 L257,395 Z', cx:270, cy:371},
+  '충청남도':     {path:'M130,261 L259,261 L259,434 L163,434 L130,363 Z', cx:178, cy:336},
+  '경상북도':     {path:'M321,261 L480,261 L480,505 L403,513 L297,505 L273,426 Z', cx:368, cy:390},
+  '대구 광역시':  {path:'M363,418 L398,418 L398,471 L363,471 Z', cx:380, cy:444},
+  '전라북도':     {path:'M163,395 L316,395 L316,521 L182,521 L163,474 Z', cx:217, cy:450},
+  '경상남도':     {path:'M283,497 L465,497 L465,640 L326,640 L283,584 Z', cx:351, cy:559},
+  '울산':         {path:'M417,458 L460,458 L460,529 L417,529 Z', cx:439, cy:493},
+  '부산':         {path:'M395,521 L453,521 L453,605 L395,605 Z', cx:424, cy:563},
+  '광주':         {path:'M200,540 L232,540 L232,576 L200,576 Z', cx:216, cy:558},
+  '전라남도':     {path:'M132,518 L307,518 L307,715 L132,715 Z', cx:220, cy:617},
+  '제주도':       {path:'M144,810 L228,810 L228,870 L144,870 Z', cx:186, cy:840},
 };
 
-let mapDrillState = null; // null=광역, '서울시'=드릴다운
+
+const REGION_ORDER = ['서울시','경기도','인천','강원도','충청북도','충청남도','세종','대전','경상북도','대구 광역시','경상남도','울산','부산','전라북도','광주','전라남도','제주도'];
+
+let mapDrillState = null;
 
 function buildRegion(){
   const yrs=[...selYears].sort();
   const ck=currency==='KRW'?'krw':'usd';
-
-  // KPI — 피벗 #7 기준
-  const regTotals = DATA.region_total;
-  const top = [...regTotals].sort((a,b)=>b[ck]-a[ck]);
-  const totAll = top.reduce((s,d)=>s+d[ck],0);
-  const seoul = top.find(d=>d.region==='서울시');
-  const gyeonggi = top.find(d=>d.region==='경기도');
+  const top=[...DATA.region_total].sort((a,b)=>b[ck]-a[ck]);
+  const totAll=top.reduce((s,d)=>s+(d[ck]||0),0);
+  const seoul=top.find(d=>d.region==='서울시');
+  const gyeonggi=top.find(d=>d.region==='경기도');
 
   setKPI('kpi-reg',[
     {lbl:'1위 지역',val:top[0]?.region||'-',badge:fmt(top[0]?.[ck]||0),cls:'up'},
     {lbl:'2위 지역',val:top[1]?.region||'-',badge:fmt(top[1]?.[ck]||0),cls:'neu'},
-    {lbl:'서울시',val:fmt(seoul?.[ck]||0),badge:(seoul?.[ck]/totAll*100||0).toFixed(1)+'% 비중',cls:'hi'},
-    {lbl:'경기도',val:fmt(gyeonggi?.[ck]||0),badge:(gyeonggi?.[ck]/totAll*100||0).toFixed(1)+'% 비중',cls:'neu'},
+    {lbl:'서울시',val:fmt(seoul?.[ck]||0),badge:totAll?(seoul?.[ck]/totAll*100).toFixed(1)+'% 비중':'',cls:'hi'},
+    {lbl:'경기도',val:fmt(gyeonggi?.[ck]||0),badge:totAll?(gyeonggi?.[ck]/totAll*100).toFixed(1)+'% 비중':'',cls:'neu'},
   ]);
 
-  renderKoreaMap(ck);
-  renderRegionRank(ck, null);
+  renderKoreaMap();
+  renderRegionRank(null);
 
-  // 연도별 추이 차트
   const top4Reg=['서울시','경기도','부산','대구 광역시'];
   const col4=['#3B82F6','#10B981','#F59E0B','#7C3AED'];
   charts.regYr=new Chart(document.getElementById('c-reg-yr'),{
     type:'bar',
     data:{labels:yrs.map(String),datasets:top4Reg.map((r,i)=>({
-      label:r,
-      data:yrs.map(y=>DATA.region_by_year.find(d=>d.year===y&&d.region===r)?.[ck]||0),
+      label:r, data:yrs.map(y=>DATA.region_by_year.find(d=>d.year===y&&d.region===r)?.[ck]||0),
       backgroundColor:col4[i],borderRadius:3
     }))},
     options:{responsive:true,maintainAspectRatio:false,
@@ -836,90 +838,111 @@ function buildRegion(){
   });
 }
 
-function renderKoreaMap(ck){
-  ck = ck || (currency==='KRW'?'krw':'usd');
-  const regTotals = DATA.region_total;
-  const maxV = Math.max(...regTotals.map(d=>d[ck]));
+function renderKoreaMap(){
+  const ck=currency==='KRW'?'krw':'usd';
+  const svg=document.getElementById('korea-map-svg');
+  if(!svg) return;
+  const maxV=Math.max(...DATA.region_total.map(d=>d[ck]||0));
+  let html='';
 
-  const svgW=480, svgH=500;
-  let svgPaths = '';
+  REGION_ORDER.forEach(region=>{
+    const rd=DATA.region_total.find(d=>d.region===region);
+    const val=rd?.[ck]||0;
+    const t=val/maxV;
+    const isSeoul=region==='서울시';
+    const isActive=mapDrillState===region;
 
-  Object.entries(KOREA_REGIONS).forEach(([key,cfg])=>{
-    const rd = regTotals.find(d=>d.region===key);
-    const val = rd?.[ck]||0;
-    const intensity = val/maxV;
-    // 파란색 농도
-    const r = Math.round(219 - intensity*180);
-    const g = Math.round(234 - intensity*100);
-    const b = 255;
-    const fill = `rgb(${r},${g},${b})`;
-    const stroke = mapDrillState===key ? '#F59E0B' : '#fff';
-    const sw = mapDrillState===key ? 2.5 : 1;
-    const label = cfg.label;
-    const valStr = val>=1e8 ? Math.round(val/1e8)+'억' : Math.round(val/1e4)+'만';
+    // 히트맵: 파란색 농도
+    const R=Math.round(230-t*175), G=Math.round(242-t*130), B=255;
+    const fill=isActive?'#F59E0B':`rgb(${R},${G},${B})`;
+    const stroke=isActive?'#d97706':'rgba(255,255,255,0.8)';
+    const sw=isActive?2:0.8;
 
-    svgPaths += `
-      <g class="map-region" onclick="mapClick('${key}')" style="cursor:pointer">
-        <rect x="${cfg.x}" y="${cfg.y}" width="${cfg.w}" height="${cfg.h}"
-          rx="4" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>
-        <text x="${cfg.x+cfg.w/2}" y="${cfg.y+cfg.h/2-5}" text-anchor="middle"
-          font-size="9" font-weight="500" fill="#1a1a18">${label}</text>
-        <text x="${cfg.x+cfg.w/2}" y="${cfg.y+cfg.h/2+7}" text-anchor="middle"
-          font-size="8" fill="#4a4a44">${valStr}</text>
+    const p=MAP_PATHS[region]; if(!p) return; const path=p.path;
+    const lbl={cx:p.cx, cy:p.cy};
+    const shortName=region.replace('광역시','').replace('특별시','').replace('자치시','').replace('도','').replace('시','');
+    const valStr=ck==='krw'
+      ?(val>=1e8?Math.round(val/1e8)+'억':Math.round(val/1e4)+'만')
+      :(val>=1e6?'$'+(val/1e6).toFixed(1)+'M':'$'+(val/1e3).toFixed(0)+'K');
+
+    if(isSeoul){
+      html+=`<g onclick="mapClick('${region}')" style="cursor:pointer">
+        <path d="${path}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>
+        <circle cx="${lbl.cx}" cy="${lbl.cy}" r="18" fill="${fill}" stroke="#3B82F6" stroke-width="2.5"/>
+        <text x="${lbl.cx}" y="${lbl.cy-3}" text-anchor="middle" font-size="11" font-weight="600" fill="#111">서울</text>
+        <text x="${lbl.cx}" y="${lbl.cy+11}" text-anchor="middle" font-size="9" fill="#333">${valStr}</text>
       </g>`;
+    } else {
+      html+=`<g onclick="mapClick('${region}')" style="cursor:pointer" class="mrgn">
+        <path d="${path}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>
+        <text x="${lbl.cx}" y="${lbl.cy-5}" text-anchor="middle" font-size="12" font-weight="500" fill="#111" pointer-events="none">${shortName}</text>
+        <text x="${lbl.cx}" y="${lbl.cy+10}" text-anchor="middle" font-size="10" fill="#333" pointer-events="none">${valStr}</text>
+      </g>`;
+    }
   });
 
-  const mapEl = document.getElementById('korea-map');
-  if(!mapEl) return;
-  mapEl.innerHTML = `
-    <svg viewBox="0 0 ${svgW} ${svgH}" width="100%" style="display:block">
-      <style>.map-region:hover rect{opacity:.8;}</style>
-      ${svgPaths}
-    </svg>
-    <div style="position:absolute;bottom:8px;right:8px;font-size:10px;color:var(--text3)">클릭 → 시군구 드릴다운</div>`;
+  // 범례
+  html+=`<g>
+    <text x="110" y="895" font-size="11" fill="#888">낮음</text>
+    <rect x="145" y="883" width="14" height="14" rx="2" fill="rgb(230,242,255)"/>
+    <rect x="161" y="883" width="14" height="14" rx="2" fill="rgb(175,210,245)"/>
+    <rect x="177" y="883" width="14" height="14" rx="2" fill="rgb(110,170,235)"/>
+    <rect x="193" y="883" width="14" height="14" rx="2" fill="rgb(55,130,225)"/>
+    <text x="210" y="895" font-size="11" fill="#888">높음</text>
+  </g>`;
+
+  svg.innerHTML=`<style>.mrgn:hover path{opacity:.75}</style>${html}`;
 }
 
 function mapClick(region){
-  mapDrillState = region;
-  const ck = currency==='KRW'?'krw':'usd';
-  renderKoreaMap(ck);
-  renderRegionRank(ck, region);
-  document.getElementById('map-title').textContent = region+' 상세';
-  document.getElementById('back-btn').style.display='inline-block';
+  mapDrillState=region;
+  renderKoreaMap();
+  renderRegionRank(region);
+  const t=document.getElementById('map-title');
+  const s=document.getElementById('map-sub');
+  const b=document.getElementById('back-btn');
+  if(t) t.textContent=region+' 상세';
+  if(s) s.textContent='시군구별 매출 · 피벗 #8 기준';
+  if(b) b.style.display='inline-block';
 }
 
 function mapDrillUp(){
-  mapDrillState = null;
-  const ck = currency==='KRW'?'krw':'usd';
-  renderKoreaMap(ck);
-  renderRegionRank(ck, null);
-  document.getElementById('map-title').textContent='광역 클릭 시 시군구 드릴다운';
-  document.getElementById('back-btn').style.display='none';
-  document.getElementById('rank-title').textContent='광역별 매출 순위';
-  document.getElementById('rank-sub').textContent='피벗 #7 기준 · '+currency;
+  mapDrillState=null;
+  renderKoreaMap();
+  renderRegionRank(null);
+  const t=document.getElementById('map-title');
+  const s=document.getElementById('map-sub');
+  const b=document.getElementById('back-btn');
+  if(t) t.textContent='지역별 매출 지도';
+  if(s) s.textContent='광역 클릭 → 시군구 드릴다운';
+  if(b) b.style.display='none';
 }
 
-function renderRegionRank(ck, drillRegion){
-  let items, title, sub;
+function renderRegionRank(drillRegion){
+  const ck=currency==='KRW'?'krw':'usd';
+  let items;
   if(drillRegion && DATA.region_detail[drillRegion]){
-    items = DATA.region_detail[drillRegion].map(d=>({name:d.sub, val:d[ck]||0}));
-    title = drillRegion+' 시군구별';
-    sub = '피벗 #8 기준 · '+currency;
+    items=[...DATA.region_detail[drillRegion]].map(d=>({name:d.sub,val:d[ck]||0})).sort((a,b)=>b.val-a.val);
+    const rt=document.getElementById('rank-title'); if(rt) rt.textContent=drillRegion+' 시군구';
+    const rs=document.getElementById('rank-sub');   if(rs) rs.textContent='피벗 #8 기준 · '+currency;
   } else {
-    items = DATA.region_total.map(d=>({name:d.region, val:d[ck]||0})).sort((a,b)=>b.val-a.val);
-    title = '광역별 매출 순위';
-    sub = '피벗 #7 기준 · '+currency;
+    items=DATA.region_total.map(d=>({name:d.region,val:d[ck]||0})).sort((a,b)=>b.val-a.val);
+    const rt=document.getElementById('rank-title'); if(rt) rt.textContent='광역 순위';
+    const rs=document.getElementById('rank-sub');   if(rs) rs.textContent='피벗 #7 기준 · '+currency;
   }
-  document.getElementById('rank-title').textContent = title;
-  document.getElementById('rank-sub').textContent = sub;
-  const maxV = items[0]?.val||1;
-  document.getElementById('rank-reg').innerHTML = items.map((d,i)=>`
-    <li class="ri">
-      <span class="rn">${i+1}</span>
-      <span class="rname">${d.name}</span>
-      <div class="rbg"><div class="rfill" style="width:${(d.val/maxV*100).toFixed(1)}%"></div></div>
-      <span class="rv">${fmtSm(d.val)}</span>
-    </li>`).join('');
+  const maxV=items[0]?.val||1;
+  const el=document.getElementById('rank-reg');
+  if(!el) return;
+  el.innerHTML=items.map((d,i)=>`
+    <div style="margin-bottom:7px" ${!drillRegion&&DATA.region_detail[d.name]?`onclick="mapClick('${d.name}')" style="margin-bottom:7px;cursor:pointer"`:''}">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
+        <span style="font-size:11px;color:var(--text);font-weight:${i<3?500:400}">${i+1}. ${d.name}</span>
+        <span style="font-size:11px;color:var(--text2)">${fmtSm(d.val)}</span>
+      </div>
+      <div style="height:3px;background:var(--surface3);border-radius:2px">
+        <div style="height:100%;width:${(d.val/maxV*100).toFixed(1)}%;background:#3B82F6;border-radius:2px"></div>
+      </div>
+    </div>`).join('');
 }
 
 /* ════════════════════════════════════════
