@@ -550,13 +550,53 @@ function buildOverview(){
     plugins:[qoqPlugin]
   });
 
+  // 연도별 YoY 플러그인
+  const yoyData = yrs.map((y,i)=>{
+    if(i===0) return null;
+    const prev=DATA.yearly_total[yrs[i-1]]?.[tk]||0;
+    const cur=DATA.yearly_total[y]?.[tk]||0;
+    return prev?Math.round((cur-prev)/Math.abs(prev)*100*10)/10:null;
+  });
+  const yoyPlugin={
+    id:'yoyLabelPlugin',
+    afterDraw(chart){
+      try{
+        const xS=chart.scales.x, yS=chart.scales.y;
+        if(!xS||!yS)return;
+        const ctx=chart.ctx;
+        const ds=chart.data.datasets;
+        yrs.forEach((y,i)=>{
+          const v=yoyData[i];
+          if(v===null||v===undefined)return;
+          const tot=(ds[0]?.data[i]||0)+(ds[1]?.data[i]||0);
+          const px=xS.getPixelForTick(i);
+          const py=yS.getPixelForValue(tot);
+          const sign=v>=0?'▲':'▼';
+          ctx.save();
+          ctx.font='bold 9.5px -apple-system,sans-serif';
+          ctx.fillStyle=v>=0?'#059669':'#DC2626';
+          ctx.textAlign='center';
+          ctx.textBaseline='bottom';
+          ctx.fillText(`${sign}${Math.abs(v)}%`, px, py-4);
+          ctx.restore();
+        });
+      }catch(e){}
+    }
+  };
+
   charts.yrBar=new Chart(document.getElementById('c-yr-bar'),{
     type:'bar',
     data:{labels:yrs.map(String),datasets:[
       {label:'SALES',data:yrs.map(y=>DATA.yearly_total[y]?.[sk]||0),backgroundColor:'#3B82F6',borderRadius:3},
       {label:'RECURRING',data:yrs.map(y=>DATA.yearly_total[y]?.[rk]||0),backgroundColor:'#10B981',borderRadius:3},
     ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtSm(c.raw)}}},scales:{x:{stacked:true,grid:{display:false},ticks:TK},y:{stacked:true,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}}}}
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      layout:{padding:{top:22}},
+      plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtSm(c.raw)}}},
+      scales:{x:{stacked:true,grid:{display:false},ticks:TK},y:{stacked:true,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}}}
+    },
+    plugins:[yoyPlugin]
   });
 
   const svcTot=yrs.reduce((s,y)=>s+(DATA.recurring_detail.find(d=>d.year===y&&d.cat==='service')?.[ck]||0),0);
