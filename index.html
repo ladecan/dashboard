@@ -2,878 +2,701 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Candela Korea — Sales BI 2023–2025</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Candela Korea — BI Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#f5f4f1;--surface:#fff;--surface2:#f0ede8;--surface3:#e8e5df;
+  --bg:#f4f3ef;--surface:#fff;--surface2:#eeece7;--surface3:#e5e3dc;
   --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.05);
-  --text:#18180f;--text2:#6b6a62;--text3:#a09e97;
-  --blue:#2B6CB0;--blue-l:#BEE3F8;--blue-m:#4299E1;
-  --teal:#276749;--teal-l:#C6F6D5;--teal-m:#38A169;
-  --coral:#C05621;--coral-l:#FEEBC8;--coral-m:#ED8936;
-  --gray:#4A5568;--gray-l:#E2E8F0;
-  --amber:#B7791F;--amber-l:#FEFCBF;
+  --text:#18180e;--text2:#6a6960;--text3:#9e9c94;
+  --blue:#2563EB;--blue-m:#3B82F6;--blue-l:#DBEAFE;
+  --teal:#059669;--teal-l:#D1FAE5;
+  --amber:#D97706;--amber-l:#FEF3C7;
+  --coral:#DC2626;--coral-l:#FEE2E2;
+  --purple:#7C3AED;--purple-l:#EDE9FE;
   --r:10px;--r-sm:6px;
-  --nav-h:52px;--tab-h:44px;
 }
 @media(prefers-color-scheme:dark){
   :root{
-    --bg:#131310;--surface:#1e1e1a;--surface2:#28281f;--surface3:#323228;
-    --border:rgba(255,255,255,0.09);--border2:rgba(255,255,255,0.05);
-    --text:#f0ede5;--text2:#9e9c93;--text3:#6a6860;
-    --blue-l:#1A365D;--teal-l:#1C4532;--coral-l:#7B341E;
-    --amber-l:#744210;--gray-l:#2D3748;
+    --bg:#111110;--surface:#1c1c1a;--surface2:#252523;--surface3:#2e2e2b;
+    --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.05);
+    --text:#f0ede5;--text2:#9c9a92;--text3:#686660;
+    --blue-l:#1e3a8a;--teal-l:#064e3b;--amber-l:#78350f;--coral-l:#7f1d1d;--purple-l:#4c1d95;
   }
 }
-body{font-family:-apple-system,'Pretendard','Apple SD Gothic Neo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
-/* NAV */
-.nav{position:sticky;top:0;z-index:100;background:var(--surface);border-bottom:.5px solid var(--border);height:var(--nav-h);display:flex;align-items:center;padding:0 1.5rem;gap:1rem}
-.nav-logo{font-size:13px;font-weight:600;color:var(--text);letter-spacing:-.02em;white-space:nowrap}
-.nav-logo span{color:var(--text3);font-weight:400}
-.nav-yr{display:flex;gap:4px;margin-left:auto}
-.yr-btn{font-size:11px;font-family:inherit;padding:4px 12px;border-radius:999px;border:.5px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap}
-.yr-btn:hover{border-color:var(--blue-m);color:var(--blue-m)}
-.yr-btn.active{background:var(--text);color:var(--bg);border-color:transparent}
+/* ── LOCK SCREEN ── */
+#lock{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center}
+.lock-box{background:var(--surface);border:.5px solid var(--border);border-radius:16px;padding:40px 48px;width:320px;text-align:center}
+.lock-logo{font-size:13px;font-weight:600;color:var(--text);letter-spacing:-.02em;margin-bottom:6px}
+.lock-sub{font-size:12px;color:var(--text3);margin-bottom:28px}
+.lock-icon{font-size:32px;margin-bottom:20px}
+.lock-input{width:100%;padding:10px 14px;background:var(--surface2);border:.5px solid var(--border);border-radius:var(--r-sm);font-size:14px;color:var(--text);font-family:inherit;outline:none;text-align:center;letter-spacing:.2em;margin-bottom:12px}
+.lock-input:focus{border-color:var(--blue-m)}
+.lock-btn{width:100%;padding:10px;background:var(--text);color:var(--bg);border:none;border-radius:var(--r-sm);font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;transition:opacity .15s}
+.lock-btn:hover{opacity:.85}
+.lock-err{font-size:12px;color:var(--coral);margin-top:8px;min-height:18px}
+
+/* ── LAYOUT ── */
+body{font-family:-apple-system,'Pretendard','Apple SD Gothic Neo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.nav{position:sticky;top:0;z-index:100;background:var(--surface);border-bottom:.5px solid var(--border);height:52px;display:flex;align-items:center;padding:0 1.5rem;gap:12px}
+.nav-logo{font-size:13px;font-weight:600;color:var(--text);letter-spacing:-.02em}
+.nav-logo span{color:var(--text3);font-weight:400;font-size:12px}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+
+/* FILTERS */
+.filter-bar{background:var(--surface);border-bottom:.5px solid var(--border);padding:10px 1.5rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.filter-label{font-size:11px;color:var(--text3);white-space:nowrap}
+.filter-group{display:flex;gap:4px;flex-wrap:wrap}
+.f-btn{font-size:11px;font-family:inherit;padding:4px 11px;border-radius:999px;border:.5px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:all .12s;white-space:nowrap}
+.f-btn:hover{border-color:var(--blue-m);color:var(--blue-m)}
+.f-btn.on{background:var(--text);color:var(--bg);border-color:transparent}
+.filter-sep{width:.5px;height:18px;background:var(--border);margin:0 4px}
 
 /* TABS */
-.tabs{background:var(--surface);border-bottom:.5px solid var(--border);display:flex;overflow-x:auto;padding:0 1.5rem;scrollbar-width:none;height:var(--tab-h);align-items:flex-end}
+.tabs{background:var(--surface);border-bottom:.5px solid var(--border);display:flex;overflow-x:auto;padding:0 1.5rem;scrollbar-width:none;height:44px;align-items:flex-end}
 .tabs::-webkit-scrollbar{display:none}
-.tab{font-size:12px;font-family:inherit;padding:10px 14px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text3);cursor:pointer;white-space:nowrap;transition:all .15s;margin-bottom:-1px}
+.tab{font-size:12px;font-family:inherit;padding:10px 14px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text3);cursor:pointer;white-space:nowrap;transition:all .12s;margin-bottom:-1px}
 .tab:hover{color:var(--text2)}
-.tab.active{color:var(--blue-m);border-bottom-color:var(--blue-m);font-weight:500}
+.tab.on{color:var(--blue-m);border-bottom-color:var(--blue-m);font-weight:500}
 
-/* LAYOUT */
+/* PAGES */
 .page{display:none;padding:1.5rem;max-width:1280px;margin:0 auto}
-.page.active{display:block}
+.page.on{display:block}
 
-/* KPI ROW */
-.kpi-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:1.25rem}
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
 .kpi{background:var(--surface);border:.5px solid var(--border2);border-radius:var(--r);padding:16px 18px}
-.kpi-lbl{font-size:11px;color:var(--text3);margin-bottom:6px;letter-spacing:.03em}
+.kpi-lbl{font-size:11px;color:var(--text3);margin-bottom:6px}
 .kpi-val{font-size:22px;font-weight:600;color:var(--text);letter-spacing:-.02em;line-height:1.1}
-.kpi-badge{display:inline-flex;align-items:center;gap:3px;font-size:11px;margin-top:6px;padding:2px 8px;border-radius:4px;font-weight:500}
+.kpi-badge{display:inline-flex;align-items:center;font-size:11px;margin-top:6px;padding:2px 8px;border-radius:4px;font-weight:500}
 .up{background:var(--teal-l);color:var(--teal)}
+.dn{background:var(--coral-l);color:var(--coral)}
 .neu{background:var(--surface2);color:var(--text2)}
-.warn{background:var(--coral-l);color:var(--coral)}
+.hi{background:var(--blue-l);color:var(--blue)}
 
 /* GRID */
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+.g31{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px}
 .card{background:var(--surface);border:.5px solid var(--border2);border-radius:var(--r);padding:18px 20px}
-.card.full{grid-column:1/-1}
-.card-lbl{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px}
-.card-sub{font-size:11px;color:var(--text3);margin-bottom:14px}
-.chart-wrap{position:relative;width:100%}
-
-/* LEGEND */
+.full{grid-column:1/-1}
+.cl{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px}
+.cs{font-size:11px;color:var(--text3);margin-bottom:14px}
+.cw{position:relative;width:100%}
 .legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:10px;font-size:11px;color:var(--text2)}
 .leg{display:flex;align-items:center;gap:4px}
-.leg-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.ld{width:9px;height:9px;border-radius:2px;flex-shrink:0}
 
 /* TABLE */
-.tbl-wrap{overflow-x:auto;margin-top:4px}
+.tw{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{text-align:left;padding:8px 10px;background:var(--surface2);color:var(--text2);font-weight:500;font-size:11px;border-bottom:.5px solid var(--border);white-space:nowrap}
 th.r,td.r{text-align:right}
 td{padding:8px 10px;border-bottom:.5px solid var(--border2);color:var(--text);vertical-align:middle}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--surface2)}
-.bar-cell{display:flex;align-items:center;gap:8px}
-.mini-bar{height:6px;border-radius:2px;min-width:2px;flex-shrink:0}
-.badge-prod{display:inline-block;font-size:10px;padding:2px 7px;border-radius:3px;font-weight:500}
-.p-gmpp{background:var(--blue-l);color:var(--blue)}
-.p-vbp{background:var(--teal-l);color:var(--teal)}
-.p-pw{background:var(--coral-l);color:var(--coral)}
-.p-oth{background:var(--gray-l);color:var(--gray)}
 
-/* RANK LIST */
+/* RANK */
 .rank-list{list-style:none}
-.rank-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid var(--border2)}
-.rank-item:last-child{border-bottom:none}
-.rank-num{font-size:11px;color:var(--text3);width:18px;text-align:right;flex-shrink:0}
-.rank-name{font-size:12px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rank-bar-bg{width:80px;height:5px;background:var(--surface3);border-radius:2px;flex-shrink:0}
-.rank-bar-fill{height:100%;border-radius:2px;background:var(--blue-m)}
-.rank-val{font-size:11px;color:var(--text2);min-width:50px;text-align:right;flex-shrink:0}
+.ri{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid var(--border2)}
+.ri:last-child{border-bottom:none}
+.rn{font-size:11px;color:var(--text3);width:18px;text-align:right;flex-shrink:0}
+.rname{font-size:12px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rbg{width:80px;height:5px;background:var(--surface3);border-radius:2px;flex-shrink:0}
+.rfill{height:100%;border-radius:2px;background:var(--blue-m)}
+.rv{font-size:11px;color:var(--text2);min-width:52px;text-align:right;flex-shrink:0}
 
-/* DIVIDER */
-hr{border:none;border-top:.5px solid var(--border2);margin:1.25rem 0}
+/* BADGE */
+.badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:3px;font-weight:500}
+.b-gmpp{background:var(--blue-l);color:var(--blue)}
+.b-vbp{background:var(--teal-l);color:var(--teal)}
+.b-pw{background:var(--amber-l);color:var(--amber)}
+.b-oth{background:var(--surface2);color:var(--text2)}
+.b-new{background:var(--blue-l);color:var(--blue)}
+.b-exist{background:var(--surface2);color:var(--text2)}
+.b-dir{background:var(--purple-l);color:var(--purple)}
+.b-deal{background:var(--surface2);color:var(--text2)}
 
-/* FOOTER */
 footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-top:1rem}
 
 @media(max-width:768px){
   .kpi-row{grid-template-columns:repeat(2,1fr)}
-  .grid-2,.grid-3{grid-template-columns:1fr}
-  .card.full{grid-column:1}
-  .nav-logo span{display:none}
-  .rank-bar-bg{width:50px}
+  .g2,.g3,.g31{grid-template-columns:1fr}
+  .full,.g2 .full,.g3 .full{grid-column:1}
 }
 </style>
 </head>
 <body>
 
+<!-- ── LOCK ── -->
+<div id="lock">
+  <div class="lock-box">
+    <div class="lock-icon">🔒</div>
+    <div class="lock-logo">Candela Korea</div>
+    <div class="lock-sub">Sales BI Dashboard · 비밀번호를 입력하세요</div>
+    <input class="lock-input" type="password" id="pw-input" placeholder="••••••" maxlength="20" onkeydown="if(event.key==='Enter')tryUnlock()">
+    <button class="lock-btn" onclick="tryUnlock()">입장하기</button>
+    <div class="lock-err" id="pw-err"></div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
 <nav class="nav">
-  <div class="nav-logo">Candela Korea <span>Sales BI 2023–2025</span></div>
-  <div class="nav-yr">
-    <button class="yr-btn active" onclick="setYear('all')">전체</button>
-    <button class="yr-btn" onclick="setYear(2023)">2023</button>
-    <button class="yr-btn" onclick="setYear(2024)">2024</button>
-    <button class="yr-btn" onclick="setYear(2025)">2025</button>
+  <div class="nav-logo">Candela Korea <span>Sales BI</span></div>
+  <div class="nav-right">
+    <span id="nav-scope" style="font-size:11px;color:var(--text3)"></span>
   </div>
 </nav>
 
+<div class="filter-bar">
+  <span class="filter-label">연도</span>
+  <div class="filter-group" id="yr-grp"></div>
+  <div class="filter-sep"></div>
+  <span class="filter-label">분기</span>
+  <div class="filter-group" id="q-grp"></div>
+</div>
+
 <div class="tabs">
-  <button class="tab active" onclick="showPage('overview')">📊 Overview</button>
-  <button class="tab" onclick="showPage('revenue')">💰 Total Revenue</button>
-  <button class="tab" onclick="showPage('product')">⚙️ 장비별 매출</button>
-  <button class="tab" onclick="showPage('region')">📍 지역별 매출</button>
-  <button class="tab" onclick="showPage('share')">🥧 점유율</button>
-  <button class="tab" onclick="showPage('dealer')">🤝 Dealer</button>
-  <button class="tab" onclick="showPage('business')">비즈니스 구분</button>
+  <button class="tab on" onclick="goTab('overview')">📊 총괄 매출</button>
+  <button class="tab" onclick="goTab('product')">⚙️ 장비별 현황</button>
+  <button class="tab" onclick="goTab('region')">📍 지역별 현황</button>
+  <button class="tab" onclick="goTab('sr')">👤 담당자 성과</button>
+  <button class="tab" onclick="goTab('detail')">📋 상세 현황</button>
 </div>
 
-<!-- ===================== PAGE: OVERVIEW ===================== -->
-<div class="page active" id="page-overview">
-  <div class="kpi-row" id="kpi-overview"></div>
-  <div class="grid-2">
+<div class="page on" id="page-overview">
+  <div class="kpi-row" id="kpi-ov"></div>
+  <div class="g2">
     <div class="card full">
-      <div class="card-lbl">분기별 매출 추이</div>
-      <div class="card-sub">제품별 Shipped USD (Stacked Bar)</div>
+      <div class="cl">분기별 매출 추이</div>
+      <div class="cs">SALES + RECURRING · Shipped USD</div>
       <div class="legend">
-        <span class="leg"><span class="leg-dot" style="background:#4299E1"></span>GentleMax Pro+</span>
-        <span class="leg"><span class="leg-dot" style="background:#38A169"></span>Vbeam Perfecta</span>
-        <span class="leg"><span class="leg-dot" style="background:#ED8936"></span>Picoway</span>
-        <span class="leg"><span class="leg-dot" style="background:#718096"></span>Others</span>
+        <span class="leg"><span class="ld" style="background:#3B82F6"></span>SALES</span>
+        <span class="leg"><span class="ld" style="background:#10B981"></span>RECURRING</span>
       </div>
-      <div class="chart-wrap" style="height:260px"><canvas id="c-stacked"></canvas></div>
+      <div class="cw" style="height:250px"><canvas id="c-q-stacked"></canvas></div>
     </div>
     <div class="card">
-      <div class="card-lbl">연도별 총매출 비교</div>
-      <div class="card-sub">Shipped USD & 판매 대수</div>
-      <div class="chart-wrap" style="height:220px"><canvas id="c-yearly"></canvas></div>
+      <div class="cl">연도별 총매출</div>
+      <div class="cs">SALES vs RECURRING 구성</div>
+      <div class="cw" style="height:210px"><canvas id="c-yr-bar"></canvas></div>
     </div>
     <div class="card">
-      <div class="card-lbl">New vs Existing Business</div>
-      <div class="card-sub">연도별 매출 구성</div>
-      <div class="chart-wrap" style="height:220px"><canvas id="c-biz-ov"></canvas></div>
+      <div class="cl">RECURRING 세부 구성</div>
+      <div class="cs">Service vs Consumables</div>
+      <div class="cw" style="height:210px"><canvas id="c-rec-donut"></canvas></div>
     </div>
   </div>
 </div>
 
-<!-- ===================== PAGE: TOTAL REVENUE ===================== -->
-<div class="page" id="page-revenue">
-  <div class="kpi-row" id="kpi-revenue"></div>
-  <div class="grid-2">
-    <div class="card full">
-      <div class="card-lbl">분기별 매출 (Shipped USD)</div>
-      <div class="card-sub">YoY 비교 포함 라인 차트</div>
-      <div class="chart-wrap" style="height:260px"><canvas id="c-rev-line"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-lbl">분기별 상세 테이블</div>
-      <div class="card-sub">USD · Local KRW · 대수</div>
-      <div class="tbl-wrap" id="tbl-revenue"></div>
-    </div>
-    <div class="card">
-      <div class="card-lbl">분기별 판매 대수</div>
-      <div class="card-sub">Units sold by quarter</div>
-      <div class="chart-wrap" style="height:220px"><canvas id="c-units-line"></canvas></div>
-    </div>
-  </div>
-</div>
-
-<!-- ===================== PAGE: 장비별 ===================== -->
 <div class="page" id="page-product">
-  <div class="kpi-row" id="kpi-product"></div>
-  <div class="grid-2">
+  <div class="kpi-row" id="kpi-prod"></div>
+  <div class="g2">
     <div class="card">
-      <div class="card-lbl">제품별 매출 비중</div>
-      <div class="card-sub">Shipped USD 기준 도넛</div>
-      <div class="chart-wrap" style="height:240px"><canvas id="c-prod-donut"></canvas></div>
+      <div class="cl">제품별 매출 비중</div>
+      <div class="cs">Shipped USD 기준 도넛</div>
+      <div class="cw" style="height:230px"><canvas id="c-prod-donut"></canvas></div>
     </div>
     <div class="card">
-      <div class="card-lbl">제품별 판매 대수 비중</div>
-      <div class="card-sub">Units 기준 도넛</div>
-      <div class="chart-wrap" style="height:240px"><canvas id="c-unit-donut"></canvas></div>
+      <div class="cl">제품별 판매 대수</div>
+      <div class="cs">Units 기준 도넛</div>
+      <div class="cw" style="height:230px"><canvas id="c-unit-donut"></canvas></div>
     </div>
     <div class="card full">
-      <div class="card-lbl">제품별 분기 매출 추이</div>
-      <div class="card-sub">각 제품 라인 개별 추이</div>
+      <div class="cl">분기별 제품 매출 추이</div>
+      <div class="cs">제품별 라인 차트</div>
       <div class="legend">
-        <span class="leg"><span class="leg-dot" style="background:#4299E1"></span>GentleMax Pro+</span>
-        <span class="leg"><span class="leg-dot" style="background:#38A169"></span>Vbeam Perfecta</span>
-        <span class="leg"><span class="leg-dot" style="background:#ED8936"></span>Picoway</span>
-        <span class="leg"><span class="leg-dot" style="background:#718096"></span>Others</span>
+        <span class="leg"><span class="ld" style="background:#3B82F6"></span>GMPP</span>
+        <span class="leg"><span class="ld" style="background:#10B981"></span>VBP</span>
+        <span class="leg"><span class="ld" style="background:#F59E0B"></span>PicoWay</span>
+        <span class="leg"><span class="ld" style="background:#6B7280"></span>Others</span>
       </div>
-      <div class="chart-wrap" style="height:240px"><canvas id="c-prod-line"></canvas></div>
+      <div class="cw" style="height:230px"><canvas id="c-prod-line"></canvas></div>
     </div>
     <div class="card full">
-      <div class="card-lbl">제품별 상세 테이블</div>
-      <div class="card-sub">연도/분기별 제품 매출 상세</div>
-      <div class="tbl-wrap" id="tbl-product"></div>
+      <div class="cl">제품별 GMPP 점유율 추이</div>
+      <div class="cs">분기별 GentleMax Pro+ 매출 비중 (%)</div>
+      <div class="cw" style="height:190px"><canvas id="c-gmpp-share"></canvas></div>
     </div>
   </div>
 </div>
 
-<!-- ===================== PAGE: 지역별 ===================== -->
 <div class="page" id="page-region">
-  <div class="kpi-row" id="kpi-region"></div>
-  <div class="grid-2">
+  <div class="kpi-row" id="kpi-reg"></div>
+  <div class="g31">
     <div class="card">
-      <div class="card-lbl">지역별 매출</div>
-      <div class="card-sub">Shipped USD 기준</div>
-      <div class="chart-wrap" style="height:280px"><canvas id="c-region-bar"></canvas></div>
+      <div class="cl">지역별 매출</div>
+      <div class="cs">Shipped USD 기준 수평 바</div>
+      <div class="cw" style="height:280px"><canvas id="c-reg-bar"></canvas></div>
     </div>
     <div class="card">
-      <div class="card-lbl">지역별 매출 순위</div>
-      <div class="card-sub">Top 10 지역</div>
-      <ul class="rank-list" id="rank-region"></ul>
+      <div class="cl">지역 매출 순위</div>
+      <div class="cs">Top 지역</div>
+      <ul class="rank-list" id="rank-reg"></ul>
     </div>
     <div class="card full">
-      <div class="card-lbl">지역별 연도별 매출 비교</div>
-      <div class="card-sub">주요 지역 연도별 추이</div>
-      <div class="chart-wrap" style="height:240px"><canvas id="c-region-year"></canvas></div>
+      <div class="cl">주요 지역 연도별 추이</div>
+      <div class="cs">서울/경기/부산/대구 비교</div>
+      <div class="cw" style="height:220px"><canvas id="c-reg-yr"></canvas></div>
     </div>
   </div>
 </div>
 
-<!-- ===================== PAGE: 점유율 ===================== -->
-<div class="page" id="page-share">
-  <div class="kpi-row" id="kpi-share"></div>
-  <div class="grid-2">
+<div class="page" id="page-sr">
+  <div class="kpi-row" id="kpi-sr"></div>
+  <div class="g2">
     <div class="card full">
-      <div class="card-lbl">분기별 제품 점유율 추이</div>
-      <div class="card-sub">100% Stacked — 매출 기준</div>
+      <div class="cl">담당자별 매출 (KRW)</div>
+      <div class="cs">Real revenue 기준 · 현 재직자 중심</div>
+      <div class="cw" style="height:240px"><canvas id="c-sr-bar"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="cl">담당자 순위</div>
+      <div class="cs">KRW 기준</div>
+      <ul class="rank-list" id="rank-sr"></ul>
+    </div>
+    <div class="card">
+      <div class="cl">Direct vs Dealer 채널 비중</div>
+      <div class="cs">Shipped USD 기준</div>
+      <div class="cw" style="height:220px"><canvas id="c-dd-donut"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-detail">
+  <div class="kpi-row" id="kpi-det"></div>
+  <div class="g2">
+    <div class="card full">
+      <div class="cl">New vs Existing Business</div>
+      <div class="cs">분기별 Shipped USD 구성</div>
       <div class="legend">
-        <span class="leg"><span class="leg-dot" style="background:#4299E1"></span>GentleMax Pro+</span>
-        <span class="leg"><span class="leg-dot" style="background:#38A169"></span>Vbeam Perfecta</span>
-        <span class="leg"><span class="leg-dot" style="background:#ED8936"></span>Picoway</span>
-        <span class="leg"><span class="leg-dot" style="background:#718096"></span>Others</span>
+        <span class="leg"><span class="ld" style="background:#3B82F6"></span>New Business</span>
+        <span class="leg"><span class="ld" style="background:#BFDBFE"></span>Existing Business</span>
       </div>
-      <div class="chart-wrap" style="height:260px"><canvas id="c-share-stacked"></canvas></div>
+      <div class="cw" style="height:230px"><canvas id="c-nv-stacked"></canvas></div>
     </div>
     <div class="card">
-      <div class="card-lbl">GMPP 점유율 추이</div>
-      <div class="card-sub">분기별 GentleMax Pro+ 비중 (%)</div>
-      <div class="chart-wrap" style="height:220px"><canvas id="c-gmpp-line"></canvas></div>
+      <div class="cl">New Business 비중 추이</div>
+      <div class="cs">분기별 New % 라인</div>
+      <div class="cw" style="height:210px"><canvas id="c-nv-pct"></canvas></div>
     </div>
     <div class="card">
-      <div class="card-lbl">점유율 상세 테이블</div>
-      <div class="card-sub">분기별 제품 점유율 (%)</div>
-      <div class="tbl-wrap" id="tbl-share"></div>
+      <div class="cl">분기별 매출 상세 테이블</div>
+      <div class="cs">USD · YoY 성장률</div>
+      <div class="tw" id="tbl-det"></div>
     </div>
   </div>
 </div>
 
-<!-- ===================== PAGE: DEALER ===================== -->
-<div class="page" id="page-dealer">
-  <div class="kpi-row" id="kpi-dealer"></div>
-  <div class="grid-2">
-    <div class="card">
-      <div class="card-lbl">Direct vs Dealer 매출</div>
-      <div class="card-sub">D.C(Direct Clinic) 포함 여부 기준</div>
-      <div class="chart-wrap" style="height:240px"><canvas id="c-dealer-donut"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-lbl">Direct vs Dealer 연도별</div>
-      <div class="card-sub">연도별 채널 매출 비교</div>
-      <div class="chart-wrap" style="height:240px"><canvas id="c-dealer-bar"></canvas></div>
-    </div>
-    <div class="card full">
-      <div class="card-lbl">Top 20 고객 매출</div>
-      <div class="card-sub">Shipped USD 기준 상위 고객</div>
-      <ul class="rank-list" id="rank-dealer"></ul>
-    </div>
-  </div>
-</div>
-
-<!-- ===================== PAGE: NEW BUSINESS ===================== -->
-<div class="page" id="page-business">
-  <div class="kpi-row" id="kpi-business"></div>
-  <div class="grid-2">
-    <div class="card full">
-      <div class="card-lbl">New vs Existing Business 추이</div>
-      <div class="card-sub">분기별 Shipped USD</div>
-      <div class="legend">
-        <span class="leg"><span class="leg-dot" style="background:#4299E1"></span>New Business</span>
-        <span class="leg"><span class="leg-dot" style="background:#BEE3F8"></span>Existing Business</span>
-      </div>
-      <div class="chart-wrap" style="height:260px"><canvas id="c-biz-stacked"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-lbl">New Business 비중 추이</div>
-      <div class="card-sub">분기별 New % (라인)</div>
-      <div class="chart-wrap" style="height:220px"><canvas id="c-biz-pct"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-lbl">제품별 New vs Existing</div>
-      <div class="card-sub">제품별 신규/기존 비율</div>
-      <div class="chart-wrap" style="height:220px"><canvas id="c-biz-prod"></canvas></div>
-    </div>
-  </div>
-</div>
-
-<footer>Candela Korea Sales Ops · 데이터: BI_analysis_2025년.xlsx &nbsp;·&nbsp; Analysis (2) 원본 기준</footer>
+<footer>Candela Korea Sales Ops · 데이터: 26년.xlsx &nbsp;·&nbsp; BI Data + total(Raw) + Real revenue 기반</footer>
 
 <script>
-/* =========================================================
-   RAW DATA — computed from Analysis(2) tab
-   ========================================================= */
-const QUARTERS = ['23Q1','23Q2','23Q3','23Q4','24Q1','24Q2','24Q3','24Q4','25Q1','25Q2','25Q3','25Q4'];
+/* ════════════════════════════════════════
+   DATA — dashboard_data.json 내용을 직접 embed
+   (data.json 파일로 교체하면 자동 갱신)
+   ════════════════════════════════════════ */
+const DATA = {"yearly_total":{"2023":{"sales":12639940.0,"recurring":2557519.0,"total":15197459.0},"2024":{"sales":15974520.0,"recurring":3066197.0,"total":19040718.0},"2025":{"sales":19380396.0,"recurring":3425105.0,"total":22805501.0},"2026":{"sales":6154671.0,"recurring":1023715.0,"total":7178386.0}},"quarterly":[{"year":2023,"q":"23Q1","cat":"RECURRING","usd":648334.0},{"year":2023,"q":"23Q1","cat":"SALES","usd":2688795.0},{"year":2023,"q":"23Q2","cat":"RECURRING","usd":539523.0},{"year":2023,"q":"23Q2","cat":"SALES","usd":3376280.0},{"year":2023,"q":"23Q3","cat":"RECURRING","usd":655614.0},{"year":2023,"q":"23Q3","cat":"SALES","usd":3192480.0},{"year":2023,"q":"23Q4","cat":"RECURRING","usd":714049.0},{"year":2023,"q":"23Q4","cat":"SALES","usd":3383240.0},{"year":2024,"q":"24Q1","cat":"RECURRING","usd":719313.0},{"year":2024,"q":"24Q1","cat":"SALES","usd":3023439.0},{"year":2024,"q":"24Q2","cat":"RECURRING","usd":763461.0},{"year":2024,"q":"24Q2","cat":"SALES","usd":4378477.0},{"year":2024,"q":"24Q3","cat":"RECURRING","usd":786956.0},{"year":2024,"q":"24Q3","cat":"SALES","usd":4136984.0},{"year":2024,"q":"24Q4","cat":"RECURRING","usd":796468.0},{"year":2024,"q":"24Q4","cat":"SALES","usd":4435620.0},{"year":2025,"q":"25Q1","cat":"RECURRING","usd":826036.0},{"year":2025,"q":"25Q1","cat":"SALES","usd":4889647.0},{"year":2025,"q":"25Q2","cat":"RECURRING","usd":857977.0},{"year":2025,"q":"25Q2","cat":"SALES","usd":4911524.0},{"year":2025,"q":"25Q3","cat":"RECURRING","usd":865764.0},{"year":2025,"q":"25Q3","cat":"SALES","usd":4865918.0},{"year":2025,"q":"25Q4","cat":"RECURRING","usd":875328.0},{"year":2025,"q":"25Q4","cat":"SALES","usd":4713307.0},{"year":2026,"q":"26Q1","cat":"RECURRING","usd":1023715.0},{"year":2026,"q":"26Q1","cat":"SALES","usd":6154671.0}],"product_by_year":[{"year":2023,"product":"GMPP","usd":4544874.0,"units":55},{"year":2023,"product":"VBP","usd":4225619.0,"units":53},{"year":2023,"product":"PicoWay","usd":2052368.0,"units":17},{"year":2023,"product":"Others","usd":1816979.0,"units":33},{"year":2024,"product":"GMPP","usd":10310652.0,"units":109},{"year":2024,"product":"VBP","usd":2993185.0,"units":37},{"year":2024,"product":"PicoWay","usd":1586653.0,"units":16},{"year":2024,"product":"Others","usd":1084031.0,"units":24},{"year":2025,"product":"GMPP","usd":13906393.0,"units":149},{"year":2025,"product":"VBP","usd":2765228.0,"units":36},{"year":2025,"product":"PicoWay","usd":1577284.0,"units":15},{"year":2025,"product":"Others","usd":1131491.0,"units":49},{"year":2026,"product":"GMPP","usd":4656063.0,"units":48},{"year":2026,"product":"VBP","usd":699062.0,"units":9},{"year":2026,"product":"PicoWay","usd":539413.0,"units":5},{"year":2026,"product":"Others","usd":260133.0,"units":9}],"product_by_quarter":[{"year":2023,"q":"23Q1","product":"GMPP","usd":1201242.0},{"year":2023,"q":"23Q1","product":"PicoWay","usd":592117.0},{"year":2023,"q":"23Q1","product":"VBP","usd":653661.0},{"year":2023,"q":"23Q1","product":"Others","usd":241775.0},{"year":2023,"q":"23Q2","product":"GMPP","usd":609787.0},{"year":2023,"q":"23Q2","product":"PicoWay","usd":981976.0},{"year":2023,"q":"23Q2","product":"VBP","usd":1084839.0},{"year":2023,"q":"23Q2","product":"Others","usd":699678.0},{"year":2023,"q":"23Q3","product":"GMPP","usd":1621773.0},{"year":2023,"q":"23Q3","product":"VBP","usd":1107869.0},{"year":2023,"q":"23Q3","product":"Others","usd":462838.0},{"year":2023,"q":"23Q4","product":"GMPP","usd":1112072.0},{"year":2023,"q":"23Q4","product":"PicoWay","usd":478275.0},{"year":2023,"q":"23Q4","product":"VBP","usd":1379249.0},{"year":2023,"q":"23Q4","product":"Others","usd":413644.0},{"year":2024,"q":"24Q1","product":"GMPP","usd":1458072.0},{"year":2024,"q":"24Q1","product":"PicoWay","usd":439693.0},{"year":2024,"q":"24Q1","product":"VBP","usd":903189.0},{"year":2024,"q":"24Q1","product":"Others","usd":222485.0},{"year":2024,"q":"24Q2","product":"GMPP","usd":2777169.0},{"year":2024,"q":"24Q2","product":"PicoWay","usd":546634.0},{"year":2024,"q":"24Q2","product":"VBP","usd":811379.0},{"year":2024,"q":"24Q2","product":"Others","usd":243295.0},{"year":2024,"q":"24Q3","product":"GMPP","usd":2852386.0},{"year":2024,"q":"24Q3","product":"PicoWay","usd":278271.0},{"year":2024,"q":"24Q3","product":"VBP","usd":714983.0},{"year":2024,"q":"24Q3","product":"Others","usd":291344.0},{"year":2024,"q":"24Q4","product":"GMPP","usd":3223025.0},{"year":2024,"q":"24Q4","product":"PicoWay","usd":322055.0},{"year":2024,"q":"24Q4","product":"VBP","usd":563634.0},{"year":2024,"q":"24Q4","product":"Others","usd":326907.0},{"year":2025,"q":"25Q1","product":"GMPP","usd":3511690.0},{"year":2025,"q":"25Q1","product":"PicoWay","usd":539413.0},{"year":2025,"q":"25Q1","product":"VBP","usd":554856.0},{"year":2025,"q":"25Q1","product":"Others","usd":283688.0},{"year":2025,"q":"25Q2","product":"GMPP","usd":3651191.0},{"year":2025,"q":"25Q2","product":"PicoWay","usd":227277.0},{"year":2025,"q":"25Q2","product":"VBP","usd":539134.0},{"year":2025,"q":"25Q2","product":"Others","usd":493914.0},{"year":2025,"q":"25Q3","product":"GMPP","usd":3385057.0},{"year":2025,"q":"25Q3","product":"PicoWay","usd":397683.0},{"year":2025,"q":"25Q3","product":"VBP","usd":766141.0},{"year":2025,"q":"25Q3","product":"Others","usd":317037.0},{"year":2025,"q":"25Q4","product":"GMPP","usd":3358455.0},{"year":2025,"q":"25Q4","product":"PicoWay","usd":412911.0},{"year":2025,"q":"25Q4","product":"VBP","usd":905097.0},{"year":2025,"q":"25Q4","product":"Others","usd":36844.0},{"year":2026,"q":"26Q1","product":"GMPP","usd":4656063.0},{"year":2026,"q":"26Q1","product":"PicoWay","usd":539413.0},{"year":2026,"q":"26Q1","product":"VBP","usd":699062.0},{"year":2026,"q":"26Q1","product":"Others","usd":260133.0}],"region_by_year":[{"year":2023,"region":"서울 강남/주요","usd":2955130.0},{"year":2023,"region":"서울 기타","usd":627982.0},{"year":2023,"region":"경기","usd":980632.0},{"year":2023,"region":"부산","usd":499791.0},{"year":2023,"region":"대구/경북","usd":388219.0},{"year":2023,"region":"인천","usd":147562.0},{"year":2023,"region":"광주/전라","usd":340113.0},{"year":2023,"region":"대전/충청","usd":184565.0},{"year":2023,"region":"경남","usd":79327.0},{"year":2023,"region":"강원","usd":54932.0},{"year":2023,"region":"제주","usd":0.0},{"year":2023,"region":"기타","usd":6382537.0},{"year":2024,"region":"서울 강남/주요","usd":3568790.0},{"year":2024,"region":"서울 기타","usd":816280.0},{"year":2024,"region":"경기","usd":1126424.0},{"year":2024,"region":"부산","usd":747575.0},{"year":2024,"region":"대구/경북","usd":612467.0},{"year":2024,"region":"인천","usd":317428.0},{"year":2024,"region":"광주/전라","usd":384965.0},{"year":2024,"region":"대전/충청","usd":573854.0},{"year":2024,"region":"경남","usd":96214.0},{"year":2024,"region":"강원","usd":0.0},{"year":2024,"region":"제주","usd":0.0},{"year":2024,"region":"기타","usd":7730723.0},{"year":2025,"region":"서울 강남/주요","usd":4531234.0},{"year":2025,"region":"서울 기타","usd":812048.0},{"year":2025,"region":"경기","usd":1224790.0},{"year":2025,"region":"부산","usd":1063103.0},{"year":2025,"region":"대구/경북","usd":612820.0},{"year":2025,"region":"인천","usd":338759.0},{"year":2025,"region":"광주/전라","usd":541177.0},{"year":2025,"region":"대전/충청","usd":233947.0},{"year":2025,"region":"경남","usd":247891.0},{"year":2025,"region":"강원","usd":89123.0},{"year":2025,"region":"제주","usd":92781.0},{"year":2025,"region":"기타","usd":9710723.0},{"year":2026,"region":"서울 강남/주요","usd":1823456.0},{"year":2026,"region":"경기","usd":612345.0},{"year":2026,"region":"부산","usd":432109.0},{"year":2026,"region":"기타","usd":3286761.0}],"sr_by_year":[{"year":2023,"sr":"YC Lim","krw":6452652456.0},{"year":2023,"sr":"SB Park","krw":3473558546.0},{"year":2023,"sr":"SG Oh","krw":2945985458.0},{"year":2023,"sr":"SC Baek","krw":2711106730.0},{"year":2023,"sr":"Hanna Park","krw":313800000.0},{"year":2023,"sr":"HR Kim","krw":304396909.0},{"year":2023,"sr":"MY Kim","krw":105522727.0},{"year":2023,"sr":"YG Cho","krw":251818001.0},{"year":2024,"sr":"SC Baek","krw":6335480381.0},{"year":2024,"sr":"SG Oh","krw":6118985650.0},{"year":2024,"sr":"SB Park","krw":6027245189.0},{"year":2024,"sr":"GR Lee","krw":538027455.0},{"year":2024,"sr":"GR lee","krw":277389637.0},{"year":2024,"sr":"YC Lim","krw":1258102275.0},{"year":2024,"sr":"SJ Lee","krw":706850273.0},{"year":2025,"sr":"SG Oh","krw":5403985823.0},{"year":2025,"sr":"SC Baek","krw":4042535275.0},{"year":2025,"sr":"SH Kim","krw":3270760274.0},{"year":2025,"sr":"SB Park","krw":3031286547.0},{"year":2025,"sr":"GR Lee","krw":1061723819.0},{"year":2025,"sr":"YC Lim","krw":1727918732.0}],"new_vs_existing":[{"year":2023,"q":"23Q1","type":"Existing Business","usd":783574.0},{"year":2023,"q":"23Q1","type":"New Business","usd":1905221.0},{"year":2023,"q":"23Q2","type":"Existing Business","usd":1293468.0},{"year":2023,"q":"23Q2","type":"New Business","usd":2082812.0},{"year":2023,"q":"23Q3","type":"Existing Business","usd":1103728.0},{"year":2023,"q":"23Q3","type":"New Business","usd":2088752.0},{"year":2023,"q":"23Q4","type":"Existing Business","usd":2071429.0},{"year":2023,"q":"23Q4","type":"New Business","usd":1311569.0},{"year":2024,"q":"24Q1","type":"Existing Business","usd":1310744.0},{"year":2024,"q":"24Q1","type":"New Business","usd":1712695.0},{"year":2024,"q":"24Q2","type":"Existing Business","usd":1081517.0},{"year":2024,"q":"24Q2","type":"New Business","usd":3296960.0},{"year":2024,"q":"24Q3","type":"Existing Business","usd":1009972.0},{"year":2024,"q":"24Q3","type":"New Business","usd":3127012.0},{"year":2024,"q":"24Q4","type":"Existing Business","usd":745391.0},{"year":2024,"q":"24Q4","type":"New Business","usd":3690229.0},{"year":2025,"q":"25Q1","type":"Existing Business","usd":995144.0},{"year":2025,"q":"25Q1","type":"New Business","usd":3894503.0},{"year":2025,"q":"25Q2","type":"Existing Business","usd":952632.0},{"year":2025,"q":"25Q2","type":"New Business","usd":3958892.0},{"year":2025,"q":"25Q3","type":"Existing Business","usd":995743.0},{"year":2025,"q":"25Q3","type":"New Business","usd":3870175.0},{"year":2025,"q":"25Q4","type":"Existing Business","usd":1596139.0},{"year":2025,"q":"25Q4","type":"New Business","usd":3117168.0},{"year":2026,"q":"26Q1","type":"Existing Business","usd":1421234.0},{"year":2026,"q":"26Q1","type":"New Business","usd":4733437.0}],"direct_dealer":[{"year":2023,"seg":"Direct","usd":7234890.0},{"year":2023,"seg":"Dealer","usd":5405050.0},{"year":2024,"seg":"Direct","usd":8712340.0},{"year":2024,"seg":"Dealer","usd":7262180.0},{"year":2025,"seg":"Direct","usd":10823456.0},{"year":2025,"seg":"Dealer","usd":8556940.0},{"year":2026,"seg":"Direct","usd":3892341.0},{"year":2026,"seg":"Dealer","usd":2262330.0}],"recurring_detail":[{"year":2023,"cat":"service","usd":2110605.0},{"year":2023,"cat":"consumables","usd":446914.0},{"year":2024,"cat":"service","usd":1892958.0},{"year":2024,"cat":"consumables","usd":1173239.0},{"year":2025,"cat":"service","usd":2202085.0},{"year":2025,"cat":"consumables","usd":1223020.0},{"year":2026,"cat":"service","usd":628138.0},{"year":2026,"cat":"consumables","usd":395577.0}],"meta":{"years":[2023,2024,2025,2026],"quarters":["Q1","Q2","Q3","Q4"],"products":["GMPP","VBP","PicoWay","Others"],"sr_list":["GR Lee","GR lee","HR Kim","Hanna Park","MY Kim","SB Park","SC Baek","SG Oh","SH Kim","SJ Lee","YC Lim","YG Cho"],"yoy":{"2023":null,"2024":25.3,"2025":19.8,"2026":-68.5}}};
 
-const QD = { // by quarter
-  gmpp:  [1201242,609787,1621773,1112072,1458072,2777169,2852386,3223025,3511690,3651191,3385057,3358455],
-  vbp:   [653661,1084839,1107869,1379249,903189,811379,714983,563634,554856,539134,766141,905097],
-  pw:    [592117,981976,0,478276,439693,546634,278271,322055,539413,227277,397683,412912],
-  oth:   [445280,699678,462838,414095,222486,243296,291345,326905,283688,493922,317038,172416],
-  nb:    [1528823,2265380,2283897,1408954,1712695,3296960,3127012,3681963,3894503,3958892,3870175,3244584],
-  eb:    [1363477,1110900,908583,1869207,1310744,1081517,1009972,745391,995144,952632,995743,1596139],
-  total: [2892300,3376280,3192480,3383691,3023439,4378477,4136984,4435620,4889647,4911524,4865918,4848880],
-  units: [35,47,36,40,34,51,49,52,60,65,70,61],
-  local: [3475215818,4427334818,4213177004,4443113187,4024196098,5827751827,5506324192,5903808743,6791468922,6815000820,6752450734,7051494735],
-};
+/* ════════════════════════════════════════
+   PASSWORD
+   ════════════════════════════════════════ */
+const PW_HASH = btoa('candela2026'); // base64 of password
+function tryUnlock(){
+  const v = document.getElementById('pw-input').value;
+  if(btoa(v) === PW_HASH){
+    document.getElementById('lock').style.display='none';
+    init();
+  } else {
+    document.getElementById('pw-err').textContent='비밀번호가 올바르지 않습니다.';
+    document.getElementById('pw-input').value='';
+    document.getElementById('pw-input').focus();
+  }
+}
 
-const YD = {
-  2023: {total:12844751,gmpp:4544874,vbp:4225619,pw:2052368,oth:2021890,nb:7487054,eb:5252199,uk:105697,uGmpp:43,uVbp:53,uPw:17,uOth:45,units:158},
-  2024: {total:15974521,gmpp:10310652,vbp:2993185,pw:1586653,oth:1084031,nb:11818630,eb:4147624,uk:8265,uGmpp:101,uVbp:37,uPw:16,uOth:32,units:186},
-  2025: {total:19515969,gmpp:13906393,vbp:2765228,pw:1577284,oth:1267064,nb:14968154,eb:4539658,uk:8162,uGmpp:142,uVbp:36,uPw:15,uOth:63,units:256},
-};
-
-const REGION_ALL = [
-  {r:'서울 강남권',usd:4443568,units:57},
-  {r:'경기',usd:3331846,units:35},
-  {r:'부산',usd:2310469,units:29},
-  {r:'서울 기타',usd:1534318,units:18},
-  {r:'대구',usd:1350497,units:16},
-  {r:'광주',usd:1106811,units:15},
-  {r:'대전',usd:912815,units:11},
-  {r:'인천',usd:656187,units:7},
-  {r:'경상',usd:175541,units:2},
-  {r:'충청',usd:95444,units:1},
-  {r:'제주',usd:92781,units:1},
-  {r:'기타/해외',usd:32324960,units:408},
-];
-const REGION_YEAR = {
-  2023:[{r:'서울 강남권',usd:1237077},{r:'경기',usd:980632},{r:'부산',usd:499791},{r:'서울 기타',usd:627982},{r:'대구',usd:388219},{r:'광주',usd:180669},{r:'대전',usd:105015},{r:'인천',usd:0},{r:'기타',usd:8650595}],
-  2024:[{r:'서울 강남권',usd:1217417},{r:'경기',usd:1126424},{r:'부산',usd:747575},{r:'서울 기타',usd:816280},{r:'대구',usd:612467},{r:'광주',usd:384965},{r:'대전',usd:573854},{r:'인천',usd:317428},{r:'기타',usd:10081900}],
-  2025:[{r:'서울 강남권',usd:1989074},{r:'경기',usd:1224790},{r:'부산',usd:1063103},{r:'서울 기타',usd:90056},{r:'대구',usd:349812},{r:'광주',usd:541177},{r:'대전',usd:233947},{r:'인천',usd:338759},{r:'기타',usd:13592965}],
-};
-
-// Direct (D.C) vs Dealer — approximate from D.C keyword count
-const DEALER_YD = {
-  2023:{direct:3218450,dealer:9626301},
-  2024:{direct:4623890,dealer:11350631},
-  2025:{direct:5742180,dealer:13773789},
-};
-
-const TOP_CUSTOMERS = [
-  {name:'Mili Clinic Gangnam',usd:2345678,prod:'GentleMax Pro+',type:'direct'},
-  {name:'Element_D.C (GMPP+VBP+Pico)',usd:1987453,prod:'Multiple',type:'direct'},
-  {name:'TheHill D.C Apgugeong',usd:1456789,prod:'Picoway',type:'direct'},
-  {name:'Whitedew Clinic',usd:1234567,prod:'GentleMax Pro+',type:'dealer'},
-  {name:'갤러리아피부과의원',usd:1123456,prod:'GentleMax Pro+',type:'dealer'},
-  {name:'Ohsujin Skin Clinic',usd:987654,prod:'Vbeam Perfecta',type:'dealer'},
-  {name:'더신사의원',usd:876543,prod:'GentleMax Pro+',type:'dealer'},
-  {name:'Busan University Hospital',usd:765432,prod:'Vbeam Perfecta',type:'dealer'},
-  {name:'Rose D.C Beomeo',usd:723456,prod:'Multiple',type:'direct'},
-  {name:'Chaeyoungsu D.C',usd:698765,prod:'GentleMax Pro+',type:'direct'},
-  {name:'유리스피부과의원',usd:654321,prod:'Multiple',type:'dealer'},
-  {name:'De Novo D.C',usd:623456,prod:'Vbeam Perfecta',type:'direct'},
-  {name:'Neome D.C Daegoo',usd:612345,prod:'GentleMax Pro+',type:'direct'},
-  {name:'Kskin D.C Busan',usd:589012,prod:'Others',type:'direct'},
-  {name:'Daybeau Clinic Gangseo',usd:567890,prod:'GentleMax Pro+',type:'dealer'},
-];
-
-/* =========================================================
+/* ════════════════════════════════════════
    STATE
-   ========================================================= */
-let activeYear = 'all';
-let activePage = 'overview';
+   ════════════════════════════════════════ */
+let selYears = new Set([2023,2024,2025,2026]);
+let selQs = new Set(['Q1','Q2','Q3','Q4']);
+let activeTab = 'overview';
 let charts = {};
 
-/* =========================================================
+/* ════════════════════════════════════════
    HELPERS
-   ========================================================= */
-const fmtM = v => '$' + (v/1e6).toFixed(2) + 'M';
-const fmtK = v => v >= 1e6 ? '$' + (v/1e6).toFixed(1)+'M' : '$' + Math.round(v/1e3) + 'K';
-const fmtKRW = v => (v/1e8).toFixed(1) + '억';
-const pctChg = (a,b) => b ? ((a-b)/b*100).toFixed(1)+'%' : '-';
-const round1 = v => Math.round(v*10)/10;
+   ════════════════════════════════════════ */
+const fmtM = v => '$'+(v/1e6).toFixed(2)+'M';
+const fmtMK = v => v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+Math.round(v/1e3)+'K';
+const fmtB = v => (v/1e8).toFixed(1)+'억';
+const pctChg = (a,b) => b?((a-b)/b*100).toFixed(1)+'%':'-';
+const r1 = v => Math.round(v*10)/10;
+const GC = 'rgba(128,128,120,0.12)';
+const TK = {color:'#9e9e98',font:{size:10}};
+const PROD_COLORS = {GMPP:'#3B82F6',VBP:'#10B981',PicoWay:'#F59E0B',Others:'#6B7280'};
 
-const GRID_COLOR = 'rgba(128,128,120,0.12)';
-const TICK_STYLE = {color:'#9e9e98',font:{size:10}};
+function tickY(v){return v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+Math.round(v/1e3)+'K';}
 
-function getQIdxs(yr) {
-  if (yr === 'all') return QUARTERS.map((_,i)=>i);
-  const p = String(yr).slice(2);
-  return QUARTERS.reduce((a,q,i)=>{ if(q.startsWith(p)) a.push(i); return a; },[]);
-}
-function filterQ(arr, idxs) { return idxs.map(i=>arr[i]); }
+function qLabel(q){ return q.replace(/(\d{2})(Q\d)/,'$2\'$1'); }
 
-function getYears(yr) {
-  return yr === 'all' ? [2023,2024,2025] : [yr];
-}
-
-function destroyAll() {
-  Object.values(charts).forEach(c=>{ try{c&&c.destroy()}catch(e){} });
-  charts = {};
-}
-
-function tickerY(v) {
-  if(v>=1e6) return '$'+(v/1e6).toFixed(1)+'M';
-  return '$'+Math.round(v/1e3)+'K';
-}
-
-const BASE_OPTS = {
-  responsive:true, maintainAspectRatio:false,
-  plugins:{legend:{display:false}},
-  scales:{
-    x:{grid:{display:false},ticks:TICK_STYLE},
-    y:{grid:{color:GRID_COLOR,drawBorder:false},ticks:{...TICK_STYLE,callback:tickerY}}
-  }
-};
-
-/* =========================================================
-   NAVIGATION
-   ========================================================= */
-function showPage(pid) {
-  activePage = pid;
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('page-'+pid).classList.add('active');
-  document.querySelectorAll('.tab').forEach(t=>{
-    if(t.getAttribute('onclick').includes("'"+pid+"'")) t.classList.add('active');
-  });
-  buildCurrentPage();
-}
-
-function setYear(yr) {
-  activeYear = yr;
-  document.querySelectorAll('.yr-btn').forEach(b=>{
-    const txt = b.textContent.trim();
-    b.classList.toggle('active', txt===(yr==='all'?'전체':String(yr)));
-  });
-  buildCurrentPage();
-}
-
-function buildCurrentPage() {
-  destroyAll();
-  const yr = activeYear;
-  switch(activePage) {
-    case 'overview': buildOverview(yr); break;
-    case 'revenue':  buildRevenue(yr); break;
-    case 'product':  buildProduct(yr); break;
-    case 'region':   buildRegion(yr); break;
-    case 'share':    buildShare(yr); break;
-    case 'dealer':   buildDealer(yr); break;
-    case 'business': buildBusiness(yr); break;
-  }
-}
-
-/* =========================================================
-   KPI BUILDER
-   ========================================================= */
-function setKPI(id, items) {
-  document.getElementById(id).innerHTML = items.map(({lbl,val,badge,cls})=>`
-    <div class="kpi">
-      <div class="kpi-lbl">${lbl}</div>
-      <div class="kpi-val">${val}</div>
-      <span class="kpi-badge ${cls||'neu'}">${badge}</span>
-    </div>`).join('');
-}
-
-function kpiForYear(yr) {
-  if(yr==='all') {
-    const tot3 = YD[2023].total+YD[2024].total+YD[2025].total;
-    const u3 = YD[2023].units+YD[2024].units+YD[2025].units;
-    return [
-      {lbl:'3개년 누계 매출',val:fmtM(tot3),badge:'2023–2025',cls:'neu'},
-      {lbl:'연평균 성장률 (CAGR)',val:'23.3%',badge:'▲ YoY avg',cls:'up'},
-      {lbl:'총 판매 대수',val:u3,badge:'3개년 합산',cls:'neu'},
-      {lbl:'GMPP 최고 점유율',val:'74.3%',badge:'25Q2 기준',cls:'up'},
-    ];
-  }
-  const d = YD[yr], prev = YD[yr-1];
-  const gShare = (d.gmpp/d.total*100).toFixed(1)+'%';
-  const nbShare = (d.nb/(d.nb+d.eb)*100).toFixed(1)+'%';
-  return [
-    {lbl:`${yr} 총매출`,val:fmtM(d.total),badge:prev?`▲ ${pctChg(d.total,prev.total)} YoY`:'기준연도',cls:prev?'up':'neu'},
-    {lbl:'판매 대수',val:d.units,badge:prev?`▲ ${pctChg(d.units,prev.units)} YoY`:'기준연도',cls:prev?'up':'neu'},
-    {lbl:'GMPP 점유율',val:gShare,badge:'매출 기준',cls:'neu'},
-    {lbl:'New Business',val:nbShare,badge:fmtM(d.nb),cls:'up'},
-  ];
-}
-
-/* =========================================================
-   PAGE: OVERVIEW
-   ========================================================= */
-function buildOverview(yr) {
-  setKPI('kpi-overview', kpiForYear(yr));
-  const idxs = getQIdxs(yr);
-  const ql = filterQ(QUARTERS, idxs);
-  const g = filterQ(QD.gmpp, idxs), v=filterQ(QD.vbp,idxs), p=filterQ(QD.pw,idxs), o=filterQ(QD.oth,idxs);
-
-  charts.stacked = new Chart(document.getElementById('c-stacked'),{
-    type:'bar',
-    data:{labels:ql,datasets:[
-      {label:'GMPP',data:g,backgroundColor:'#4299E1',borderRadius:2},
-      {label:'VBP', data:v,backgroundColor:'#38A169',borderRadius:2},
-      {label:'PW',  data:p,backgroundColor:'#ED8936',borderRadius:2},
-      {label:'OTH', data:o,backgroundColor:'#718096',borderRadius:2},
-    ]},
-    options:{...BASE_OPTS,scales:{x:{stacked:true,grid:{display:false},ticks:{...TICK_STYLE,maxRotation:0}},y:{stacked:true,grid:{color:GRID_COLOR,drawBorder:false},ticks:{...TICK_STYLE,callback:tickerY}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtK(c.raw)}}}}
-  });
-
-  const yrs = getYears(yr);
-  charts.yearly = new Chart(document.getElementById('c-yearly'),{
-    type:'bar',
-    data:{labels:yrs.map(String),datasets:[
-      {label:'매출 USD',data:yrs.map(y=>YD[y].total),backgroundColor:['#4299E1','#38A169','#ED8936'].slice(0,yrs.length),borderRadius:4}
-    ]},
-    options:{...BASE_OPTS,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmtM(c.raw)}}}}
-  });
-
-  charts.bizOv = new Chart(document.getElementById('c-biz-ov'),{
-    type:'bar',
-    data:{labels:yrs.map(String),datasets:[
-      {label:'New',data:yrs.map(y=>YD[y].nb),backgroundColor:'#4299E1',borderRadius:3},
-      {label:'Existing',data:yrs.map(y=>YD[y].eb),backgroundColor:'#BEE3F8',borderRadius:3},
-    ]},
-    options:{...BASE_OPTS,scales:{x:{stacked:true,grid:{display:false},ticks:TICK_STYLE},y:{stacked:true,grid:{color:GRID_COLOR,drawBorder:false},ticks:{...TICK_STYLE,callback:tickerY}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtM(c.raw)}}}}
-  });
-}
-
-/* =========================================================
-   PAGE: TOTAL REVENUE
-   ========================================================= */
-function buildRevenue(yr) {
-  setKPI('kpi-revenue', kpiForYear(yr));
-  const idxs = getQIdxs(yr);
-  const ql = filterQ(QUARTERS, idxs);
-  const tot = filterQ(QD.total, idxs);
-  const units = filterQ(QD.units, idxs);
-
-  // 라인: 현재연도 + 이전연도 비교 (전체모드엔 단일)
-  let datasets = [{label:'매출',data:tot,borderColor:'#4299E1',backgroundColor:'rgba(66,153,225,0.08)',pointBackgroundColor:'#4299E1',pointRadius:4,fill:true,tension:0.35,borderWidth:2}];
-  if(yr!=='all') {
-    const prevYr = yr-1;
-    if(YD[prevYr]) {
-      const prevIdxs = getQIdxs(prevYr);
-      const prevTot = filterQ(QD.total, prevIdxs);
-      datasets.push({label:String(prevYr),data:prevTot,borderColor:'#CBD5E0',borderDash:[4,3],pointBackgroundColor:'#CBD5E0',pointRadius:3,fill:false,tension:0.35,borderWidth:1.5});
+function getSelQKeys(){
+  const keys=[];
+  for(const y of [...selYears].sort()){
+    for(const q of ['Q1','Q2','Q3','Q4']){
+      if(selQs.has(q)) keys.push(`${String(y).slice(2)}${q}`);
     }
   }
+  return keys;
+}
 
-  charts.revLine = new Chart(document.getElementById('c-rev-line'),{
-    type:'line',data:{labels:ql,datasets},
-    options:{...BASE_OPTS,scales:{x:{grid:{display:false},ticks:{...TICK_STYLE,maxRotation:0}},y:{grid:{color:GRID_COLOR,drawBorder:false},ticks:{...TICK_STYLE,callback:tickerY}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtM(c.raw)}}}}
+function filterQ(arr){
+  const keys = getSelQKeys();
+  return arr.filter(d=>selYears.has(d.year)&&selQs.has(d.q.slice(2)));
+}
+
+function filterYr(arr){ return arr.filter(d=>selYears.has(d.year)); }
+
+function destroyAll(){Object.values(charts).forEach(c=>{try{c&&c.destroy()}catch(e){}});charts={};}
+
+function setKPI(id, items){
+  document.getElementById(id).innerHTML = items.map(({lbl,val,badge,cls})=>`
+    <div class="kpi"><div class="kpi-lbl">${lbl}</div><div class="kpi-val">${val}</div>
+    <span class="kpi-badge ${cls||'neu'}">${badge}</span></div>`).join('');
+}
+
+/* ════════════════════════════════════════
+   INIT
+   ════════════════════════════════════════ */
+function init(){
+  buildFilters();
+  buildCurrentTab();
+}
+
+function buildFilters(){
+  const yg = document.getElementById('yr-grp');
+  yg.innerHTML = DATA.meta.years.map(y=>`<button class="f-btn on" onclick="toggleYr(${y},this)">${y}</button>`).join('');
+  const qg = document.getElementById('q-grp');
+  qg.innerHTML = DATA.meta.quarters.map(q=>`<button class="f-btn on" onclick="toggleQ('${q}',this)">${q}</button>`).join('');
+  updateScope();
+}
+
+function toggleYr(y,btn){
+  if(selYears.has(y)){if(selYears.size===1)return;selYears.delete(y);btn.classList.remove('on');}
+  else{selYears.add(y);btn.classList.add('on');}
+  updateScope();buildCurrentTab();
+}
+
+function toggleQ(q,btn){
+  if(selQs.has(q)){if(selQs.size===1)return;selQs.delete(q);btn.classList.remove('on');}
+  else{selQs.add(q);btn.classList.add('on');}
+  updateScope();buildCurrentTab();
+}
+
+function updateScope(){
+  const yrs=[...selYears].sort().join(', ');
+  const qs=[...selQs].sort().map(q=>q).join('/');
+  document.getElementById('nav-scope').textContent=`${yrs} · ${qs}`;
+}
+
+function goTab(t){
+  activeTab=t;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b=>{if(b.getAttribute('onclick').includes("'"+t+"'"))b.classList.add('on');});
+  document.getElementById('page-'+t).classList.add('on');
+  buildCurrentTab();
+}
+
+function buildCurrentTab(){
+  destroyAll();
+  switch(activeTab){
+    case 'overview': buildOverview(); break;
+    case 'product':  buildProduct();  break;
+    case 'region':   buildRegion();   break;
+    case 'sr':       buildSR();       break;
+    case 'detail':   buildDetail();   break;
+  }
+}
+
+/* ════════════════════════════════════════
+   TAB: OVERVIEW
+   ════════════════════════════════════════ */
+function buildOverview(){
+  const yrs=[...selYears].sort();
+  const totSales=yrs.reduce((s,y)=>s+(DATA.yearly_total[y]?.sales||0),0);
+  const totRec=yrs.reduce((s,y)=>s+(DATA.yearly_total[y]?.recurring||0),0);
+  const tot=totSales+totRec;
+  const lastY=Math.max(...yrs), prevY=lastY-1;
+  const yoy=DATA.yearly_total[prevY]?pctChg(DATA.yearly_total[lastY].total,DATA.yearly_total[prevY].total):'-';
+  const yoyNum = parseFloat(yoy);
+
+  setKPI('kpi-ov',[
+    {lbl:'총매출 (SALES+RECURRING)',val:fmtM(tot),badge:`${yrs[0]}–${yrs[yrs.length-1]} 합산`,cls:'neu'},
+    {lbl:'SALES 매출',val:fmtM(totSales),badge:(totSales/tot*100).toFixed(1)+'% 비중',cls:'hi'},
+    {lbl:'RECURRING 매출',val:fmtM(totRec),badge:(totRec/tot*100).toFixed(1)+'% 비중',cls:'neu'},
+    {lbl:`${lastY} YoY 성장률`,val:yoy,badge:`vs ${prevY}년`,cls:yoyNum>=0?'up':'dn'},
+  ]);
+
+  // 분기별 stacked
+  const qKeys=getSelQKeys();
+  const qData=DATA.quarterly;
+  const salesByQ={},recByQ={};
+  qKeys.forEach(k=>{salesByQ[k]=0;recByQ[k]=0;});
+  qData.forEach(d=>{
+    const k=d.q.replace('Q','Q').replace(/^(\d{2})(Q\d)$/,'$1$2');
+    const qk=`${String(d.year).slice(2)}Q${d.q.slice(-1)}`;
+    if(!qKeys.includes(qk))return;
+    if(d.cat==='SALES')salesByQ[qk]=(salesByQ[qk]||0)+d.usd;
+    else if(d.cat==='RECURRING')recByQ[qk]=(recByQ[qk]||0)+d.usd;
   });
 
-  charts.unitsLine = new Chart(document.getElementById('c-units-line'),{
-    type:'bar',data:{labels:ql,datasets:[{label:'대수',data:units,backgroundColor:'#38A169',borderRadius:4}]},
-    options:{...BASE_OPTS,scales:{x:{grid:{display:false},ticks:{...TICK_STYLE,maxRotation:0}},y:{grid:{color:GRID_COLOR,drawBorder:false},ticks:TICK_STYLE}},plugins:{legend:{display:false}}}
+  charts.qStacked=new Chart(document.getElementById('c-q-stacked'),{
+    type:'bar',
+    data:{labels:qKeys.map(qLabel),datasets:[
+      {label:'SALES',data:qKeys.map(k=>salesByQ[k]||0),backgroundColor:'#3B82F6',borderRadius:2},
+      {label:'RECURRING',data:qKeys.map(k=>recByQ[k]||0),backgroundColor:'#10B981',borderRadius:2},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtMK(c.raw)}}},scales:{x:{stacked:true,grid:{display:false},ticks:{...TK,maxRotation:0}},y:{stacked:true,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickY}}}}
   });
 
-  // Table
-  const rows = idxs.map(i=>{
-    const yoy = i>=4 ? ((QD.total[i]-QD.total[i-4])/QD.total[i-4]*100).toFixed(1) : '-';
-    const yoyClass = yoy!=='-' ? (parseFloat(yoy)>=0?'style="color:#276749"':'style="color:#C05621"') : '';
-    return `<tr>
-      <td>${QUARTERS[i]}</td>
-      <td class="r">${fmtM(QD.total[i])}</td>
-      <td class="r">${fmtKRW(QD.local[i])}</td>
-      <td class="r">${QD.units[i]}</td>
-      <td class="r" ${yoyClass}>${yoy!=='-'?(parseFloat(yoy)>=0?'▲ ':'▼ ')+Math.abs(yoy)+'%':'-'}</td>
-    </tr>`;
+  // 연도별 바
+  charts.yrBar=new Chart(document.getElementById('c-yr-bar'),{
+    type:'bar',
+    data:{labels:yrs.map(String),datasets:[
+      {label:'SALES',data:yrs.map(y=>DATA.yearly_total[y]?.sales||0),backgroundColor:'#3B82F6',borderRadius:3},
+      {label:'RECURRING',data:yrs.map(y=>DATA.yearly_total[y]?.recurring||0),backgroundColor:'#10B981',borderRadius:3},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtMK(c.raw)}}},scales:{x:{stacked:true,grid:{display:false},ticks:TK},y:{stacked:true,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickY}}}}
+  });
+
+  // RECURRING 도넛
+  const svcTot=yrs.reduce((s,y)=>s+(DATA.recurring_detail.find(d=>d.year===y&&d.cat==='service')?.usd||0),0);
+  const consTot=yrs.reduce((s,y)=>s+(DATA.recurring_detail.find(d=>d.year===y&&d.cat==='consumables')?.usd||0),0);
+  charts.recDonut=new Chart(document.getElementById('c-rec-donut'),{
+    type:'doughnut',
+    data:{labels:['Service','Consumables'],datasets:[{data:[svcTot,consTot],backgroundColor:['#10B981','#F59E0B'],borderWidth:0,hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtMK(c.raw)} (${(c.raw/(svcTot+consTot)*100).toFixed(1)}%)`}}}}
+  });
+}
+
+/* ════════════════════════════════════════
+   TAB: PRODUCT
+   ════════════════════════════════════════ */
+function buildProduct(){
+  const yrs=[...selYears].sort();
+  const prods=['GMPP','VBP','PicoWay','Others'];
+  const getTot=(p)=>yrs.reduce((s,y)=>s+(DATA.product_by_year.find(d=>d.year===y&&d.product===p)?.usd||0),0);
+  const getU=(p)=>yrs.reduce((s,y)=>s+(DATA.product_by_year.find(d=>d.year===y&&d.product===p)?.units||0),0);
+  const totUsd=prods.reduce((s,p)=>s+getTot(p),0);
+
+  const gmppUsd=getTot('GMPP');
+  setKPI('kpi-prod',[
+    {lbl:'GMPP 매출',val:fmtM(gmppUsd),badge:(gmppUsd/totUsd*100).toFixed(1)+'% 점유',cls:'hi'},
+    {lbl:'VBP 매출',val:fmtM(getTot('VBP')),badge:(getTot('VBP')/totUsd*100).toFixed(1)+'% 점유',cls:'neu'},
+    {lbl:'PicoWay 매출',val:fmtM(getTot('PicoWay')),badge:(getTot('PicoWay')/totUsd*100).toFixed(1)+'% 점유',cls:'neu'},
+    {lbl:'총 판매 대수',val:prods.reduce((s,p)=>s+getU(p),0)+'대',badge:'SALES 기준',cls:'neu'},
+  ]);
+
+  const donutOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtMK(c.raw)} (${(c.raw/c.dataset.data.reduce((a,b)=>a+b,0)*100).toFixed(1)}%)`}}}};
+  charts.prodDonut=new Chart(document.getElementById('c-prod-donut'),{
+    type:'doughnut',data:{labels:prods,datasets:[{data:prods.map(getTot),backgroundColor:prods.map(p=>PROD_COLORS[p]),borderWidth:0,hoverOffset:4}]},options:donutOpts
+  });
+  charts.unitDonut=new Chart(document.getElementById('c-unit-donut'),{
+    type:'doughnut',data:{labels:prods,datasets:[{data:prods.map(getU),backgroundColor:prods.map(p=>PROD_COLORS[p]),borderWidth:0,hoverOffset:4}]},options:donutOpts
+  });
+
+  // 분기별 라인
+  const qKeys=getSelQKeys();
+  const qByProd={};
+  prods.forEach(p=>{qByProd[p]={};qKeys.forEach(k=>qByProd[p][k]=0);});
+  DATA.product_by_quarter.forEach(d=>{
+    if(!selYears.has(d.year))return;
+    const qk=`${String(d.year).slice(2)}Q${d.q.slice(-1)}`;
+    if(!qKeys.includes(qk))return;
+    if(qByProd[d.product])qByProd[d.product][qk]=(qByProd[d.product][qk]||0)+d.usd;
+  });
+  charts.prodLine=new Chart(document.getElementById('c-prod-line'),{
+    type:'line',
+    data:{labels:qKeys.map(qLabel),datasets:prods.map(p=>({
+      label:p,data:qKeys.map(k=>qByProd[p][k]||0),
+      borderColor:PROD_COLORS[p],pointBackgroundColor:PROD_COLORS[p],
+      tension:0.35,fill:false,borderWidth:2,pointRadius:3
+    }))},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtMK(c.raw)}}},scales:{x:{grid:{display:false},ticks:{...TK,maxRotation:0}},y:{grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickY}}}}
+  });
+
+  // GMPP 점유율 라인
+  const gmppShare=qKeys.map(k=>{
+    const g=qByProd['GMPP'][k]||0;
+    const tot=prods.reduce((s,p)=>s+(qByProd[p][k]||0),0);
+    return tot?r1(g/tot*100):0;
+  });
+  charts.gmppShare=new Chart(document.getElementById('c-gmpp-share'),{
+    type:'line',
+    data:{labels:qKeys.map(qLabel),datasets:[{label:'GMPP 점유율',data:gmppShare,borderColor:'#3B82F6',backgroundColor:'rgba(59,130,246,0.08)',pointBackgroundColor:'#3B82F6',pointRadius:4,fill:true,tension:0.35,borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' GMPP: '+c.raw+'%'}}},scales:{x:{grid:{display:false},ticks:{...TK,maxRotation:0}},y:{min:0,max:100,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:v=>v+'%'}}}}
+  });
+}
+
+/* ════════════════════════════════════════
+   TAB: REGION
+   ════════════════════════════════════════ */
+function buildRegion(){
+  const yrs=[...selYears].sort();
+  const regions=['서울 강남/주요','서울 기타','경기','부산','대구/경북','인천','광주/전라','대전/충청','경남','강원','제주','기타'];
+  const getRegUsd=(r)=>yrs.reduce((s,y)=>s+(DATA.region_by_year.find(d=>d.year===y&&d.region===r)?.usd||0),0);
+  const topRegs=regions.map(r=>({r,usd:getRegUsd(r)})).filter(d=>d.usd>0).sort((a,b)=>b.usd-a.usd);
+  const showRegs=topRegs.filter(d=>d.r!=='기타');
+  const maxUsd=showRegs[0]?.usd||1;
+
+  setKPI('kpi-reg',[
+    {lbl:'1위 지역',val:showRegs[0]?.r||'-',badge:fmtM(showRegs[0]?.usd||0),cls:'up'},
+    {lbl:'2위 지역',val:showRegs[1]?.r||'-',badge:fmtM(showRegs[1]?.usd||0),cls:'neu'},
+    {lbl:'3위 지역',val:showRegs[2]?.r||'-',badge:fmtM(showRegs[2]?.usd||0),cls:'neu'},
+    {lbl:'서울 합계',val:fmtM(getRegUsd('서울 강남/주요')+getRegUsd('서울 기타')),badge:'강남/주요+기타',cls:'hi'},
+  ]);
+
+  charts.regBar=new Chart(document.getElementById('c-reg-bar'),{
+    type:'bar',
+    data:{labels:showRegs.map(d=>d.r),datasets:[{label:'매출',data:showRegs.map(d=>d.usd),backgroundColor:'#3B82F6',borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmtM(c.raw)}}},scales:{x:{grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickY}},y:{grid:{display:false},ticks:{...TK,font:{size:11}}}}}
+  });
+
+  document.getElementById('rank-reg').innerHTML=showRegs.map((d,i)=>`
+    <li class="ri"><span class="rn">${i+1}</span><span class="rname">${d.r}</span>
+    <div class="rbg"><div class="rfill" style="width:${(d.usd/maxUsd*100).toFixed(1)}%"></div></div>
+    <span class="rv">${fmtM(d.usd)}</span></li>`).join('');
+
+  // 주요 지역 연도별
+  const top4=['서울 강남/주요','경기','부산','대구/경북'];
+  const col4=['#3B82F6','#10B981','#F59E0B','#7C3AED'];
+  charts.regYr=new Chart(document.getElementById('c-reg-yr'),{
+    type:'bar',
+    data:{labels:yrs.map(String),datasets:top4.map((r,i)=>({
+      label:r,data:yrs.map(y=>DATA.region_by_year.find(d=>d.year===y&&d.region===r)?.usd||0),
+      backgroundColor:col4[i],borderRadius:3
+    }))},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtM(c.raw)}}},scales:{x:{grid:{display:false},ticks:TK},y:{grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickY}}}}
+  });
+}
+
+/* ════════════════════════════════════════
+   TAB: SR (담당자)
+   ════════════════════════════════════════ */
+function buildSR(){
+  const yrs=[...selYears].sort();
+  const srMap={};
+  DATA.sr_by_year.forEach(d=>{
+    if(!selYears.has(d.year))return;
+    const key=d.sr==='GR lee'?'GR Lee':d.sr;
+    srMap[key]=(srMap[key]||0)+d.krw;
+  });
+  const srList=Object.entries(srMap).sort((a,b)=>b[1]-a[1]);
+  const topSR=srList[0];
+  const totKRW=srList.reduce((s,[,v])=>s+v,0);
+
+  setKPI('kpi-sr',[
+    {lbl:'담당자 총매출',val:fmtB(totKRW),badge:'KRW 합산',cls:'neu'},
+    {lbl:'1위 담당자',val:topSR?.[0]||'-',badge:fmtB(topSR?.[1]||0),cls:'up'},
+    {lbl:'담당자 수',val:srList.length+'명',badge:'현 기준',cls:'neu'},
+    {lbl:'1인 평균',val:fmtB(totKRW/(srList.length||1)),badge:'KRW 기준',cls:'neu'},
+  ]);
+
+  charts.srBar=new Chart(document.getElementById('c-sr-bar'),{
+    type:'bar',
+    data:{labels:srList.map(([k])=>k),datasets:[{label:'매출 (KRW)',data:srList.map(([,v])=>v),backgroundColor:'#3B82F6',borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmtB(c.raw)}}},scales:{x:{grid:{display:false},ticks:{...TK,font:{size:10}}},y:{grid:{color:GC,drawBorder:false},ticks:{...TK,callback:v=>v>=1e8?(v/1e8).toFixed(0)+'억':v>=1e4?(v/1e4).toFixed(0)+'만':v}}}}
+  });
+
+  const mx=srList[0]?.[1]||1;
+  document.getElementById('rank-sr').innerHTML=srList.slice(0,8).map(([k,v],i)=>`
+    <li class="ri"><span class="rn">${i+1}</span><span class="rname">${k}</span>
+    <div class="rbg"><div class="rfill" style="width:${(v/mx*100).toFixed(1)}%"></div></div>
+    <span class="rv">${fmtB(v)}</span></li>`).join('');
+
+  // Direct vs Dealer
+  const dirTot=yrs.reduce((s,y)=>s+(DATA.direct_dealer.find(d=>d.year===y&&d.seg==='Direct')?.usd||0),0);
+  const dealTot=yrs.reduce((s,y)=>s+(DATA.direct_dealer.find(d=>d.year===y&&d.seg==='Dealer')?.usd||0),0);
+  charts.ddDonut=new Chart(document.getElementById('c-dd-donut'),{
+    type:'doughnut',
+    data:{labels:['Direct','Dealer'],datasets:[{data:[dirTot,dealTot],backgroundColor:['#7C3AED','#D1D5DB'],borderWidth:0,hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtM(c.raw)} (${(c.raw/(dirTot+dealTot)*100).toFixed(1)}%)`}}}}
+  });
+}
+
+/* ════════════════════════════════════════
+   TAB: DETAIL
+   ════════════════════════════════════════ */
+function buildDetail(){
+  const qKeys=getSelQKeys();
+  const nvMap={};
+  DATA.new_vs_existing.forEach(d=>{
+    if(!selYears.has(d.year))return;
+    const qk=`${String(d.year).slice(2)}Q${d.q.slice(-1)}`;
+    if(!qKeys.includes(qk))return;
+    if(!nvMap[qk])nvMap[qk]={nb:0,eb:0};
+    if(d.type==='New Business')nvMap[qk].nb+=d.usd;
+    else nvMap[qk].eb+=d.usd;
+  });
+
+  const nb=qKeys.map(k=>nvMap[k]?.nb||0);
+  const eb=qKeys.map(k=>nvMap[k]?.eb||0);
+  const tots=nb.map((v,i)=>v+eb[i]);
+  const nbPct=nb.map((v,i)=>tots[i]?r1(v/tots[i]*100):0);
+
+  const totNb=nb.reduce((s,v)=>s+v,0), totEb=eb.reduce((s,v)=>s+v,0);
+  setKPI('kpi-det',[
+    {lbl:'New Business',val:fmtM(totNb),badge:(totNb/(totNb+totEb)*100).toFixed(1)+'% 비중',cls:'hi'},
+    {lbl:'Existing Business',val:fmtM(totEb),badge:(totEb/(totNb+totEb)*100).toFixed(1)+'% 비중',cls:'neu'},
+    {lbl:'New Biz 최고 분기',val:qKeys[nb.indexOf(Math.max(...nb))]||'-',badge:fmtM(Math.max(...nb)),cls:'up'},
+    {lbl:'평균 New Biz 비중',val:r1(nb.reduce((s,v,i)=>s+(tots[i]?v/tots[i]*100:0),0)/(nb.length||1))+'%',badge:'분기 평균',cls:'neu'},
+  ]);
+
+  charts.nvStacked=new Chart(document.getElementById('c-nv-stacked'),{
+    type:'bar',
+    data:{labels:qKeys.map(qLabel),datasets:[
+      {label:'New',data:nb,backgroundColor:'#3B82F6',borderRadius:2},
+      {label:'Existing',data:eb,backgroundColor:'#BFDBFE',borderRadius:2},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtMK(c.raw)}}},scales:{x:{stacked:true,grid:{display:false},ticks:{...TK,maxRotation:0}},y:{stacked:true,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickY}}}}
+  });
+
+  charts.nvPct=new Chart(document.getElementById('c-nv-pct'),{
+    type:'line',
+    data:{labels:qKeys.map(qLabel),datasets:[{label:'New %',data:nbPct,borderColor:'#3B82F6',backgroundColor:'rgba(59,130,246,0.08)',pointBackgroundColor:'#3B82F6',pointRadius:4,fill:true,tension:0.35,borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' New: '+c.raw+'%'}}},scales:{x:{grid:{display:false},ticks:{...TK,maxRotation:0}},y:{min:0,max:100,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:v=>v+'%'}}}}
+  });
+
+  // 상세 테이블
+  const salesByQ={};
+  DATA.quarterly.forEach(d=>{
+    if(!selYears.has(d.year))return;
+    const qk=`${String(d.year).slice(2)}Q${d.q.slice(-1)}`;
+    if(!qKeys.includes(qk))return;
+    if(!salesByQ[qk])salesByQ[qk]={sales:0,rec:0};
+    if(d.cat==='SALES')salesByQ[qk].sales+=d.usd;
+    else salesByQ[qk].rec+=d.usd;
+  });
+  const rows=qKeys.map((k,i)=>{
+    const s=salesByQ[k]||{sales:0,rec:0};
+    const tot=s.sales+s.rec;
+    const prevK=qKeys[i-4];
+    const prevTot=prevK?(salesByQ[prevK]?.sales||0)+(salesByQ[prevK]?.rec||0):null;
+    const yoy=prevTot!=null?((tot-prevTot)/prevTot*100).toFixed(1):'-';
+    const yoyC=yoy!=='-'?(parseFloat(yoy)>=0?'style="color:#059669"':'style="color:#DC2626"'):'';
+    return `<tr><td>${qLabel(k)}</td><td class="r">${fmtMK(s.sales)}</td><td class="r">${fmtMK(s.rec)}</td><td class="r">${fmtMK(tot)}</td>
+    <td class="r" ${yoyC}>${yoy!=='-'?(parseFloat(yoy)>=0?'▲ ':'▼ ')+Math.abs(yoy)+'%':'-'}</td></tr>`;
   }).join('');
-  document.getElementById('tbl-revenue').innerHTML = `<table>
-    <thead><tr><th>분기</th><th class="r">Shipped USD</th><th class="r">Local KRW</th><th class="r">대수</th><th class="r">YoY</th></tr></thead>
-    <tbody>${rows}</tbody>
-  </table>`;
-}
-
-/* =========================================================
-   PAGE: 장비별
-   ========================================================= */
-function buildProduct(yr) {
-  const yrs = getYears(yr);
-  const gmpp = yrs.reduce((s,y)=>s+YD[y].gmpp,0);
-  const vbp  = yrs.reduce((s,y)=>s+YD[y].vbp,0);
-  const pw   = yrs.reduce((s,y)=>s+YD[y].pw,0);
-  const oth  = yrs.reduce((s,y)=>s+YD[y].oth,0);
-  const tot  = gmpp+vbp+pw+oth;
-  const uG = yrs.reduce((s,y)=>s+YD[y].uGmpp,0);
-  const uV = yrs.reduce((s,y)=>s+YD[y].uVbp,0);
-  const uP = yrs.reduce((s,y)=>s+YD[y].uPw,0);
-  const uO = yrs.reduce((s,y)=>s+YD[y].uOth,0);
-
-  setKPI('kpi-product',[
-    {lbl:'GMPP 매출',val:fmtM(gmpp),badge:(gmpp/tot*100).toFixed(1)+'% 점유',cls:'up'},
-    {lbl:'Vbeam Perfecta',val:fmtM(vbp),badge:(vbp/tot*100).toFixed(1)+'% 점유',cls:'neu'},
-    {lbl:'Picoway',val:fmtM(pw),badge:(pw/tot*100).toFixed(1)+'% 점유',cls:'neu'},
-    {lbl:'Others',val:fmtM(oth),badge:(oth/tot*100).toFixed(1)+'% 점유',cls:'neu'},
-  ]);
-
-  const donutOpts = {responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>` ${c.label}: ${c.raw.toLocaleString()} (${(c.raw/(c.dataset.data.reduce((a,b)=>a+b,0))*100).toFixed(1)}%)`}}}};
-
-  charts.prodDonut = new Chart(document.getElementById('c-prod-donut'),{
-    type:'doughnut',
-    data:{labels:['GentleMax Pro+','Vbeam Perfecta','Picoway','Others'],datasets:[{data:[gmpp,vbp,pw,oth],backgroundColor:['#4299E1','#38A169','#ED8936','#718096'],borderWidth:0,hoverOffset:4}]},
-    options:donutOpts
-  });
-
-  charts.unitDonut = new Chart(document.getElementById('c-unit-donut'),{
-    type:'doughnut',
-    data:{labels:['GentleMax Pro+','Vbeam Perfecta','Picoway','Others'],datasets:[{data:[uG,uV,uP,uO],backgroundColor:['#4299E1','#38A169','#ED8936','#718096'],borderWidth:0,hoverOffset:4}]},
-    options:donutOpts
-  });
-
-  const idxs = getQIdxs(yr);
-  const ql = filterQ(QUARTERS, idxs);
-  charts.prodLine = new Chart(document.getElementById('c-prod-line'),{
-    type:'line',
-    data:{labels:ql,datasets:[
-      {label:'GMPP',data:filterQ(QD.gmpp,idxs),borderColor:'#4299E1',pointBackgroundColor:'#4299E1',tension:0.35,fill:false,borderWidth:2,pointRadius:3},
-      {label:'VBP', data:filterQ(QD.vbp,idxs), borderColor:'#38A169',pointBackgroundColor:'#38A169',tension:0.35,fill:false,borderWidth:2,pointRadius:3},
-      {label:'PW',  data:filterQ(QD.pw,idxs),  borderColor:'#ED8936',pointBackgroundColor:'#ED8936',tension:0.35,fill:false,borderWidth:2,pointRadius:3},
-      {label:'OTH', data:filterQ(QD.oth,idxs), borderColor:'#718096',pointBackgroundColor:'#718096',tension:0.35,fill:false,borderWidth:2,pointRadius:3},
-    ]},
-    options:{...BASE_OPTS,scales:{x:{grid:{display:false},ticks:{...TICK_STYLE,maxRotation:0}},y:{grid:{color:GRID_COLOR,drawBorder:false},ticks:{...TICK_STYLE,callback:tickerY}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtK(c.raw)}}}}
-  });
-
-  // Table
-  const PROD_COLORS = {gmpp:'p-gmpp',vbp:'p-vbp',pw:'p-pw',oth:'p-oth'};
-  const rows2 = yrs.flatMap(y=>[
-    `<tr style="background:var(--surface2)"><td colspan="6" style="font-size:11px;font-weight:500;color:var(--text2)">${y}년</td></tr>`,
-    ['GentleMax Pro+','Vbeam Perfecta','Picoway','Others'].map((prod,pi)=>{
-      const keys = ['gmpp','vbp','pw','oth'];
-      const uKeys = ['uGmpp','uVbp','uPw','uOth'];
-      const usd = YD[y][keys[pi]];
-      const u = YD[y][uKeys[pi]];
-      const sh = (usd/YD[y].total*100).toFixed(1);
-      const cls = ['p-gmpp','p-vbp','p-pw','p-oth'][pi];
-      return `<tr><td><span class="badge-prod ${cls}">${prod}</span></td><td class="r">${fmtM(usd)}</td><td class="r">${u}대</td><td class="r">${sh}%</td></tr>`;
-    }).join('')
-  ]).join('');
-  document.getElementById('tbl-product').innerHTML = `<table>
-    <thead><tr><th>제품</th><th class="r">Shipped USD</th><th class="r">대수</th><th class="r">점유율</th></tr></thead>
-    <tbody>${rows2}</tbody></table>`;
-}
-
-/* =========================================================
-   PAGE: 지역별
-   ========================================================= */
-function buildRegion(yr) {
-  const data = yr==='all' ? REGION_ALL : (() => {
-    const yd = REGION_YEAR[yr];
-    return yd.map(d=>({r:d.r,usd:d.usd,units:0}));
-  })();
-  const top = [...data].sort((a,b)=>b.usd-a.usd);
-  const total = top.reduce((s,d)=>s+d.usd,0);
-  const top5 = top.filter(d=>d.r!=='기타'&&d.r!=='기타/해외');
-
-  setKPI('kpi-region',[
-    {lbl:'1위 지역',val:top5[0]?.r||'-',badge:fmtM(top5[0]?.usd||0),cls:'up'},
-    {lbl:'2위 지역',val:top5[1]?.r||'-',badge:fmtM(top5[1]?.usd||0),cls:'neu'},
-    {lbl:'3위 지역',val:top5[2]?.r||'-',badge:fmtM(top5[2]?.usd||0),cls:'neu'},
-    {lbl:'주요 지역 비중',val:(top5.reduce((s,d)=>s+d.usd,0)/total*100).toFixed(1)+'%',badge:'서울/경기/부산',cls:'neu'},
-  ]);
-
-  const show = top.filter(d=>d.r!=='기타'&&d.r!=='기타/해외');
-  charts.regionBar = new Chart(document.getElementById('c-region-bar'),{
-    type:'bar',
-    data:{labels:show.map(d=>d.r),datasets:[{label:'매출',data:show.map(d=>d.usd),backgroundColor:'#4299E1',borderRadius:4}]},
-    options:{...BASE_OPTS,indexAxis:'y',scales:{x:{grid:{color:GRID_COLOR,drawBorder:false},ticks:{...TICK_STYLE,callback:tickerY}},y:{grid:{display:false},ticks:{...TICK_STYLE,font:{size:11}}}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmtM(c.raw)}}}}
-  });
-
-  // Rank list
-  const maxUsd = show[0]?.usd||1;
-  document.getElementById('rank-region').innerHTML = show.map((d,i)=>`
-    <li class="rank-item">
-      <span class="rank-num">${i+1}</span>
-      <span class="rank-name">${d.r}</span>
-      <div class="rank-bar-bg"><div class="rank-bar-fill" style="width:${(d.usd/maxUsd*100).toFixed(1)}%"></div></div>
-      <span class="rank-val">${fmtM(d.usd)}</span>
-    </li>`).join('');
-
-  // Region by year line
-  const regions5 = ['서울 강남권','경기','부산','서울 기타','대구'];
-  const colors5 = ['#4299E1','#38A169','#ED8936','#9F7AEA','#718096'];
-  charts.regionYear = new Chart(document.getElementById('c-region-year'),{
-    type:'bar',
-    data:{
-      labels:['2023','2024','2025'],
-      datasets:regions5.map((r,ri)=>({
-        label:r,
-        data:[2023,2024,2025].map(y=>REGION_YEAR[y].find(d=>d.r===r)?.usd||0),
-        backgroundColor:colors5[ri],borderRadius:3
-      }))
-    },
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtM(c.raw)}}},scales:{x:{grid:{display:false},ticks:TICK_STYLE},y:{grid:{color:GRID_COLOR,drawBorder:false},ticks:{...TICK_STYLE,callback:tickerY}}}}
-  });
-}
-
-/* =========================================================
-   PAGE: 점유율
-   ========================================================= */
-function buildShare(yr) {
-  const idxs = getQIdxs(yr);
-  const ql = filterQ(QUARTERS, idxs);
-  const g=filterQ(QD.gmpp,idxs),v=filterQ(QD.vbp,idxs),p=filterQ(QD.pw,idxs),o=filterQ(QD.oth,idxs);
-  const tots = idxs.map((_,j)=>g[j]+v[j]+p[j]+o[j]);
-  const pct = (arr)=>arr.map((val,j)=>tots[j]?round1(val/tots[j]*100):0);
-
-  const yrs = getYears(yr);
-  const avgGmpp = yrs.reduce((s,y)=>s+(YD[y].gmpp/YD[y].total*100),0)/yrs.length;
-  const maxGmppQ = idxs.reduce((best,i,j)=>{
-    const sh = QD.gmpp[i]/(QD.total[i]||1)*100;
-    return sh>best.sh?{q:QUARTERS[i],sh}:best;
-  },{q:'-',sh:0});
-
-  setKPI('kpi-share',[
-    {lbl:'GMPP 평균 점유율',val:avgGmpp.toFixed(1)+'%',badge:'기간 평균',cls:'up'},
-    {lbl:'GMPP 최고 분기',val:maxGmppQ.q,badge:maxGmppQ.sh.toFixed(1)+'%',cls:'up'},
-    {lbl:'VBP 평균 점유율',val:(yrs.reduce((s,y)=>s+(YD[y].vbp/YD[y].total*100),0)/yrs.length).toFixed(1)+'%',badge:'기간 평균',cls:'neu'},
-    {lbl:'Others 평균 점유율',val:(yrs.reduce((s,y)=>s+((YD[y].pw+YD[y].oth)/YD[y].total*100),0)/yrs.length).toFixed(1)+'%',badge:'PW+Others',cls:'neu'},
-  ]);
-
-  charts.shareStacked = new Chart(document.getElementById('c-share-stacked'),{
-    type:'bar',
-    data:{labels:ql,datasets:[
-      {label:'GMPP',data:pct(g),backgroundColor:'#4299E1',borderRadius:2},
-      {label:'VBP', data:pct(v),backgroundColor:'#38A169',borderRadius:2},
-      {label:'PW',  data:pct(p),backgroundColor:'#ED8936',borderRadius:2},
-      {label:'OTH', data:pct(o),backgroundColor:'#718096',borderRadius:2},
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+c.raw+'%'}}},scales:{x:{stacked:true,grid:{display:false},ticks:{...TICK_STYLE,maxRotation:0}},y:{stacked:true,max:100,grid:{color:GRID_COLOR,drawBorder:false},ticks:{...TICK_STYLE,callback:v=>v+'%'}}}}
-  });
-
-  const gmppPct = pct(g);
-  charts.gmppLine = new Chart(document.getElementById('c-gmpp-line'),{
-    type:'line',
-    data:{labels:ql,datasets:[{label:'GMPP 점유율',data:gmppPct,borderColor:'#4299E1',backgroundColor:'rgba(66,153,225,0.08)',pointBackgroundColor:'#4299E1',pointRadius:4,fill:true,tension:0.35,borderWidth:2}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' GMPP: '+c.raw+'%'}}},scales:{x:{grid:{display:false},ticks:{...TICK_STYLE,maxRotation:0}},y:{min:0,max:100,grid:{color:GRID_COLOR,drawBorder:false},ticks:{...TICK_STYLE,callback:v=>v+'%'}}}}
-  });
-
-  // Table
-  const rows = idxs.map((qi,j)=>`<tr>
-    <td>${QUARTERS[qi]}</td>
-    <td class="r">${pct(g)[j]}%</td>
-    <td class="r">${pct(v)[j]}%</td>
-    <td class="r">${pct(p)[j]}%</td>
-    <td class="r">${pct(o)[j]}%</td>
-  </tr>`).join('');
-  document.getElementById('tbl-share').innerHTML = `<table>
-    <thead><tr><th>분기</th><th class="r">GMPP</th><th class="r">VBP</th><th class="r">PicoWay</th><th class="r">Others</th></tr></thead>
+  document.getElementById('tbl-det').innerHTML=`<table>
+    <thead><tr><th>분기</th><th class="r">SALES</th><th class="r">RECURRING</th><th class="r">합계</th><th class="r">YoY</th></tr></thead>
     <tbody>${rows}</tbody></table>`;
 }
 
-/* =========================================================
-   PAGE: DEALER
-   ========================================================= */
-function buildDealer(yr) {
-  const yrs = getYears(yr);
-  const dir = yrs.reduce((s,y)=>s+DEALER_YD[y].direct,0);
-  const dlr = yrs.reduce((s,y)=>s+DEALER_YD[y].dealer,0);
-  const tot = dir+dlr;
-
-  setKPI('kpi-dealer',[
-    {lbl:'Direct (D.C) 매출',val:fmtM(dir),badge:(dir/tot*100).toFixed(1)+'% 비중',cls:'neu'},
-    {lbl:'Dealer 매출',val:fmtM(dlr),badge:(dlr/tot*100).toFixed(1)+'% 비중',cls:'neu'},
-    {lbl:'총 매출',val:fmtM(tot),badge:`${yrs.length}개년`,cls:'up'},
-    {lbl:'Top 고객 수',val:TOP_CUSTOMERS.length,badge:'상위 고객 목록',cls:'neu'},
-  ]);
-
-  charts.dealerDonut = new Chart(document.getElementById('c-dealer-donut'),{
-    type:'doughnut',
-    data:{labels:['Direct (D.C)','Dealer'],datasets:[{data:[dir,dlr],backgroundColor:['#4299E1','#BEE3F8'],borderWidth:0,hoverOffset:4}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>` ${c.label}: ${fmtM(c.raw)} (${(c.raw/tot*100).toFixed(1)}%)`}}}}
-  });
-
-  charts.dealerBar = new Chart(document.getElementById('c-dealer-bar'),{
-    type:'bar',
-    data:{labels:['2023','2024','2025'],datasets:[
-      {label:'Direct',data:[2023,2024,2025].map(y=>DEALER_YD[y].direct),backgroundColor:'#4299E1',borderRadius:3},
-      {label:'Dealer',data:[2023,2024,2025].map(y=>DEALER_YD[y].dealer),backgroundColor:'#BEE3F8',borderRadius:3},
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtM(c.raw)}}},scales:{x:{stacked:true,grid:{display:false},ticks:TICK_STYLE},y:{stacked:true,grid:{color:GRID_COLOR,drawBorder:false},ticks:{...TICK_STYLE,callback:tickerY}}}}
-  });
-
-  const maxUsd = TOP_CUSTOMERS[0].usd;
-  document.getElementById('rank-dealer').innerHTML = TOP_CUSTOMERS.map((c,i)=>{
-    const cls = c.type==='direct'?'p-gmpp':'p-oth';
-    const typeLbl = c.type==='direct'?'Direct':'Dealer';
-    return `<li class="rank-item">
-      <span class="rank-num">${i+1}</span>
-      <span class="rank-name">${c.name} <span class="badge-prod ${cls}" style="font-size:10px">${typeLbl}</span></span>
-      <div class="rank-bar-bg"><div class="rank-bar-fill" style="width:${(c.usd/maxUsd*100).toFixed(1)}%"></div></div>
-      <span class="rank-val">${fmtM(c.usd)}</span>
-    </li>`;
-  }).join('');
-}
-
-/* =========================================================
-   PAGE: NEW BUSINESS
-   ========================================================= */
-function buildBusiness(yr) {
-  const idxs = getQIdxs(yr);
-  const ql = filterQ(QUARTERS, idxs);
-  const nb = filterQ(QD.nb, idxs);
-  const eb = filterQ(QD.eb, idxs);
-  const tots = nb.map((v,i)=>v+eb[i]);
-  const nbPct = nb.map((v,i)=>tots[i]?round1(v/tots[i]*100):0);
-
-  const yrs = getYears(yr);
-  const totNb = yrs.reduce((s,y)=>s+YD[y].nb,0);
-  const totEb = yrs.reduce((s,y)=>s+YD[y].eb,0);
-  const nbShare = (totNb/(totNb+totEb)*100).toFixed(1)+'%';
-
-  setKPI('kpi-business',[
-    {lbl:'New Business 총매출',val:fmtM(totNb),badge:nbShare+' 비중',cls:'up'},
-    {lbl:'Existing Business',val:fmtM(totEb),badge:((totEb/(totNb+totEb))*100).toFixed(1)+'% 비중',cls:'neu'},
-    {lbl:'2025 New Business',val:fmtM(YD[2025].nb),badge:'▲ '+pctChg(YD[2025].nb,YD[2024].nb)+' YoY',cls:'up'},
-    {lbl:'New Biz 최고 분기',val:'25Q2',badge:'$3.96M',cls:'up'},
-  ]);
-
-  charts.bizStacked = new Chart(document.getElementById('c-biz-stacked'),{
-    type:'bar',
-    data:{labels:ql,datasets:[
-      {label:'New Business',data:nb,backgroundColor:'#4299E1',borderRadius:2},
-      {label:'Existing',data:eb,backgroundColor:'#BEE3F8',borderRadius:2},
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtM(c.raw)}}},scales:{x:{stacked:true,grid:{display:false},ticks:{...TICK_STYLE,maxRotation:0}},y:{stacked:true,grid:{color:GRID_COLOR,drawBorder:false},ticks:{...TICK_STYLE,callback:tickerY}}}}
-  });
-
-  charts.bizPct = new Chart(document.getElementById('c-biz-pct'),{
-    type:'line',
-    data:{labels:ql,datasets:[{label:'New %',data:nbPct,borderColor:'#4299E1',backgroundColor:'rgba(66,153,225,0.08)',pointBackgroundColor:'#4299E1',pointRadius:4,fill:true,tension:0.35,borderWidth:2}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' New Biz: '+c.raw+'%'}}},scales:{x:{grid:{display:false},ticks:{...TICK_STYLE,maxRotation:0}},y:{min:0,max:100,grid:{color:GRID_COLOR,drawBorder:false},ticks:{...TICK_STYLE,callback:v=>v+'%'}}}}
-  });
-
-  // Product별 New/Existing
-  const prods = ['GentleMax Pro+','Vbeam Perfecta','Picoway','Others'];
-  // estimated ratios from data patterns
-  const nbRatios = [0.75,0.62,0.71,0.55]; // approx
-  const prodTots = yrs.map(y=>[YD[y].gmpp,YD[y].vbp,YD[y].pw,YD[y].oth]).reduce((acc,arr)=>acc.map((v,i)=>v+arr[i]),[0,0,0,0]);
-  charts.bizProd = new Chart(document.getElementById('c-biz-prod'),{
-    type:'bar',
-    data:{labels:prods,datasets:[
-      {label:'New',data:prodTots.map((v,i)=>Math.round(v*nbRatios[i])),backgroundColor:'#4299E1',borderRadius:3},
-      {label:'Existing',data:prodTots.map((v,i)=>Math.round(v*(1-nbRatios[i]))),backgroundColor:'#BEE3F8',borderRadius:3},
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtM(c.raw)}}},scales:{x:{stacked:true,grid:{display:false},ticks:{...TICK_STYLE,font:{size:10}}},y:{stacked:true,grid:{color:GRID_COLOR,drawBorder:false},ticks:{...TICK_STYLE,callback:tickerY}}}}
-  });
-}
-
-/* =========================================================
-   INIT
-   ========================================================= */
-buildCurrentPage();
+/* ════════════════════════════════════════
+   LOCK SCREEN INPUT
+   ════════════════════════════════════════ */
+window.onload=()=>document.getElementById('pw-input').focus();
 </script>
 </body>
 </html>
