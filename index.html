@@ -48,7 +48,7 @@ body{font-family:-apple-system,'Pretendard','Apple SD Gothic Neo',sans-serif;bac
 .nav-right{margin-left:auto;display:flex;align-items:center;gap:8px}
 
 /* FILTERS */
-.filter-bar{background:var(--surface);border-bottom:.5px solid var(--border);padding:10px 1.5rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.filter-bar{position:sticky;top:52px;z-index:90;background:var(--surface);border-bottom:.5px solid var(--border);padding:10px 1.5rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .filter-label{font-size:11px;color:var(--text3);white-space:nowrap}
 .filter-group{display:flex;gap:4px;flex-wrap:wrap}
 .f-btn{font-size:11px;font-family:inherit;padding:4px 11px;border-radius:999px;border:.5px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:all .12s;white-space:nowrap}
@@ -57,7 +57,7 @@ body{font-family:-apple-system,'Pretendard','Apple SD Gothic Neo',sans-serif;bac
 .filter-sep{width:.5px;height:18px;background:var(--border);margin:0 4px}
 
 /* TABS */
-.tabs{background:var(--surface);border-bottom:.5px solid var(--border);display:flex;overflow-x:auto;padding:0 1.5rem;scrollbar-width:none;height:44px;align-items:flex-end}
+.tabs{position:sticky;top:100px;z-index:89;background:var(--surface);border-bottom:.5px solid var(--border);display:flex;overflow-x:auto;padding:0 1.5rem;scrollbar-width:none;height:44px;align-items:flex-end}
 .tabs::-webkit-scrollbar{display:none}
 .tab{font-size:12px;font-family:inherit;padding:10px 14px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text3);cursor:pointer;white-space:nowrap;transition:all .12s;margin-bottom:-1px}
 .tab:hover{color:var(--text2)}
@@ -277,10 +277,21 @@ footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-t
 
 <div class="page" id="page-sr">
   <div class="kpi-row" id="kpi-sr"></div>
+  <!-- 안내 문구 (전체 목록 상태에서만 표시) -->
+  <div id="sr-guide" style="text-align:center;padding:14px 1.5rem 0;margin-bottom:-4px">
+    <span style="font-size:17px;font-weight:600;color:var(--text);letter-spacing:-.01em">
+      👆 담당자 이름을 클릭하면 제품별 상세 판매 현황이 나타납니다
+    </span>
+  </div>
   <div class="g2">
     <div class="card full">
-      <div class="cl" id="sr-bar-title">담당자별 매출</div>
-      <div class="cs" id="sr-bar-sub">BI Data 기준 · 현 재직자</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+        <div>
+          <div class="cl" id="sr-bar-title">담당자별 매출</div>
+          <div class="cs" id="sr-bar-sub">BI Data 기준 · 현 재직자</div>
+        </div>
+        <button id="sr-back-btn2" onclick="srDrillUp()" style="display:none;font-size:12px;font-family:inherit;padding:6px 16px;border:.5px solid var(--border);border-radius:999px;background:var(--surface2);color:var(--text);cursor:pointer;font-weight:500">🔙 목록으로</button>
+      </div>
       <div class="cw" style="height:240px"><canvas id="c-sr-bar"></canvas></div>
     </div>
     <div class="card">
@@ -396,6 +407,99 @@ const r1 = v => Math.round(v*10)/10;
 const GC = 'rgba(128,128,120,0.12)';
 const TK = {color:'#9e9e98',font:{size:10}};
 const PROD_COLORS = {'Gentle Series':'#3B82F6',VBP:'#10B981',PicoWay:'#F59E0B',Others:'#6B7280'};
+
+// 바 위에 값 항상 표시하는 전역 플러그인
+const barLabelPlugin = {
+  id:'barLabelPlugin',
+  afterDatasetsDraw(chart){
+    const type=chart.config.type;
+    if(type!=='bar') return;
+    const ctx=chart.ctx;
+    chart.data.datasets.forEach((ds,di)=>{
+      if(ds.type==='line') return; // line 데이터셋 스킵
+      const meta=chart.getDatasetMeta(di);
+      if(meta.hidden) return;
+      meta.data.forEach((bar,idx)=>{
+        const v=ds.data[idx];
+        if(!v||v<=0) return;
+        const isK=currency==='KRW';
+        let label;
+        if(isK){
+          label=v>=1e9?(v/1e8).toFixed(1)+'억':(v>=1e8?(v/1e8).toFixed(1)+'억':Math.round(v/1e4)+'만');
+        } else {
+          label=v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+(v/1e3).toFixed(0)+'K';
+        }
+        const isHoriz=chart.options.indexAxis==='y';
+        ctx.save();
+        ctx.font='500 9px -apple-system,sans-serif';
+        ctx.fillStyle='#555';
+        ctx.textAlign='center';
+        ctx.textBaseline='bottom';
+        if(isHoriz){
+          const x=bar.x+4;
+          const y=bar.y;
+          ctx.textAlign='left';
+          ctx.textBaseline='middle';
+          ctx.fillText(label, x, y);
+        } else {
+          ctx.fillText(label, bar.x, bar.y-3);
+        }
+        ctx.restore();
+      });
+    });
+  }
+};
+Chart.register(barLabelPlugin);
+
+// 도넛 차트 바깥 라벨 + 지시선 플러그인
+const donutLabelPlugin = {
+  id:'donutLabelPlugin',
+  afterDraw(chart){
+    if(chart.config.type!=='doughnut') return;
+    const ctx=chart.ctx;
+    const ds=chart.data.datasets[0];
+    const meta=chart.getDatasetMeta(0);
+    const tot=ds.data.reduce((a,b)=>a+b,0)||1;
+    const cx=chart.chartArea?(chart.chartArea.left+chart.chartArea.right)/2:chart.width/2;
+    const cy=chart.chartArea?(chart.chartArea.top+chart.chartArea.bottom)/2:chart.height/2;
+    const outerR=(Math.min(chart.chartArea.right-chart.chartArea.left, chart.chartArea.bottom-chart.chartArea.top)/2)*0.95;
+    meta.data.forEach((arc,i)=>{
+      const v=ds.data[i];
+      const pct=v/tot*100;
+      if(pct<1) return; // 1% 미만 스킵
+      const midAngle=(arc.startAngle+arc.endAngle)/2;
+      const r1=outerR+10;
+      const r2=outerR+22;
+      const lx1=cx+Math.cos(midAngle)*r1;
+      const ly1=cy+Math.sin(midAngle)*r1;
+      const lx2=cx+Math.cos(midAngle)*r2;
+      const ly2=cy+Math.sin(midAngle)*r2;
+      const isLeft=lx2<cx;
+      const lx3=lx2+(isLeft?-6:6);
+      const label=chart.data.labels[i];
+      const isK=currency==='KRW';
+      let valStr;
+      if(isK) valStr=v>=1e9?(v/1e8).toFixed(0)+'억':(v/1e8).toFixed(1)+'억';
+      else valStr=v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+(v/1e3).toFixed(0)+'K';
+      const text=pct>=5?`${label} ${pct.toFixed(0)}%`:pct.toFixed(0)+'%';
+      ctx.save();
+      ctx.strokeStyle=arc.options?.backgroundColor||'#ccc';
+      ctx.lineWidth=1;
+      ctx.beginPath();
+      ctx.moveTo(lx1,ly1);
+      ctx.lineTo(lx2,ly2);
+      ctx.lineTo(lx3,ly2);
+      ctx.stroke();
+      ctx.font='500 9px -apple-system,sans-serif';
+      ctx.fillStyle='#555';
+      ctx.textAlign=isLeft?'right':'left';
+      ctx.textBaseline='middle';
+      ctx.fillText(text, lx3+(isLeft?-2:2), ly2);
+      ctx.restore();
+    });
+  }
+};
+Chart.register(donutLabelPlugin);
 function tickY(v){return v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+Math.round(v/1e3)+'K';}
 function qLabel(q){ return q.replace(/(\d{2})(Q\d)/,'$2\'$1'); }
 
@@ -433,6 +537,7 @@ function tickCur(v){ return currency==='KRW'?tickKRW(v):tickY(v); }
 function mkDonutOpts(){
   return {
     responsive:true, maintainAspectRatio:false,
+    layout:{padding:30},
     plugins:{
       legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:8,color:'#9e9e98'}},
       tooltip:{callbacks:{label:c=>`${c.label}: ${fmtSm(c.raw)} (${(c.raw/(c.dataset.data.reduce((a,b)=>a+b,0)||1)*100).toFixed(1)}%)`}}
@@ -682,7 +787,7 @@ function buildOverview(){
   charts.recDonut=new Chart(document.getElementById('c-rec-donut'),{
     type:'doughnut',
     data:{labels:['Service','Consumables'],datasets:[{data:[svcTot,consTot],backgroundColor:['#10B981','#F59E0B'],borderWidth:0,hoverOffset:4}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtSm(c.raw)} (${(c.raw/(svcTot+consTot)*100).toFixed(1)}%)`}}}}
+    options:{responsive:true,maintainAspectRatio:false,layout:{padding:28},plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtSm(c.raw)} (${(c.raw/(svcTot+consTot)*100).toFixed(1)}%)`}}}}
   });
 }
 
@@ -792,7 +897,7 @@ function buildProduct(){
   charts.unitDonut=new Chart(document.getElementById('c-unit-donut'),{
     type:'doughnut',
     data:{labels:prods,datasets:[{data:prods.map(p=>getProdUnits(p)),backgroundColor:prods.map(p=>PROD_COLORS[p]),borderWidth:0,hoverOffset:4}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw}대 (${(c.raw/(c.dataset.data.reduce((a,b)=>a+b,0)||1)*100).toFixed(1)}%)`}}}}
+    options:{responsive:true,maintainAspectRatio:false,layout:{padding:28},plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw}대 (${(c.raw/(c.dataset.data.reduce((a,b)=>a+b,0)||1)*100).toFixed(1)}%)`}}}}
   });
 
   renderProdTable();
@@ -970,9 +1075,13 @@ function renderSRBar(drillSR){
     const titleEl=document.getElementById('sr-bar-title');
     const subEl=document.getElementById('sr-bar-sub');
     const backEl=document.getElementById('sr-back-btn');
+    const back2El=document.getElementById('sr-back-btn2');
+    const guideEl=document.getElementById('sr-guide');
     if(titleEl) titleEl.textContent=drillSR+' · 제품별 매출';
     if(subEl)   subEl.textContent=currency+' 기준 · 피벗 기준';
     if(backEl)  backEl.style.display='inline-block';
+    if(back2El) back2El.style.display='inline-block';
+    if(guideEl) guideEl.style.display='none';
 
     setKPI('kpi-sr',[
       {lbl:drillSR+' 총매출',val:fmt(totVal),badge:currency+' 기준',cls:'hi'},
@@ -1127,11 +1236,23 @@ function renderSRProdDonut(drillSR){
 
 function srDrillDown(sr){
   srDrillSR=sr;
+  // 안내문구 숨김, 큰 뒤로가기 버튼 표시
+  const guide=document.getElementById('sr-guide');
+  const back2=document.getElementById('sr-back-btn2');
+  if(guide) guide.style.display='none';
+  if(back2) back2.style.display='inline-block';
   renderSRBar(sr);
 }
 
 function srDrillUp(){
   srDrillSR=null;
+  // 안내문구 복원, 큰 뒤로가기 버튼 숨김
+  const guide=document.getElementById('sr-guide');
+  const back2=document.getElementById('sr-back-btn2');
+  const back1=document.getElementById('sr-back-btn');
+  if(guide) guide.style.display='';
+  if(back2) back2.style.display='none';
+  if(back1) back1.style.display='none';
   renderSRBar(null);
 }
 
