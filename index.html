@@ -123,6 +123,32 @@ tr:hover td{background:var(--surface2)}
 
 footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-top:1rem}
 
+/* ── SR DETAIL SIDEBAR LAYOUT ── */
+.sr-layout{display:flex;gap:0;min-height:calc(100vh - 148px)}
+.sr-sidebar{width:180px;flex-shrink:0;background:var(--surface);border-right:.5px solid var(--border);padding:16px 0}
+.sr-sidebar-title{font-size:10px;font-weight:600;color:var(--text3);padding:0 14px 10px;letter-spacing:.06em;text-transform:uppercase}
+.sr-person-btn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 14px;background:transparent;border:none;border-bottom:.5px solid var(--border2);font-size:12px;font-family:inherit;color:var(--text2);cursor:pointer;transition:all .13s}
+.sr-person-btn:last-child{border-bottom:none}
+.sr-person-btn:hover{background:var(--surface2);color:var(--text)}
+.sr-person-btn.active{background:var(--blue-l);color:var(--blue);font-weight:600;border-left:3px solid var(--blue-m)}
+.sr-person-avatar{width:28px;height:28px;border-radius:50%;background:var(--blue-m);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.sr-person-info{flex:1;min-width:0}
+.sr-person-name{font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sr-person-val{font-size:10px;color:var(--text3);margin-top:1px}
+.sr-person-btn.active .sr-person-val{color:var(--blue);opacity:.8}
+.sr-main{flex:1;padding:1.5rem;overflow-x:hidden;min-width:0}
+.sr-kpi-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.sr-section-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+.sr-section-sub{font-size:11px;color:var(--text3);margin-bottom:14px}
+.sr-charts-grid{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px}
+.sr-full{grid-column:1/-1}
+@media(max-width:768px){
+  .sr-layout{flex-direction:column}
+  .sr-sidebar{width:100%;border-right:none;border-bottom:.5px solid var(--border)}
+  .sr-kpi-row{grid-template-columns:repeat(2,1fr)}
+  .sr-charts-grid{grid-template-columns:1fr}
+}
+
 /* ── PRODUCT SIDEBAR ── */
 .prod-layout{display:flex;gap:14px;padding:1.5rem;max-width:1280px;margin:0 auto}
 .prod-sidebar{width:160px;flex-shrink:0}
@@ -189,6 +215,7 @@ footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-t
   <button class="tab" onclick="goTab('region')">📍 지역별 현황</button>
   <button class="tab" onclick="goTab('sr')">👤 담당자 성과</button>
   <button class="tab" onclick="goTab('detail')">📋 상세 현황</button>
+  <button class="tab" onclick="goTab('srdetail')">🎯 담당자 상세</button>
 </div>
 
 <div class="page on" id="page-overview">
@@ -279,13 +306,22 @@ footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-t
   <div class="kpi-row" id="kpi-sr"></div>
   <div class="g2">
     <div class="card full">
-      <div class="cl">담당자별 매출 (KRW)</div>
-      <div class="cs">Real revenue 기준 · 현 재직자 중심</div>
+      <div class="cl" id="sr-bar-title">담당자별 매출 (KRW)</div>
+      <div class="cs" id="sr-bar-sub">Real revenue 기준 · 현 재직자 중심 · 클릭하면 제품별 상세 보기</div>
       <div class="cw" style="height:240px"><canvas id="c-sr-bar"></canvas></div>
+    </div>
+    <!-- 담당자 상세 패널 -->
+    <div class="card full" id="sr-detail-panel" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+        <div class="cl" id="sr-detail-title">담당자 상세</div>
+        <button onclick="closeSRDetail()" style="font-size:11px;font-family:inherit;padding:3px 10px;border:.5px solid var(--border);border-radius:999px;background:transparent;color:var(--text2);cursor:pointer">✕ 닫기</button>
+      </div>
+      <div class="cs" id="sr-detail-sub">제품별 판매 대수 · 매출</div>
+      <div class="tw" id="sr-detail-table"></div>
     </div>
     <div class="card">
       <div class="cl">담당자 순위</div>
-      <div class="cs">KRW 기준</div>
+      <div class="cs" id="sr-rank-sub">KRW 기준</div>
       <ul class="rank-list" id="rank-sr"></ul>
     </div>
     <div class="card">
@@ -321,6 +357,36 @@ footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-t
       <div class="cl">New Business 비중 추이</div>
       <div class="cs">분기별 New % 라인</div>
       <div class="cw" style="height:180px"><canvas id="c-nv-pct"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 담당자 상세 페이지 ── -->
+<div class="page" id="page-srdetail" style="padding:0;max-width:none">
+  <div class="sr-layout">
+    <div class="sr-sidebar">
+      <div class="sr-sidebar-title">재직자 담당자</div>
+      <div id="sr-person-list"></div>
+    </div>
+    <div class="sr-main" id="sr-detail-main">
+      <div class="sr-kpi-row" id="srd-kpi"></div>
+      <div class="card sr-full" style="margin-bottom:12px">
+        <div class="sr-section-title" id="srd-bar-title">연도별 매출 추이</div>
+        <div class="sr-section-sub" id="srd-bar-sub">pivot.csv 기준</div>
+        <div class="cw" style="height:240px"><canvas id="c-srd-yr-bar"></canvas></div>
+      </div>
+      <div class="sr-charts-grid">
+        <div class="card">
+          <div class="sr-section-title">제품별 매출 비중 <span style="font-size:10px;font-weight:400;color:var(--text3)">(카테고리 기준)</span></div>
+          <div class="sr-section-sub" id="srd-donut-sub">선택 기간</div>
+          <div class="cw" style="height:240px"><canvas id="c-srd-prod-donut"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="sr-section-title">제품별 상세 매출</div>
+          <div class="sr-section-sub" id="srd-tbl-sub">KRW(억 원) / USD</div>
+          <div class="tw" id="srd-prod-table"></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -571,6 +637,7 @@ function buildCurrentTab(){
     case 'region':   buildRegion();   break;
     case 'sr':       buildSR();       break;
     case 'detail':   buildDetail();   break;
+    case 'srdetail': buildSRDetail(); break;
   }
 }
 
@@ -672,11 +739,15 @@ function buildOverview(){
       id:'qStackedLabel',
       afterDatasetsDraw(chart){
         try{
-          const {ctx,scales:{x,y},data}=chart;
-          const sales=data.datasets[0].data;
-          const rec=data.datasets[1].data;
-          sales.forEach((_,i)=>{
-            const tot=(sales[i]||0)+(rec[i]||0);
+          const {ctx,scales,data}=chart;
+          const x=scales.x, y=scales.y;
+          if(!x||!y)return;
+          // label 이름으로 안전하게 찾기
+          const salesDs=data.datasets.find(d=>d.label==='SALES');
+          const recDs=data.datasets.find(d=>d.label==='RECURRING');
+          if(!salesDs||!recDs)return;
+          salesDs.data.forEach((_,i)=>{
+            const tot=(salesDs.data[i]||0)+(recDs.data[i]||0);
             if(!tot)return;
             const px=x.getPixelForTick(i);
             const py=y.getPixelForValue(tot);
@@ -708,8 +779,11 @@ function buildOverview(){
         if(!xS||!yS)return;
         const ctx=chart.ctx;
         const ds=chart.data.datasets;
+        const salesDs=ds.find(d=>d.label==='SALES');
+        const recDs=ds.find(d=>d.label==='RECURRING');
+        if(!salesDs||!recDs)return;
         yrs.forEach((y,i)=>{
-          const tot=(ds[0]?.data[i]||0)+(ds[1]?.data[i]||0);
+          const tot=(salesDs.data[i]||0)+(recDs.data[i]||0);
           const px=xS.getPixelForTick(i);
           const py=yS.getPixelForValue(tot);
           // 총액 라벨
@@ -895,7 +969,7 @@ function buildProduct(){
       id:'prodLineLabel',
       afterDatasetsDraw(chart){
         try{
-          const {ctx,scales:{x,y},data}=chart;
+          const {ctx,scales,data}=chart; const x=scales.x,y=scales.y; if(!x||!y)return;
           data.datasets.forEach((ds,di)=>{
             // 마지막 포인트에만 라벨 표기
             const lastIdx=ds.data.length-1;
@@ -931,7 +1005,7 @@ function buildProduct(){
       id:'gmppLabel',
       afterDatasetsDraw(chart){
         try{
-          const {ctx,scales:{x,y},data}=chart;
+          const {ctx,scales,data}=chart; const x=scales.x,y=scales.y; if(!x||!y)return;
           const ds=data.datasets[0];
           ds.data.forEach((v,i)=>{
             if(v===null||v===undefined)return;
@@ -991,7 +1065,7 @@ function buildRegion(){
       id:'regYrLabel',
       afterDatasetsDraw(chart){
         try{
-          const {ctx,scales:{x,y},data}=chart;
+          const {ctx,scales,data}=chart; const x=scales.x,y=scales.y; if(!x||!y)return;
           data.datasets.forEach(ds=>{
             // 최대값 데이터셋만 라벨 표기 (혼잡 방지 — 1위 지역만)
             if(ds.label!==top4Reg[0])return;
@@ -1038,7 +1112,15 @@ function renderRegionBar(drillRegion){
   const wrapper = document.getElementById('c-reg-bar')?.parentElement;
   if(wrapper) wrapper.style.height = canvasH+'px';
 
+  // canvas 교체로 destroy 후 잔여 콜백 오류 원천 차단
   if(charts.regBar){ charts.regBar.destroy(); delete charts.regBar; }
+  const regWrapper = document.getElementById('c-reg-bar')?.parentElement;
+  if(regWrapper){
+    const oldCanvas = document.getElementById('c-reg-bar');
+    const newCanvas = document.createElement('canvas');
+    newCanvas.id = 'c-reg-bar';
+    oldCanvas.replaceWith(newCanvas);
+  }
   charts.regBar=new Chart(document.getElementById('c-reg-bar'),{
     type:'bar',
     data:{
@@ -1074,11 +1156,14 @@ function renderRegionBar(drillRegion){
       id:'regBarLabel',
       afterDatasetsDraw(chart){
         try{
-          const {ctx,scales:{x,y},data}=chart;
+          const {ctx,scales,data}=chart;
+          const x=scales.x, y=scales.y;
+          if(!x||!y||!data.datasets[0])return;
           data.datasets[0].data.forEach((v,i)=>{
             if(!v)return;
             const px=x.getPixelForValue(v);
             const py=y.getPixelForTick(i);
+            if(isNaN(px)||isNaN(py))return;
             ctx.save();
             ctx.font='bold 9px -apple-system,sans-serif';
             ctx.fillStyle='#6a6960';
@@ -1108,6 +1193,10 @@ function buildSR(){
   const isK=currency==='KRW';
   const valKey=isK?'krw':'usd';
 
+  // 필터 변경·탭 재진입 시 상세 패널 초기화
+  const panel=document.getElementById('sr-detail-panel');
+  if(panel) panel.style.display='none';
+
   // 담당자별 집계 — KRW/USD 모두 합산
   const srMap={};
   DATA.sr_by_year.forEach(d=>{
@@ -1132,44 +1221,58 @@ function buildSR(){
     {lbl:'1인 평균',val:fmtSR(totVal/(srList.length||1)),badge:currency+' 기준',cls:'neu'},
   ]);
 
-  // 담당자 카드 제목 통화 표기 갱신
-  const srBarTitle=document.querySelector('#page-sr .card .cl');
-  if(srBarTitle) srBarTitle.textContent=`담당자별 매출 (${currency})`;
-  const srBarSub=document.querySelector('#page-sr .card .cs');
-  if(srBarSub) srBarSub.textContent=currency==='KRW'?'Real revenue 기준 · 현 재직자 중심':'Shipped USD 기준 · 현 재직자 중심';
+  // 담당자 카드 제목 통화 표기 갱신 — HTML에서 직접 id로 관리
+  const srBarTitleEl=document.getElementById('sr-bar-title');
+  if(srBarTitleEl) srBarTitleEl.textContent=`담당자별 매출 (${currency})`;
+  const srBarSubEl=document.getElementById('sr-bar-sub');
+  if(srBarSubEl) srBarSubEl.textContent=currency==='KRW'?'Real revenue 기준 · 현 재직자 중심':'Shipped USD 기준 · 현 재직자 중심';
+  const rankSubEl=document.getElementById('sr-rank-sub');
+  if(rankSubEl) rankSubEl.textContent=currency+' 기준';
 
-  // 담당자 순위 카드 통화 표기
-  const rankTitle=document.querySelector('#rank-sr')?.closest('.card')?.querySelector('.cs');
-  if(rankTitle) rankTitle.textContent=currency+' 기준';
-
+  // 선택된 담당자 하이라이트 상태
+  const selSRColors=srList.map(()=>'#3B82F6');
   charts.srBar=new Chart(document.getElementById('c-sr-bar'),{
     type:'bar',
-    data:{labels:srList.map(([k])=>k),datasets:[{label:`매출 (${currency})`,data:srList.map(([,v])=>v[valKey]),backgroundColor:'#3B82F6',borderRadius:4}]},
+    data:{labels:srList.map(([k])=>k),datasets:[{label:`매출 (${currency})`,data:srList.map(([,v])=>v[valKey]),backgroundColor:selSRColors,borderRadius:4}]},
     options:{
       responsive:true,maintainAspectRatio:false,
       layout:{padding:{top:28}},
+      cursor:'pointer',
+      onClick(evt,els){
+        if(!els.length)return;
+        const idx=els[0].index;
+        const srName=srList[idx][0];
+        // 클릭된 바 강조
+        selSRColors.fill('#3B82F6');
+        selSRColors[idx]='#1D4ED8';
+        charts.srBar.update('none');
+        renderSRDetail(srName, srList[idx][1]);
+      },
       plugins:{
         legend:{display:false},
-        tooltip:{callbacks:{label:c=>' '+fmtSR(c.raw)}},
+        tooltip:{callbacks:{label:c=>' '+fmtSR(c.raw)+' — 클릭하면 제품별 상세'}},
       },
       scales:{x:{grid:{display:false},ticks:{...TK,font:{size:10}}},y:{grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickSR}}}
     },
     plugins:[{
       id:'srBarLabel',
       afterDatasetsDraw(chart){
-        const {ctx,scales:{x,y},data}=chart;
-        data.datasets[0].data.forEach((v,i)=>{
-          if(!v)return;
-          const px=x.getPixelForTick(i);
-          const py=y.getPixelForValue(v);
-          ctx.save();
-          ctx.font='bold 9px -apple-system,sans-serif';
-          ctx.fillStyle='#6a6960';
-          ctx.textAlign='center';
-          ctx.textBaseline='bottom';
-          ctx.fillText(fmtSR(v),px,py-4);
-          ctx.restore();
-        });
+        const {ctx,scales,data}=chart; const x=scales.x,y=scales.y; if(!x||!y)return;
+        try{
+          data.datasets[0].data.forEach((v,i)=>{
+            if(!v)return;
+            const px=x.getPixelForTick(i);
+            const py=y.getPixelForValue(v);
+            if(isNaN(px)||isNaN(py))return;
+            ctx.save();
+            ctx.font='bold 9px -apple-system,sans-serif';
+            ctx.fillStyle='#6a6960';
+            ctx.textAlign='center';
+            ctx.textBaseline='bottom';
+            ctx.fillText(fmtSR(v),px,py-4);
+            ctx.restore();
+          });
+        }catch(e){}
       }
     }]
   });
@@ -1190,6 +1293,107 @@ function buildSR(){
     options:{responsive:true,maintainAspectRatio:false,layout:{padding:40},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtSm(c.raw)} (${(c.raw/(dirTot+dealTot)*100).toFixed(1)}%)`}}}},
     plugins:[donutLabelPlugin(fmtSm)]
   });
+}
+
+/* ════════════════════════════════════════
+   SR 담당자 제품별 상세 테이블
+   ════════════════════════════════════════ */
+function renderSRDetail(srName, srVals){
+  const panel=document.getElementById('sr-detail-panel');
+  const titleEl=document.getElementById('sr-detail-title');
+  const subEl=document.getElementById('sr-detail-sub');
+  const tblEl=document.getElementById('sr-detail-table');
+  if(!panel||!tblEl)return;
+
+  const isK=currency==='KRW';
+  const valKey=isK?'krw':'usd';
+  const fmtSRd=v=>isK?fmtKRW_large(v):fmtMK(v);
+
+  // 선택 연도 기준 전체 매출 합산 (담당자별 비중 계산용)
+  const srTotVal=srVals[valKey]||0;
+
+  // product_by_year_detail에서 선택 연도 합산 → 전체 대비 비중으로 담당자 추정
+  // (담당자별 제품 분리 데이터가 없으므로 담당자 매출비중 × 제품별 전체매출로 추정)
+  const allSRTot={krw:0,usd:0};
+  const srMap={};
+  DATA.sr_by_year.forEach(d=>{
+    if(!selYears.has(d.year))return;
+    const key=d.sr==='GR lee'?'GR Lee':d.sr;
+    if(!srMap[key])srMap[key]={krw:0,usd:0};
+    srMap[key].krw+=(d.krw||0);
+    srMap[key].usd+=(d.usd||0);
+  });
+  Object.values(srMap).forEach(v=>{allSRTot.krw+=v.krw;allSRTot.usd+=v.usd;});
+  const srRatio=allSRTot[valKey]?srTotVal/allSRTot[valKey]:0;
+
+  // 제품별 합산 (선택 연도)
+  const prodMap={};
+  DATA.product_by_year_detail.forEach(d=>{
+    if(!selYears.has(d.year))return;
+    if(!prodMap[d.prod])prodMap[d.prod]={krw:0,usd:0,units:0};
+    prodMap[d.prod].krw+=(d.krw||0);
+    prodMap[d.prod].usd+=(d.usd||0);
+    prodMap[d.prod].units+=(d.units||0);
+  });
+
+  // 담당자 추정 매출 = 제품별 전체 × 담당자 비중
+  const rows=Object.entries(prodMap)
+    .map(([prod,v])=>({prod, units:Math.round(v.units*srRatio), val:v[valKey]*srRatio, usd:v.usd*srRatio, krw:v.krw*srRatio}))
+    .filter(d=>d.units>0||d.val>0)
+    .sort((a,b)=>b.val-a.val);
+
+  const totUnits=rows.reduce((s,d)=>s+d.units,0);
+  const totVal=rows.reduce((s,d)=>s+d.val,0);
+  const maxVal=rows[0]?.val||1;
+
+  titleEl.textContent=`${srName} — 제품별 상세`;
+  subEl.textContent=`${[...selYears].sort().join('/')}년 · ${currency} · 담당자 매출비중(${(srRatio*100).toFixed(1)}%) 기준 추정치`;
+
+  tblEl.innerHTML=`<table>
+    <thead><tr>
+      <th style="padding:7px 10px">제품명</th>
+      <th class="r" style="padding:7px 10px">판매 대수</th>
+      <th style="padding:7px 10px;width:100px">비중</th>
+      <th class="r" style="padding:7px 10px">매출 (${currency})</th>
+    </tr></thead>
+    <tbody>${rows.map(d=>{
+      const sh=totVal?(d.val/totVal*100).toFixed(1):'0.0';
+      const bw=(d.val/maxVal*100).toFixed(1);
+      return `<tr>
+        <td style="font-weight:500;padding:7px 10px">${d.prod}</td>
+        <td class="r" style="padding:7px 10px">${d.units}대</td>
+        <td style="padding:7px 10px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="width:60px;height:5px;background:var(--surface3);border-radius:2px;flex-shrink:0">
+              <div style="width:${bw}%;height:100%;background:#3B82F6;border-radius:2px"></div>
+            </div>
+            <span style="font-size:11px;color:var(--text3)">${sh}%</span>
+          </div>
+        </td>
+        <td class="r" style="padding:7px 10px">${fmtSRd(d.val)}</td>
+      </tr>`;
+    }).join('')}</tbody>
+    <tfoot><tr style="border-top:.5px solid var(--border);background:var(--surface2)">
+      <td style="font-weight:500;padding:7px 10px">합계</td>
+      <td class="r" style="padding:7px 10px;font-weight:500">${totUnits}대</td>
+      <td style="padding:7px 10px"></td>
+      <td class="r" style="padding:7px 10px;font-weight:500">${fmtSRd(totVal)}</td>
+    </tr></tfoot>
+  </table>`;
+
+  panel.style.display='';
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function closeSRDetail(){
+  const panel=document.getElementById('sr-detail-panel');
+  if(panel) panel.style.display='none';
+  // 바 차트 색상 초기화
+  if(charts.srBar){
+    charts.srBar.data.datasets[0].backgroundColor=
+      charts.srBar.data.datasets[0].backgroundColor.map(()=>'#3B82F6');
+    charts.srBar.update('none');
+  }
 }
 
 /* ════════════════════════════════════════
@@ -1309,7 +1513,7 @@ function buildDetail(){
       id:'nvPctLabel',
       afterDatasetsDraw(chart){
         try{
-          const {ctx,scales:{x,y},data}=chart;
+          const {ctx,scales,data}=chart; const x=scales.x,y=scales.y; if(!x||!y)return;
           const ds=data.datasets[0];
           ds.data.forEach((v,i)=>{
             if(v===null||v===undefined)return;
@@ -1327,6 +1531,283 @@ function buildDetail(){
       }
     }]
   });
+}
+
+
+/* ════════════════════════════════════════
+   TAB: SR DETAIL (담당자 상세) — 왼쪽 사이드바 + 오른쪽 상세
+   ════════════════════════════════════════ */
+const SR_PERSONS = ['Baek Seung Chul','Oh Sang Geol','LIM YONG CHUL','Kim Sung Hoon','Lee Garam'];
+const SR_COLORS  = ['#3B82F6','#10B981','#F59E0B','#7C3AED','#DC2626'];
+const SR_INITIALS = {'Baek Seung Chul':'BSC','Oh Sang Geol':'OSG','LIM YONG CHUL':'LYC','Kim Sung Hoon':'KSH','Lee Garam':'LGR'};
+const PROD_CAT4 = ['Gentle Series','VBP','PicoWay','Others'];
+const PROD_CAT4_COLORS = {'Gentle Series':'#3B82F6','VBP':'#10B981','PicoWay':'#F59E0B','Others':'#6B7280'};
+let selSRPerson = 'Baek Seung Chul';
+
+function buildSRDetail(){
+  // ── 사이드바 버튼 렌더 ──
+  const listEl = document.getElementById('sr-person-list');
+  const isK = currency==='KRW';
+  const vk = isK?'krw':'usd';
+  // pivot 기준 전체 합계
+  const pivotMap = {};
+  DATA.sr_total.forEach(d=>{ pivotMap[d.sr]={krw:d.krw,usd:d.usd}; });
+
+  if(listEl){
+    listEl.innerHTML = SR_PERSONS.map((name,i)=>{
+      const tot = pivotMap[name]?.[vk]||0;
+      const label = isK ? fmtKRW_large(tot) : fmtMK(tot);
+      const initials = SR_INITIALS[name]||name.slice(0,2).toUpperCase();
+      const active = name===selSRPerson?' active':'';
+      const avatarColor = SR_COLORS[i];
+      return `<button class="sr-person-btn${active}" onclick="selectSRPerson('${name}')">
+        <div class="sr-person-avatar" style="background:${avatarColor}">${initials}</div>
+        <div class="sr-person-info">
+          <div class="sr-person-name">${name}</div>
+          <div class="sr-person-val">${label}</div>
+        </div>
+      </button>`;
+    }).join('');
+  }
+
+  renderSRPersonDetail(selSRPerson);
+}
+
+function selectSRPerson(name){
+  selSRPerson = name;
+  buildSRDetail();
+}
+
+function renderSRPersonDetail(srName){
+  const isK = currency==='KRW';
+  const vk  = isK?'krw':'usd';
+  const fmtV = v=> isK?fmtKRW_large(v):fmtMK(v);
+  const fmtVlg = v=> isK?fmtKRW_large(v):'$'+(v/1e6).toFixed(2)+'M';
+  const tickV = v=> isK?tickKRW(v):tickY(v);
+  const pivotMap = {};
+  DATA.sr_total.forEach(d=>{ pivotMap[d.sr]={krw:d.krw,usd:d.usd}; });
+
+  // ── 연도별 데이터 ──
+  const yrs = [2023,2024,2025,2026];
+  const yrData = yrs.map(y=>{
+    const d = DATA.sr_by_year.find(r=>r.year===y&&r.sr===srName);
+    return d?{krw:d.krw,usd:d.usd}:{krw:0,usd:0};
+  });
+  const yrVals = yrData.map(d=>d[vk]||0);
+
+  // pivot 기준 전체 합산
+  const totKRW = pivotMap[srName]?.krw||0;
+  const totUSD = pivotMap[srName]?.usd||0;
+  const totVal = isK?totKRW:totUSD;
+
+  // YoY 성장률 (2024 vs 2023 등)
+  const yoyArr = yrVals.map((v,i)=>{
+    if(i===0) return null;
+    const prev=yrVals[i-1];
+    return prev?Math.round((v-prev)/Math.abs(prev)*100*10)/10:null;
+  });
+
+  // 최고 연도
+  const bestYr = yrs[yrVals.indexOf(Math.max(...yrVals))];
+  const bestVal = Math.max(...yrVals);
+
+  // ── KPI ──
+  const kpiEl = document.getElementById('srd-kpi');
+  if(kpiEl){
+    const rank = SR_PERSONS.slice().sort((a,b)=>{
+      const av=pivotMap[a]?.[vk]||0, bv=pivotMap[b]?.[vk]||0;
+      return bv-av;
+    }).indexOf(srName)+1;
+    const totAllSR = DATA.sr_total.reduce((s,d)=>s+(d[vk]||0),0);
+    const share = totAllSR?((totVal/totAllSR)*100).toFixed(1):'0.0';
+    // 최근 연도 데이터(2026 or 2025)
+    const lastYrVal = yrVals[3]>0?yrVals[3]:yrVals[2];
+    const lastYr = yrVals[3]>0?2026:2025;
+    const yoy2025 = yoyArr[2]; // 2025 vs 2024
+    kpiEl.innerHTML = [
+      {lbl:'누적 총매출 (pivot 기준)',val:fmtVlg(totVal),badge:`전체 ${share}% 비중`,cls:'hi'},
+      {lbl:'담당자 순위',val:`${rank}위`,badge:`전체 ${SR_PERSONS.length}명 중`,cls:'up'},
+      {lbl:'2025 YoY 성장률',val:yoy2025!==null?(yoy2025>=0?'▲':'▼')+Math.abs(yoy2025)+'%':'-',badge:'vs 2024',cls:yoy2025>=0?'up':'dn'},
+      {lbl:`${lastYr}년 매출`,val:fmtV(lastYrVal),badge:`${lastYr}년 실적`,cls:'neu'},
+    ].map(({lbl,val,badge,cls})=>`<div class="kpi"><div class="kpi-lbl">${lbl}</div><div class="kpi-val">${val}</div><span class="kpi-badge ${cls}">${badge}</span></div>`).join('');
+  }
+
+  // ── 연도별 막대 그래프 ──
+  const titleEl=document.getElementById('srd-bar-title');
+  const subEl=document.getElementById('srd-bar-sub');
+  if(titleEl) titleEl.textContent=`${srName} — 연도별 매출 추이`;
+  if(subEl) subEl.textContent=`pivot.csv 기준 · ${currency} · Real revenue`;
+
+  // destroy existing
+  if(charts.srdYrBar){try{charts.srdYrBar.destroy();}catch(e){} delete charts.srdYrBar;}
+  if(charts.srdProdDonut){try{charts.srdProdDonut.destroy();}catch(e){} delete charts.srdProdDonut;}
+
+  const yoyPlugin={
+    id:'srdYoyLabel',
+    afterDraw(chart){
+      try{
+        const {ctx,scales,data}=chart;
+        const xS=chart.scales.x, yS=chart.scales.y;
+        if(!xS||!yS)return;
+        data.datasets[0].data.forEach((v,i)=>{
+          if(!v)return;
+          const px=xS.getPixelForTick(i);
+          const py=yS.getPixelForValue(v);
+          // 수치 라벨
+          ctx.save();
+          ctx.font='bold 9px -apple-system,sans-serif';
+          ctx.fillStyle='#6a6960';
+          ctx.textAlign='center';
+          ctx.textBaseline='bottom';
+          ctx.fillText(fmtV(v), px, py-18);
+          ctx.restore();
+          // YoY
+          const yv=yoyArr[i];
+          if(yv===null||yv===undefined)return;
+          const sign=yv>=0?'▲':'▼';
+          ctx.save();
+          ctx.font='bold 9px -apple-system,sans-serif';
+          ctx.fillStyle=yv>=0?'#059669':'#DC2626';
+          ctx.textAlign='center';
+          ctx.textBaseline='bottom';
+          ctx.fillText(`${sign}${Math.abs(yv)}%`, px, py-4);
+          ctx.restore();
+        });
+      }catch(e){}
+    }
+  };
+
+  const srColor = SR_COLORS[SR_PERSONS.indexOf(srName)]||'#3B82F6';
+  charts.srdYrBar = new Chart(document.getElementById('c-srd-yr-bar'),{
+    type:'bar',
+    data:{
+      labels:yrs.map(String),
+      datasets:[{
+        label:'매출',
+        data:yrVals,
+        backgroundColor: yrVals.map((v,i)=>yrs[i]===bestYr?srColor:srColor+'88'),
+        borderRadius:5,
+        borderSkipped:false,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      layout:{padding:{top:40}},
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:c=>' 매출: '+fmtV(c.raw)+' | KRW: '+fmtKRW_large(yrData[c.dataIndex].krw)+' / USD: $'+(yrData[c.dataIndex].usd/1e6).toFixed(2)+'M'}}
+      },
+      scales:{
+        x:{grid:{display:false}, ticks:{...TK,font:{size:11}}},
+        y:{grid:{color:GC,drawBorder:false}, ticks:{...TK,callback:tickV}, beginAtZero:true}
+      }
+    },
+    plugins:[yoyPlugin]
+  });
+
+  // ── 제품별 비중 (sr 전체 비중 기준 추정) ──
+  // 전체 sr 합산 대비 이 sr의 비중 → 전체 제품별 매출에 곱함
+  const allSRTot = {krw:0,usd:0};
+  const srMap2 = {};
+  DATA.sr_by_year.forEach(d=>{
+    if(!selYears.has(d.year))return;
+    const k=d.sr==='GR lee'?'GR Lee':d.sr;
+    if(!srMap2[k])srMap2[k]={krw:0,usd:0};
+    srMap2[k].krw+=(d.krw||0);
+    srMap2[k].usd+=(d.usd||0);
+  });
+  Object.values(srMap2).forEach(v=>{allSRTot.krw+=v.krw;allSRTot.usd+=v.usd;});
+  const srFiltered = srMap2[srName]||{krw:0,usd:0};
+  const ratio = allSRTot[vk]?srFiltered[vk]/allSRTot[vk]:0;
+
+  // 선택 연도 기반 제품별 집계 (카테고리 4종)
+  const prodMap4 = {};
+  PROD_CAT4.forEach(p=>{ prodMap4[p]={krw:0,usd:0,units:0}; });
+  DATA.product_by_quarter.forEach(d=>{
+    if(!selYears.has(d.year))return;
+    if(!prodMap4[d.product])return;
+    prodMap4[d.product].krw+=(d.krw||0);
+    prodMap4[d.product].usd+=(d.usd||0);
+    prodMap4[d.product].units+=(d.units||0);
+  });
+
+  // 추정치 적용
+  const srProdVals = PROD_CAT4.map(p=>({
+    prod:p,
+    krw: prodMap4[p].krw*ratio,
+    usd: prodMap4[p].usd*ratio,
+    units: Math.round(prodMap4[p].units*ratio),
+  }));
+  const totProdVal = srProdVals.reduce((s,d)=>s+(d[vk]||0),0);
+
+  // 도넛 차트
+  const donutSub = document.getElementById('srd-donut-sub');
+  if(donutSub) donutSub.textContent=`${[...selYears].sort().join('/')}년 선택 · 담당자 매출비중 ${(ratio*100).toFixed(1)}% 추정치`;
+
+  charts.srdProdDonut = new Chart(document.getElementById('c-srd-prod-donut'),{
+    type:'doughnut',
+    data:{
+      labels:PROD_CAT4,
+      datasets:[{
+        data:srProdVals.map(d=>d[vk]||0),
+        backgroundColor:PROD_CAT4.map(p=>PROD_CAT4_COLORS[p]),
+        borderWidth:0, hoverOffset:4
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      layout:{padding:40},
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:c=>`${c.label}: ${fmtV(c.raw)} (${(c.raw/(totProdVal||1)*100).toFixed(1)}%)`}}
+      }
+    },
+    plugins:[donutLabelPlugin(fmtV)]
+  });
+
+  // 상세 제품 테이블 (product_by_year_detail 기반, KRW+USD 이중 표기)
+  const detailMap = {};
+  DATA.product_by_year_detail.forEach(d=>{
+    if(!selYears.has(d.year))return;
+    if(!detailMap[d.prod])detailMap[d.prod]={krw:0,usd:0,units:0};
+    detailMap[d.prod].krw+=(d.krw||0);
+    detailMap[d.prod].usd+=(d.usd||0);
+    detailMap[d.prod].units+=(d.units||0);
+  });
+  const detailRows = Object.entries(detailMap)
+    .map(([prod,v])=>({prod, krw:v.krw*ratio, usd:v.usd*ratio, units:Math.round(v.units*ratio)}))
+    .filter(d=>d.units>0||d.krw>0)
+    .sort((a,b)=>b[vk]-a[vk]);
+  const totU = detailRows.reduce((s,d)=>s+d.units,0);
+  const totKRWd = detailRows.reduce((s,d)=>s+d.krw,0);
+  const totUSDd = detailRows.reduce((s,d)=>s+d.usd,0);
+
+  const tblSub = document.getElementById('srd-tbl-sub');
+  if(tblSub) tblSub.textContent=`${[...selYears].sort().join('/')}년 · KRW(억 원) / USD`;
+
+  const tblEl = document.getElementById('srd-prod-table');
+  if(tblEl){
+    tblEl.innerHTML=`<table>
+      <thead><tr>
+        <th style="padding:6px 8px">제품</th>
+        <th class="r" style="padding:6px 8px">대수</th>
+        <th class="r" style="padding:6px 8px;color:#6B7280">KRW</th>
+        <th class="r" style="padding:6px 8px;color:#3B82F6">USD</th>
+      </tr></thead>
+      <tbody>${detailRows.map(d=>`<tr>
+        <td style="padding:6px 8px;font-weight:500;font-size:11px">${d.prod}</td>
+        <td class="r" style="padding:6px 8px;font-size:11px">${d.units}대</td>
+        <td class="r" style="padding:6px 8px;font-size:11px;color:#6B7280">${fmtKRW_large(d.krw)}</td>
+        <td class="r" style="padding:6px 8px;font-size:11px;color:#3B82F6">$${(d.usd/1e6).toFixed(2)}M</td>
+      </tr>`).join('')}</tbody>
+      <tfoot><tr style="border-top:.5px solid var(--border);background:var(--surface2)">
+        <td style="padding:6px 8px;font-weight:600;font-size:11px">합계</td>
+        <td class="r" style="padding:6px 8px;font-weight:600;font-size:11px">${totU}대</td>
+        <td class="r" style="padding:6px 8px;font-weight:600;font-size:11px;color:#6B7280">${fmtKRW_large(totKRWd)}</td>
+        <td class="r" style="padding:6px 8px;font-weight:600;font-size:11px;color:#3B82F6">$${(totUSDd/1e6).toFixed(2)}M</td>
+      </tr></tfoot>
+    </table>`;
+  }
 }
 
 /* ════════════════════════════════════════
