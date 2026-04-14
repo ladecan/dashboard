@@ -147,7 +147,11 @@ footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-t
 <nav class="nav">
   <div class="nav-logo">Candela Korea <span>Sales BI</span></div>
   <div class="nav-right">
-    <span id="nav-scope" style="font-size:11px;color:var(--text3)"></span>
+    <span id="nav-scope" style="font-size:11px;color:var(--text3);margin-right:8px"></span>
+    <div style="display:flex;border:.5px solid var(--border);border-radius:999px;overflow:hidden;font-size:11px">
+      <button id="btn-krw" onclick="setCurrency('KRW')" style="padding:4px 12px;font-family:inherit;border:none;cursor:pointer;background:var(--text);color:var(--bg);font-weight:500;transition:all .15s">KRW</button>
+      <button id="btn-usd" onclick="setCurrency('USD')" style="padding:4px 12px;font-family:inherit;border:none;cursor:pointer;background:transparent;color:var(--text2);transition:all .15s">USD</button>
+    </div>
   </div>
 </nav>
 
@@ -299,7 +303,7 @@ footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-t
    (data.json 파일로 교체하면 자동 갱신)
    ════════════════════════════════════════ */
 // 2026년은 Q1만 유효 데이터 — Q2/Q3/Q4 완전 제외
-const DATA = {"yearly_total":{"2023":{"sales":12639940.0,"recurring":2557519.0,"total":15197459.0},"2024":{"sales":15974520.0,"recurring":3066197.0,"total":19040718.0},"2025":{"sales":19380396.0,"recurring":3425105.0,"total":22805501.0},"2026":{"sales":6154671.0,"recurring":1023715.0,"total":7178386.0}},"quarterly":[{"year":2023,"q":"23Q1","cat":"RECURRING","usd":648334.0},{"year":2023,"q":"23Q1","cat":"SALES","usd":2688795.0},{"year":2023,"q":"23Q2","cat":"RECURRING","usd":706014.0},{"year":2023,"q":"23Q2","cat":"SALES","usd":3374974.0},{"year":2023,"q":"23Q3","cat":"RECURRING","usd":576383.0},{"year":2023,"q":"23Q3","cat":"SALES","usd":3192480.0},{"year":2023,"q":"23Q4","cat":"RECURRING","usd":626789.0},{"year":2023,"q":"23Q4","cat":"SALES","usd":3383691.0},{"year":2024,"q":"24Q1","cat":"RECURRING","usd":670362.0},{"year":2024,"q":"24Q1","cat":"SALES","usd":3023439.0},{"year":2024,"q":"24Q2","cat":"RECURRING","usd":769868.0},{"year":2024,"q":"24Q2","cat":"SALES","usd":4378477.0},{"year":2024,"q":"24Q3","cat":"RECURRING","usd":775930.0},{"year":2024,"q":"24Q3","cat":"SALES","usd":4136984.0},{"year":2024,"q":"24Q4","cat":"RECURRING","usd":850037.0},{"year":2024,"q":"24Q4","cat":"SALES","usd":4435620.0},{"year":2025,"q":"25Q1","cat":"RECURRING","usd":697111.0},{"year":2025,"q":"25Q1","cat":"SALES","usd":4754075.0},{"year":2025,"q":"25Q2","cat":"RECURRING","usd":844552.0},{"year":2025,"q":"25Q2","cat":"SALES","usd":4911524.0},{"year":2025,"q":"25Q3","cat":"RECURRING","usd":896137.0},{"year":2025,"q":"25Q3","cat":"SALES","usd":4865918.0},{"year":2025,"q":"25Q4","cat":"RECURRING","usd":987305.0},{"year":2025,"q":"25Q4","cat":"SALES","usd":4848880.0},{"year":2026,"q":"26Q1","cat":"RECURRING","usd":1023715.0},{"year":2026,"q":"26Q1","cat":"SALES","usd":6154671.0}],"qoq":[{"q":"23Q1","total":3337129.0,"qoq":null},{"q":"23Q2","total":4080988.0,"qoq":22.29},{"q":"23Q3","total":3768863.0,"qoq":-7.65},{"q":"23Q4","total":4010480.0,"qoq":6.41},{"q":"24Q1","total":3693801.0,"qoq":-7.90},{"q":"24Q2","total":5148345.0,"qoq":39.38},{"q":"24Q3","total":4912914.0,"qoq":-4.57},{"q":"24Q4","total":5285657.0,"qoq":7.59},{"q":"25Q1","total":5451186.0,"qoq":3.13},{"q":"25Q2","total":5756076.0,"qoq":5.59},{"q":"25Q3","total":5762055.0,"qoq":0.10},{"q":"25Q4","total":5836185.0,"qoq":1.29},{"q":"26Q1","total":7178386.0,"qoq":23.00}],"product_by_year":[{"year":2023,"product":"GMPP","usd":4544874.0,"units":55},{"year":2023,"product":"VBP","usd":4225619.0,"units":53},{"year":2023,"product":"PicoWay","usd":2052368.0,"units":17},{"year":2023,"product":"Others","usd":1816979.0,"units":33},{"year":2024,"product":"GMPP","usd":10310652.0,"units":109},{"year":2024,"product":"VBP","usd":2993185.0,"units":37},{"year":2024,"product":"PicoWay","usd":1586653.0,"units":16},{"year":2024,"product":"Others","usd":1084031.0,"units":24},{"year":2025,"product":"GMPP","usd":13906393.0,"units":149},{"year":2025,"product":"VBP","usd":2765228.0,"units":36},{"year":2025,"product":"PicoWay","usd":1577284.0,"units":15},{"year":2025,"product":"Others","usd":1131491.0,"units":49},{"year":2026,"product":"GMPP","usd":4656063.0,"units":48},{"year":2026,"product":"VBP","usd":699062.0,"units":9},{"year":2026,"product":"PicoWay","usd":539413.0,"units":5},{"year":2026,"product":"Others","usd":260133.0,"units":9}],"product_by_quarter":[{"year":2023,"q":"23Q1","product":"GMPP","usd":1201242.0},{"year":2023,"q":"23Q1","product":"PicoWay","usd":592117.0},{"year":2023,"q":"23Q1","product":"VBP","usd":653661.0},{"year":2023,"q":"23Q1","product":"Others","usd":241775.0},{"year":2023,"q":"23Q2","product":"GMPP","usd":609787.0},{"year":2023,"q":"23Q2","product":"PicoWay","usd":981976.0},{"year":2023,"q":"23Q2","product":"VBP","usd":1084839.0},{"year":2023,"q":"23Q2","product":"Others","usd":699678.0},{"year":2023,"q":"23Q3","product":"GMPP","usd":1621773.0},{"year":2023,"q":"23Q3","product":"VBP","usd":1107869.0},{"year":2023,"q":"23Q3","product":"Others","usd":462838.0},{"year":2023,"q":"23Q4","product":"GMPP","usd":1112072.0},{"year":2023,"q":"23Q4","product":"PicoWay","usd":478275.0},{"year":2023,"q":"23Q4","product":"VBP","usd":1379249.0},{"year":2023,"q":"23Q4","product":"Others","usd":413644.0},{"year":2024,"q":"24Q1","product":"GMPP","usd":1458072.0},{"year":2024,"q":"24Q1","product":"PicoWay","usd":439693.0},{"year":2024,"q":"24Q1","product":"VBP","usd":903189.0},{"year":2024,"q":"24Q1","product":"Others","usd":222485.0},{"year":2024,"q":"24Q2","product":"GMPP","usd":2777169.0},{"year":2024,"q":"24Q2","product":"PicoWay","usd":546634.0},{"year":2024,"q":"24Q2","product":"VBP","usd":811379.0},{"year":2024,"q":"24Q2","product":"Others","usd":243295.0},{"year":2024,"q":"24Q3","product":"GMPP","usd":2852386.0},{"year":2024,"q":"24Q3","product":"PicoWay","usd":278271.0},{"year":2024,"q":"24Q3","product":"VBP","usd":714983.0},{"year":2024,"q":"24Q3","product":"Others","usd":291344.0},{"year":2024,"q":"24Q4","product":"GMPP","usd":3223025.0},{"year":2024,"q":"24Q4","product":"PicoWay","usd":322055.0},{"year":2024,"q":"24Q4","product":"VBP","usd":563634.0},{"year":2024,"q":"24Q4","product":"Others","usd":326907.0},{"year":2025,"q":"25Q1","product":"GMPP","usd":3511690.0},{"year":2025,"q":"25Q1","product":"PicoWay","usd":539413.0},{"year":2025,"q":"25Q1","product":"VBP","usd":554856.0},{"year":2025,"q":"25Q1","product":"Others","usd":283688.0},{"year":2025,"q":"25Q2","product":"GMPP","usd":3651191.0},{"year":2025,"q":"25Q2","product":"PicoWay","usd":227277.0},{"year":2025,"q":"25Q2","product":"VBP","usd":539134.0},{"year":2025,"q":"25Q2","product":"Others","usd":493914.0},{"year":2025,"q":"25Q3","product":"GMPP","usd":3385057.0},{"year":2025,"q":"25Q3","product":"PicoWay","usd":397683.0},{"year":2025,"q":"25Q3","product":"VBP","usd":766141.0},{"year":2025,"q":"25Q3","product":"Others","usd":317037.0},{"year":2025,"q":"25Q4","product":"GMPP","usd":3358455.0},{"year":2025,"q":"25Q4","product":"PicoWay","usd":412911.0},{"year":2025,"q":"25Q4","product":"VBP","usd":905097.0},{"year":2025,"q":"25Q4","product":"Others","usd":36844.0},{"year":2026,"q":"26Q1","product":"GMPP","usd":4656063.0},{"year":2026,"q":"26Q1","product":"PicoWay","usd":539413.0},{"year":2026,"q":"26Q1","product":"VBP","usd":699062.0},{"year":2026,"q":"26Q1","product":"Others","usd":260133.0}],"region_by_year":[{"year":2023,"region":"서울 강남/주요","usd":2955130.0},{"year":2023,"region":"서울 기타","usd":627982.0},{"year":2023,"region":"경기","usd":980632.0},{"year":2023,"region":"부산","usd":499791.0},{"year":2023,"region":"대구/경북","usd":388219.0},{"year":2023,"region":"인천","usd":147562.0},{"year":2023,"region":"광주/전라","usd":340113.0},{"year":2023,"region":"대전/충청","usd":184565.0},{"year":2023,"region":"경남","usd":79327.0},{"year":2023,"region":"강원","usd":54932.0},{"year":2023,"region":"제주","usd":0.0},{"year":2023,"region":"기타","usd":6382537.0},{"year":2024,"region":"서울 강남/주요","usd":3568790.0},{"year":2024,"region":"서울 기타","usd":816280.0},{"year":2024,"region":"경기","usd":1126424.0},{"year":2024,"region":"부산","usd":747575.0},{"year":2024,"region":"대구/경북","usd":612467.0},{"year":2024,"region":"인천","usd":317428.0},{"year":2024,"region":"광주/전라","usd":384965.0},{"year":2024,"region":"대전/충청","usd":573854.0},{"year":2024,"region":"경남","usd":96214.0},{"year":2024,"region":"강원","usd":0.0},{"year":2024,"region":"제주","usd":0.0},{"year":2024,"region":"기타","usd":7730723.0},{"year":2025,"region":"서울 강남/주요","usd":4531234.0},{"year":2025,"region":"서울 기타","usd":812048.0},{"year":2025,"region":"경기","usd":1224790.0},{"year":2025,"region":"부산","usd":1063103.0},{"year":2025,"region":"대구/경북","usd":612820.0},{"year":2025,"region":"인천","usd":338759.0},{"year":2025,"region":"광주/전라","usd":541177.0},{"year":2025,"region":"대전/충청","usd":233947.0},{"year":2025,"region":"경남","usd":247891.0},{"year":2025,"region":"강원","usd":89123.0},{"year":2025,"region":"제주","usd":92781.0},{"year":2025,"region":"기타","usd":9710723.0},{"year":2026,"region":"서울 강남/주요","usd":1823456.0},{"year":2026,"region":"경기","usd":612345.0},{"year":2026,"region":"부산","usd":432109.0},{"year":2026,"region":"기타","usd":3286761.0}],"sr_by_year":[{"year":2023,"sr":"YC Lim","krw":6452652456.0},{"year":2023,"sr":"SB Park","krw":3473558546.0},{"year":2023,"sr":"SG Oh","krw":2945985458.0},{"year":2023,"sr":"SC Baek","krw":2711106730.0},{"year":2023,"sr":"Hanna Park","krw":313800000.0},{"year":2023,"sr":"HR Kim","krw":304396909.0},{"year":2023,"sr":"MY Kim","krw":105522727.0},{"year":2023,"sr":"YG Cho","krw":251818001.0},{"year":2024,"sr":"SC Baek","krw":6335480381.0},{"year":2024,"sr":"SG Oh","krw":6118985650.0},{"year":2024,"sr":"SB Park","krw":6027245189.0},{"year":2024,"sr":"GR Lee","krw":538027455.0},{"year":2024,"sr":"GR lee","krw":277389637.0},{"year":2024,"sr":"YC Lim","krw":1258102275.0},{"year":2024,"sr":"SJ Lee","krw":706850273.0},{"year":2025,"sr":"SG Oh","krw":5403985823.0},{"year":2025,"sr":"SC Baek","krw":4042535275.0},{"year":2025,"sr":"SH Kim","krw":3270760274.0},{"year":2025,"sr":"SB Park","krw":3031286547.0},{"year":2025,"sr":"GR Lee","krw":1061723819.0},{"year":2025,"sr":"YC Lim","krw":1727918732.0}],"new_vs_existing":[{"year":2023,"q":"23Q1","type":"Existing Business","usd":783574.0},{"year":2023,"q":"23Q1","type":"New Business","usd":1905221.0},{"year":2023,"q":"23Q2","type":"Existing Business","usd":1293468.0},{"year":2023,"q":"23Q2","type":"New Business","usd":2082812.0},{"year":2023,"q":"23Q3","type":"Existing Business","usd":1103728.0},{"year":2023,"q":"23Q3","type":"New Business","usd":2088752.0},{"year":2023,"q":"23Q4","type":"Existing Business","usd":2071429.0},{"year":2023,"q":"23Q4","type":"New Business","usd":1311569.0},{"year":2024,"q":"24Q1","type":"Existing Business","usd":1310744.0},{"year":2024,"q":"24Q1","type":"New Business","usd":1712695.0},{"year":2024,"q":"24Q2","type":"Existing Business","usd":1081517.0},{"year":2024,"q":"24Q2","type":"New Business","usd":3296960.0},{"year":2024,"q":"24Q3","type":"Existing Business","usd":1009972.0},{"year":2024,"q":"24Q3","type":"New Business","usd":3127012.0},{"year":2024,"q":"24Q4","type":"Existing Business","usd":745391.0},{"year":2024,"q":"24Q4","type":"New Business","usd":3690229.0},{"year":2025,"q":"25Q1","type":"Existing Business","usd":995144.0},{"year":2025,"q":"25Q1","type":"New Business","usd":3894503.0},{"year":2025,"q":"25Q2","type":"Existing Business","usd":952632.0},{"year":2025,"q":"25Q2","type":"New Business","usd":3958892.0},{"year":2025,"q":"25Q3","type":"Existing Business","usd":995743.0},{"year":2025,"q":"25Q3","type":"New Business","usd":3870175.0},{"year":2025,"q":"25Q4","type":"Existing Business","usd":1596139.0},{"year":2025,"q":"25Q4","type":"New Business","usd":3117168.0},{"year":2026,"q":"26Q1","type":"Existing Business","usd":1421234.0},{"year":2026,"q":"26Q1","type":"New Business","usd":4733437.0}],"direct_dealer":[{"year":2023,"seg":"Direct","usd":7234890.0},{"year":2023,"seg":"Dealer","usd":5405050.0},{"year":2024,"seg":"Direct","usd":8712340.0},{"year":2024,"seg":"Dealer","usd":7262180.0},{"year":2025,"seg":"Direct","usd":10823456.0},{"year":2025,"seg":"Dealer","usd":8556940.0},{"year":2026,"seg":"Direct","usd":3892341.0},{"year":2026,"seg":"Dealer","usd":2262330.0}],"recurring_detail":[{"year":2023,"cat":"service","usd":2110605.0},{"year":2023,"cat":"consumables","usd":446914.0},{"year":2024,"cat":"service","usd":1892958.0},{"year":2024,"cat":"consumables","usd":1173239.0},{"year":2025,"cat":"service","usd":2202085.0},{"year":2025,"cat":"consumables","usd":1223020.0},{"year":2026,"cat":"service","usd":628138.0},{"year":2026,"cat":"consumables","usd":395577.0}],"meta":{"years":[2023,2024,2025,2026],"quarters":["Q1","Q2","Q3","Q4"],"products":["GMPP","VBP","PicoWay","Others"],"sr_list":["GR Lee","GR lee","HR Kim","Hanna Park","MY Kim","SB Park","SC Baek","SG Oh","SH Kim","SJ Lee","YC Lim","YG Cho"],"yoy":{"2023":null,"2024":25.3,"2025":19.8,"2026":-68.5}}};
+const DATA = {"yearly_total":{"2023":{"sales":12639940.0,"recurring":2557519.0,"total":15197459.0,"sales_krw":16558840827,"recurring_krw":3343892036,"total_krw":19902732863},"2024":{"sales":15974520.0,"recurring":3066197.0,"total":19040718.0,"sales_krw":21262080860,"recurring_krw":4081107000,"total_krw":25343187860},"2025":{"sales":19380396.0,"recurring":3425105.0,"total":22805501.0,"sales_krw":27539420000,"recurring_krw":4866624000,"total_krw":32406044000},"2026":{"sales":6154671.0,"recurring":1023715.0,"total":7178386.0,"sales_krw":9085049000,"recurring_krw":1498117000,"total_krw":10583166000}},"quarterly":[{"year":2023,"q":"23Q1","cat":"RECURRING","usd":648334.0,"krw":827340800},{"year":2023,"q":"23Q1","cat":"SALES","usd":2688795.0,"krw":3475215818},{"year":2023,"q":"23Q2","cat":"RECURRING","usd":706014.0,"krw":929607100},{"year":2023,"q":"23Q2","cat":"SALES","usd":3374974.0,"krw":4427334818},{"year":2023,"q":"23Q3","cat":"RECURRING","usd":576383.0,"krw":760699600},{"year":2023,"q":"23Q3","cat":"SALES","usd":3192480.0,"krw":4213177004},{"year":2023,"q":"23Q4","cat":"RECURRING","usd":626789.0,"krw":826244400},{"year":2023,"q":"23Q4","cat":"SALES","usd":3383691.0,"krw":4443113187},{"year":2024,"q":"24Q1","cat":"RECURRING","usd":670362.0,"krw":892251700},{"year":2024,"q":"24Q1","cat":"SALES","usd":3023439.0,"krw":4024196098},{"year":2024,"q":"24Q2","cat":"RECURRING","usd":769868.0,"krw":1024694000},{"year":2024,"q":"24Q2","cat":"SALES","usd":4378477.0,"krw":5827751827},{"year":2024,"q":"24Q3","cat":"RECURRING","usd":775930.0,"krw":1032763000},{"year":2024,"q":"24Q3","cat":"SALES","usd":4136984.0,"krw":5506324192},{"year":2024,"q":"24Q4","cat":"RECURRING","usd":850037.0,"krw":1131399000},{"year":2024,"q":"24Q4","cat":"SALES","usd":4435620.0,"krw":5903808743},{"year":2025,"q":"25Q1","cat":"RECURRING","usd":697111.0,"krw":1013580000},{"year":2025,"q":"25Q1","cat":"SALES","usd":4754075.0,"krw":6920477000},{"year":2025,"q":"25Q2","cat":"RECURRING","usd":844552.0,"krw":1184403000},{"year":2025,"q":"25Q2","cat":"SALES","usd":4911524.0,"krw":6815001000},{"year":2025,"q":"25Q3","cat":"RECURRING","usd":896137.0,"krw":1240941000},{"year":2025,"q":"25Q3","cat":"SALES","usd":4865918.0,"krw":6752451000},{"year":2025,"q":"25Q4","cat":"RECURRING","usd":987305.0,"krw":1427699000},{"year":2025,"q":"25Q4","cat":"SALES","usd":4848880.0,"krw":7051495000},{"year":2026,"q":"26Q1","cat":"RECURRING","usd":1023715.0,"krw":1498117000},{"year":2026,"q":"26Q1","cat":"SALES","usd":6154671.0,"krw":9085049000}],"qoq":[{"q":"23Q1","total":3337129.0,"total_krw":4302556618,"qoq":null},{"q":"23Q2","total":4080988.0,"total_krw":5356941918,"qoq":22.29},{"q":"23Q3","total":3768863.0,"total_krw":4973876604,"qoq":-7.65},{"q":"23Q4","total":4010480.0,"total_krw":5269357587,"qoq":6.41},{"q":"24Q1","total":3693801.0,"total_krw":4916447798,"qoq":-7.90},{"q":"24Q2","total":5148345.0,"total_krw":6852445827,"qoq":39.38},{"q":"24Q3","total":4912914.0,"total_krw":6539087192,"qoq":-4.57},{"q":"24Q4","total":5285657.0,"total_krw":7035207743,"qoq":7.59},{"q":"25Q1","total":5451186.0,"total_krw":7934057000,"qoq":3.13},{"q":"25Q2","total":5756076.0,"total_krw":7999404000,"qoq":5.59},{"q":"25Q3","total":5762055.0,"total_krw":7993392000,"qoq":0.10},{"q":"25Q4","total":5836185.0,"total_krw":8479194000,"qoq":1.29},{"q":"26Q1","total":7178386.0,"total_krw":10583166000,"qoq":23.00}],"product_by_year":[{"year":2023,"product":"GMPP","usd":4544874.0,"krw":7025236371,"units":55},{"year":2023,"product":"VBP","usd":4225619.0,"krw":5540747727,"units":53},{"year":2023,"product":"PicoWay","usd":2052368.0,"krw":2664090910,"units":17},{"year":2023,"product":"Others","usd":1816979.0,"krw":1328765819,"units":33},{"year":2024,"product":"GMPP","usd":10310652.0,"krw":14459360840,"units":109},{"year":2024,"product":"VBP","usd":2993185.0,"krw":3983927924,"units":37},{"year":2024,"product":"PicoWay","usd":1586653.0,"krw":2131834638,"units":16},{"year":2024,"product":"Others","usd":1084031.0,"krw":686957458,"units":24},{"year":2025,"product":"GMPP","usd":13906393.0,"krw":20236417556,"units":149},{"year":2025,"product":"VBP","usd":2765228.0,"krw":3897367560,"units":36},{"year":2025,"product":"PicoWay","usd":1577284.0,"krw":2220850640,"units":15},{"year":2025,"product":"Others","usd":1131491.0,"krw":1055779455,"units":49},{"year":2026,"product":"GMPP","usd":4656063.0,"krw":7633322825,"units":48},{"year":2026,"product":"VBP","usd":699062.0,"krw":768153365,"units":9},{"year":2026,"product":"PicoWay","usd":539413.0,"krw":417281818,"units":5},{"year":2026,"product":"Others","usd":260133.0,"krw":266290908,"units":9}],"product_by_quarter":[{"year":2023,"q":"23Q1","product":"GMPP","usd":1201242.0,"krw":1416820365},{"year":2023,"q":"23Q1","product":"PicoWay","usd":592117.0,"krw":755554546},{"year":2023,"q":"23Q1","product":"VBP","usd":653661.0,"krw":844886363},{"year":2023,"q":"23Q1","product":"Others","usd":241775.0,"krw":457954544},{"year":2023,"q":"23Q2","product":"GMPP","usd":609787.0,"krw":1152307638},{"year":2023,"q":"23Q2","product":"PicoWay","usd":981976.0,"krw":1287309091},{"year":2023,"q":"23Q2","product":"VBP","usd":1084839.0,"krw":1423747724},{"year":2023,"q":"23Q2","product":"Others","usd":699678.0,"krw":563970365},{"year":2023,"q":"23Q3","product":"GMPP","usd":1621773.0,"krw":2633731548},{"year":2023,"q":"23Q3","product":"VBP","usd":1107869.0,"krw":1469027274},{"year":2023,"q":"23Q3","product":"Others","usd":462838.0,"krw":110418182},{"year":2023,"q":"23Q4","product":"GMPP","usd":1112072.0,"krw":1822376820},{"year":2023,"q":"23Q4","product":"PicoWay","usd":478275.0,"krw":621227273},{"year":2023,"q":"23Q4","product":"VBP","usd":1379249.0,"krw":1803086366},{"year":2023,"q":"23Q4","product":"Others","usd":413644.0,"krw":196422728},{"year":2024,"q":"24Q1","product":"GMPP","usd":1458072.0,"krw":2069267548},{"year":2024,"q":"24Q1","product":"PicoWay","usd":439693.0,"krw":585230637},{"year":2024,"q":"24Q1","product":"VBP","usd":903189.0,"krw":1202143822},{"year":2024,"q":"24Q1","product":"Others","usd":222485.0,"krw":167554091},{"year":2024,"q":"24Q2","product":"GMPP","usd":2777169.0,"krw":3952737095},{"year":2024,"q":"24Q2","product":"PicoWay","usd":546634.0,"krw":727570182},{"year":2024,"q":"24Q2","product":"VBP","usd":811379.0,"krw":1079944550},{"year":2024,"q":"24Q2","product":"Others","usd":243295.0,"krw":323826364},{"year":2024,"q":"24Q3","product":"GMPP","usd":2852386.0,"krw":3796524185},{"year":2024,"q":"24Q3","product":"PicoWay","usd":278271.0,"krw":370378273},{"year":2024,"q":"24Q3","product":"VBP","usd":714983.0,"krw":951642367},{"year":2024,"q":"24Q3","product":"Others","usd":291344.0,"krw":387779367},{"year":2024,"q":"24Q4","product":"GMPP","usd":3223025.0,"krw":4289845194},{"year":2024,"q":"24Q4","product":"PicoWay","usd":322055.0,"krw":428655546},{"year":2024,"q":"24Q4","product":"VBP","usd":563634.0,"krw":750197185},{"year":2024,"q":"24Q4","product":"Others","usd":326907.0,"krw":435110818},{"year":2025,"q":"25Q1","product":"GMPP","usd":3511690.0,"krw":4877557646},{"year":2025,"q":"25Q1","product":"PicoWay","usd":539413.0,"krw":749216819},{"year":2025,"q":"25Q1","product":"VBP","usd":554856.0,"krw":770666275},{"year":2025,"q":"25Q1","product":"Others","usd":283688.0,"krw":394028182},{"year":2025,"q":"25Q2","product":"GMPP","usd":3651191.0,"krw":5057203907},{"year":2025,"q":"25Q2","product":"PicoWay","usd":227277.0,"krw":320561273},{"year":2025,"q":"25Q2","product":"VBP","usd":539134.0,"krw":755137185},{"year":2025,"q":"25Q2","product":"Others","usd":493914.0,"krw":682098455},{"year":2025,"q":"25Q3","product":"GMPP","usd":3385057.0,"krw":4698506998},{"year":2025,"q":"25Q3","product":"PicoWay","usd":397683.0,"krw":552472547},{"year":2025,"q":"25Q3","product":"VBP","usd":766141.0,"krw":1060407550},{"year":2025,"q":"25Q3","product":"Others","usd":317037.0,"krw":441063639},{"year":2025,"q":"25Q4","product":"GMPP","usd":3358455.0,"krw":4892577002},{"year":2025,"q":"25Q4","product":"PicoWay","usd":412911.0,"krw":598600001},{"year":2025,"q":"25Q4","product":"VBP","usd":905097.0,"krw":1311156550},{"year":2025,"q":"25Q4","product":"Others","usd":36844.0,"krw":249161182},{"year":2026,"q":"26Q1","product":"GMPP","usd":4656063.0,"krw":7633322825},{"year":2026,"q":"26Q1","product":"PicoWay","usd":539413.0,"krw":417281818},{"year":2026,"q":"26Q1","product":"VBP","usd":699062.0,"krw":768153365},{"year":2026,"q":"26Q1","product":"Others","usd":260133.0,"krw":266290908}],"region_by_year":[{"year":2023,"region":"서울 강남/주요","usd":2955130.0,"krw":5470100185},{"year":2023,"region":"서울 기타","usd":627982.0,"krw":895296728},{"year":2023,"region":"경기","usd":980632.0,"krw":3414678820},{"year":2023,"region":"부산","usd":499791.0,"krw":1983302909},{"year":2023,"region":"대구/경북","usd":388219.0,"krw":1347577546},{"year":2023,"region":"인천","usd":147562.0,"krw":372861454},{"year":2023,"region":"광주/전라","usd":340113.0,"krw":657955092},{"year":2023,"region":"대전/충청","usd":184565.0,"krw":1711846547},{"year":2023,"region":"경남","usd":79327.0,"krw":380604637},{"year":2023,"region":"강원","usd":54932.0,"krw":0},{"year":2023,"region":"제주","usd":0.0,"krw":0},{"year":2023,"region":"기타","usd":6382537.0,"krw":324616909},{"year":2024,"region":"서울 강남/주요","usd":3568790.0,"krw":5150003920},{"year":2024,"region":"서울 기타","usd":816280.0,"krw":2102870913},{"year":2024,"region":"경기","usd":1126424.0,"krw":4397700559},{"year":2024,"region":"부산","usd":747575.0,"krw":2210984730},{"year":2024,"region":"대구/경북","usd":612467.0,"krw":2062037275},{"year":2024,"region":"인천","usd":317428.0,"krw":999307911},{"year":2024,"region":"광주/전라","usd":384965.0,"krw":1425002911},{"year":2024,"region":"대전/충청","usd":573854.0,"krw":1396821093},{"year":2024,"region":"경남","usd":96214.0,"krw":518390728},{"year":2024,"region":"강원","usd":0.0,"krw":303292364},{"year":2024,"region":"제주","usd":0.0,"krw":0},{"year":2024,"region":"기타","usd":7730723.0,"krw":695668456},{"year":2025,"region":"서울 강남/주요","usd":4531234.0,"krw":6739695643},{"year":2025,"region":"서울 기타","usd":812048.0,"krw":3680815553},{"year":2025,"region":"경기","usd":1224790.0,"krw":5939288732},{"year":2025,"region":"부산","usd":1063103.0,"krw":2518462004},{"year":2025,"region":"대구/경북","usd":612820.0,"krw":1612457001},{"year":2025,"region":"인천","usd":338759.0,"krw":1046242183},{"year":2025,"region":"광주/전라","usd":541177.0,"krw":1679103003},{"year":2025,"region":"대전/충청","usd":233947.0,"krw":1556517637},{"year":2025,"region":"경남","usd":247891.0,"krw":1146985182},{"year":2025,"region":"강원","usd":89123.0,"krw":414601727},{"year":2025,"region":"제주","usd":92781.0,"krw":128061182},{"year":2025,"region":"기타","usd":9710723.0,"krw":948185364},{"year":2026,"region":"서울 강남/주요","usd":1823456.0,"krw":2545118274},{"year":2026,"region":"서울 기타","usd":0,"krw":442697455},{"year":2026,"region":"경기","usd":612345.0,"krw":2952392093},{"year":2026,"region":"부산","usd":432109.0,"krw":410533819},{"year":2026,"region":"대구/경북","usd":0,"krw":438595000},{"year":2026,"region":"인천","usd":0,"krw":304588364},{"year":2026,"region":"광주/전라","usd":0,"krw":378561182},{"year":2026,"region":"대전/충청","usd":0,"krw":1041039183},{"year":2026,"region":"경남","usd":0,"krw":316385091},{"year":2026,"region":"강원","usd":0,"krw":108895455},{"year":2026,"region":"기타","usd":3286761.0,"krw":146243000}],"sr_by_year":[{"year":2023,"sr":"YC Lim","krw":6452652456.0},{"year":2023,"sr":"SB Park","krw":3473558546.0},{"year":2023,"sr":"SG Oh","krw":2945985458.0},{"year":2023,"sr":"SC Baek","krw":2711106730.0},{"year":2023,"sr":"Hanna Park","krw":313800000.0},{"year":2023,"sr":"HR Kim","krw":304396909.0},{"year":2023,"sr":"MY Kim","krw":105522727.0},{"year":2023,"sr":"YG Cho","krw":251818001.0},{"year":2024,"sr":"SC Baek","krw":6335480381.0},{"year":2024,"sr":"SG Oh","krw":6118985650.0},{"year":2024,"sr":"SB Park","krw":6027245189.0},{"year":2024,"sr":"GR Lee","krw":538027455.0},{"year":2024,"sr":"GR lee","krw":277389637.0},{"year":2024,"sr":"YC Lim","krw":1258102275.0},{"year":2024,"sr":"SJ Lee","krw":706850273.0},{"year":2025,"sr":"SG Oh","krw":5403985823.0},{"year":2025,"sr":"SC Baek","krw":4042535275.0},{"year":2025,"sr":"SH Kim","krw":3270760274.0},{"year":2025,"sr":"SB Park","krw":3031286547.0},{"year":2025,"sr":"GR Lee","krw":1061723819.0},{"year":2025,"sr":"YC Lim","krw":1727918732.0}],"new_vs_existing":[{"year":2023,"q":"23Q1","type":"Existing Business","usd":783574.0,"krw":1872329454},{"year":2023,"q":"23Q1","type":"New Business","usd":1905221.0,"krw":1602886364},{"year":2023,"q":"23Q2","type":"Existing Business","usd":1293468.0,"krw":1916448545},{"year":2023,"q":"23Q2","type":"New Business","usd":2082812.0,"krw":2510886273},{"year":2023,"q":"23Q3","type":"Existing Business","usd":1103728.0,"krw":1285371637},{"year":2023,"q":"23Q3","type":"New Business","usd":2088752.0,"krw":2927805367},{"year":2023,"q":"23Q4","type":"Existing Business","usd":2071429.0,"krw":1635216001},{"year":2023,"q":"23Q4","type":"New Business","usd":1311569.0,"krw":2807897186},{"year":2024,"q":"24Q1","type":"Existing Business","usd":1310744.0,"krw":1193611638},{"year":2024,"q":"24Q1","type":"New Business","usd":1712695.0,"krw":2830584460},{"year":2024,"q":"24Q2","type":"Existing Business","usd":1081517.0,"krw":2032601275},{"year":2024,"q":"24Q2","type":"New Business","usd":3296960.0,"krw":3795150552},{"year":2024,"q":"24Q3","type":"Existing Business","usd":1009972.0,"krw":1280244913},{"year":2024,"q":"24Q3","type":"New Business","usd":3127012.0,"krw":4226079279},{"year":2024,"q":"24Q4","type":"Existing Business","usd":745391.0,"krw":1025028183},{"year":2024,"q":"24Q4","type":"New Business","usd":3690229.0,"krw":4878780560},{"year":2025,"q":"25Q1","type":"Existing Business","usd":995144.0,"krw":1341820364},{"year":2025,"q":"25Q1","type":"New Business","usd":3894503.0,"krw":5592637000},{"year":2025,"q":"25Q2","type":"Existing Business","usd":952632.0,"krw":1311580000},{"year":2025,"q":"25Q2","type":"New Business","usd":3958892.0,"krw":5503421000},{"year":2025,"q":"25Q3","type":"Existing Business","usd":995743.0,"krw":1402940000},{"year":2025,"q":"25Q3","type":"New Business","usd":3870175.0,"krw":5349511000},{"year":2025,"q":"25Q4","type":"Existing Business","usd":1596139.0,"krw":2296130000},{"year":2025,"q":"25Q4","type":"New Business","usd":3117168.0,"krw":4583060000},{"year":2026,"q":"26Q1","type":"Existing Business","usd":1421234.0,"krw":2078580000},{"year":2026,"q":"26Q1","type":"New Business","usd":4733437.0,"krw":6986440000}],"direct_dealer":[{"year":2023,"seg":"Direct","usd":7234890.0,"krw":11915082095},{"year":2023,"seg":"Dealer","usd":5405050.0,"krw":4643758732},{"year":2024,"seg":"Direct","usd":8712340.0,"krw":11807439297},{"year":2024,"seg":"Dealer","usd":7262180.0,"krw":9454641563},{"year":2025,"seg":"Direct","usd":10823456.0,"krw":16191271300},{"year":2025,"seg":"Dealer","usd":8556940.0,"krw":11219143911},{"year":2026,"seg":"Direct","usd":3892341.0,"krw":7476591371},{"year":2026,"seg":"Dealer","usd":2262330.0,"krw":1608457545}],"recurring_detail":[{"year":2023,"cat":"service","usd":2110605.0,"krw":2686528275},{"year":2023,"cat":"consumables","usd":446914.0,"krw":446913761},{"year":2024,"cat":"service","usd":1892958.0,"krw":2388844584},{"year":2024,"cat":"consumables","usd":1173239.0,"krw":1173236221},{"year":2025,"cat":"service","usd":2202085.0,"krw":3321762539},{"year":2025,"cat":"consumables","usd":1223020.0,"krw":1222877155},{"year":2026,"cat":"service","usd":628138.0,"krw":897385598},{"year":2026,"cat":"consumables","usd":395577.0,"krw":395248093}],"meta":{"years":[2023,2024,2025,2026],"quarters":["Q1","Q2","Q3","Q4"],"products":["GMPP","VBP","PicoWay","Others"],"sr_list":["GR Lee","GR lee","HR Kim","Hanna Park","MY Kim","SB Park","SC Baek","SG Oh","SH Kim","SJ Lee","YC Lim","YG Cho"],"yoy":{"2023":null,"2024":25.3,"2025":19.8,"2026":-68.5}}};
 
 /* ════════════════════════════════════════
    PASSWORD
@@ -323,13 +327,36 @@ function tryUnlock(){
 let selYears = new Set([2023,2024,2025,2026]);
 let selQs = new Set(['Q1','Q2','Q3','Q4']);
 let activeTab = 'overview';
+let currency = 'KRW'; // 'KRW' | 'USD'
 let charts = {};
+
+/* ════════════════════════════════════════
+   CURRENCY HELPERS
+   ════════════════════════════════════════ */
+function setCurrency(c){
+  currency=c;
+  document.getElementById('btn-krw').style.background = c==='KRW'?'var(--text)':'transparent';
+  document.getElementById('btn-krw').style.color = c==='KRW'?'var(--bg)':'var(--text2)';
+  document.getElementById('btn-usd').style.background = c==='USD'?'var(--text)':'transparent';
+  document.getElementById('btn-usd').style.color = c==='USD'?'var(--bg)':'var(--text2)';
+  buildCurrentTab();
+}
+
+// 데이터에서 현재 통화 값 가져오기
+function cv(d, usdKey='usd', krwKey='krw'){ return currency==='KRW' ? (d[krwKey]||0) : (d[usdKey]||0); }
+
+// 포맷: KRW→억단위, USD→$M
+function fmt(v){ return currency==='KRW' ? fmtKRW(v) : fmtM(v); }
+function fmtSm(v){ return currency==='KRW' ? fmtKRW(v) : fmtMK(v); }
+function curLabel(){ return currency==='KRW' ? 'Shipped Local (KRW)' : 'Shipped USD'; }
+function tickCur(v){ return currency==='KRW' ? fmtKRW(v) : tickY(v); }
 
 /* ════════════════════════════════════════
    HELPERS
    ════════════════════════════════════════ */
 const fmtM = v => '$'+(v/1e6).toFixed(2)+'M';
 const fmtMK = v => v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+Math.round(v/1e3)+'K';
+const fmtKRW = v => v>=1e8?(v/1e8).toFixed(1)+'억':(v/1e4).toFixed(0)+'만';
 const fmtB = v => (v/1e8).toFixed(1)+'억';
 const pctChg = (a,b) => b?((a-b)/b*100).toFixed(1)+'%':'-';
 const r1 = v => Math.round(v*10)/10;
@@ -430,31 +457,31 @@ function buildCurrentTab(){
    ════════════════════════════════════════ */
 function buildOverview(){
   const yrs=[...selYears].sort();
-  const totSales=yrs.reduce((s,y)=>s+(DATA.yearly_total[y]?.sales||0),0);
-  const totRec=yrs.reduce((s,y)=>s+(DATA.yearly_total[y]?.recurring||0),0);
+  const isK=currency==='KRW';
+  const sk=isK?'sales_krw':'sales', rk=isK?'recurring_krw':'recurring', tk=isK?'total_krw':'total';
+  const totSales=yrs.reduce((s,y)=>s+(DATA.yearly_total[y]?.[sk]||0),0);
+  const totRec=yrs.reduce((s,y)=>s+(DATA.yearly_total[y]?.[rk]||0),0);
   const tot=totSales+totRec;
   const lastY=Math.max(...yrs), prevY=lastY-1;
-  const yoy=DATA.yearly_total[prevY]?pctChg(DATA.yearly_total[lastY].total,DATA.yearly_total[prevY].total):'-';
-  const yoyNum = parseFloat(yoy);
+  const yoy=DATA.yearly_total[prevY]?pctChg(DATA.yearly_total[lastY][tk],DATA.yearly_total[prevY][tk]):'-';
+  const yoyNum=parseFloat(yoy);
 
   setKPI('kpi-ov',[
-    {lbl:'총매출 (SALES+RECURRING)',val:fmtM(tot),badge:`${yrs[0]}–${yrs[yrs.length-1]} 합산`,cls:'neu'},
-    {lbl:'SALES 매출',val:fmtM(totSales),badge:(totSales/tot*100).toFixed(1)+'% 비중',cls:'hi'},
-    {lbl:'RECURRING 매출',val:fmtM(totRec),badge:(totRec/tot*100).toFixed(1)+'% 비중',cls:'neu'},
+    {lbl:`총매출 (SALES+RECURRING) · ${currency}`,val:fmt(tot),badge:`${yrs[0]}–${yrs[yrs.length-1]} 합산`,cls:'neu'},
+    {lbl:'SALES 매출',val:fmt(totSales),badge:(totSales/tot*100).toFixed(1)+'% 비중',cls:'hi'},
+    {lbl:'RECURRING 매출',val:fmt(totRec),badge:(totRec/tot*100).toFixed(1)+'% 비중',cls:'neu'},
     {lbl:`${lastY} YoY 성장률`,val:yoy,badge:`vs ${prevY}년`,cls:yoyNum>=0?'up':'dn'},
   ]);
 
-  // 분기별 stacked
   const qKeys=getSelQKeys();
-  const qData=DATA.quarterly;
+  const ck=isK?'krw':'usd';
   const salesByQ={},recByQ={};
   qKeys.forEach(k=>{salesByQ[k]=0;recByQ[k]=0;});
-  qData.forEach(d=>{
-    const k=d.q.replace('Q','Q').replace(/^(\d{2})(Q\d)$/,'$1$2');
+  DATA.quarterly.forEach(d=>{
     const qk=`${String(d.year).slice(2)}Q${d.q.slice(-1)}`;
     if(!qKeys.includes(qk))return;
-    if(d.cat==='SALES')salesByQ[qk]=(salesByQ[qk]||0)+d.usd;
-    else if(d.cat==='RECURRING')recByQ[qk]=(recByQ[qk]||0)+d.usd;
+    if(d.cat==='SALES')salesByQ[qk]+=(d[ck]||0);
+    else if(d.cat==='RECURRING')recByQ[qk]+=(d[ck]||0);
   });
 
   charts.qStacked=new Chart(document.getElementById('c-q-stacked'),{
@@ -464,34 +491,26 @@ function buildOverview(){
       {label:'RECURRING',data:qKeys.map(k=>recByQ[k]||0),backgroundColor:'#10B981',borderRadius:2},
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{
-      label:c=>' '+c.dataset.label+': '+fmtMK(c.raw),
-      afterBody:([c])=>{
-        const qk=qKeys[c.dataIndex];
-        const qoq=getQoQ(qk);
-        if(qoq===null)return['  QoQ: 기준 분기'];
-        const sign=qoq>=0?'▲':'▼';
-        return[`  QoQ: ${sign} ${Math.abs(qoq)}%`];
-      }
-    }}},scales:{x:{stacked:true,grid:{display:false},ticks:{...TK,maxRotation:0}},y:{stacked:true,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickY}}}}
+      label:c=>' '+c.dataset.label+': '+fmtSm(c.raw),
+      afterBody:([c])=>{const qoq=getQoQ(qKeys[c.dataIndex]);return qoq===null?['  QoQ: 기준 분기']:[`  QoQ: ${qoq>=0?'▲':'▼'} ${Math.abs(qoq)}%`];}
+    }}},scales:{x:{stacked:true,grid:{display:false},ticks:{...TK,maxRotation:0}},y:{stacked:true,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}}}}
   });
 
-  // 연도별 바
   charts.yrBar=new Chart(document.getElementById('c-yr-bar'),{
     type:'bar',
     data:{labels:yrs.map(String),datasets:[
-      {label:'SALES',data:yrs.map(y=>DATA.yearly_total[y]?.sales||0),backgroundColor:'#3B82F6',borderRadius:3},
-      {label:'RECURRING',data:yrs.map(y=>DATA.yearly_total[y]?.recurring||0),backgroundColor:'#10B981',borderRadius:3},
+      {label:'SALES',data:yrs.map(y=>DATA.yearly_total[y]?.[sk]||0),backgroundColor:'#3B82F6',borderRadius:3},
+      {label:'RECURRING',data:yrs.map(y=>DATA.yearly_total[y]?.[rk]||0),backgroundColor:'#10B981',borderRadius:3},
     ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtMK(c.raw)}}},scales:{x:{stacked:true,grid:{display:false},ticks:TK},y:{stacked:true,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickY}}}}
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtSm(c.raw)}}},scales:{x:{stacked:true,grid:{display:false},ticks:TK},y:{stacked:true,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}}}}
   });
 
-  // RECURRING 도넛
-  const svcTot=yrs.reduce((s,y)=>s+(DATA.recurring_detail.find(d=>d.year===y&&d.cat==='service')?.usd||0),0);
-  const consTot=yrs.reduce((s,y)=>s+(DATA.recurring_detail.find(d=>d.year===y&&d.cat==='consumables')?.usd||0),0);
+  const svcTot=yrs.reduce((s,y)=>s+(DATA.recurring_detail.find(d=>d.year===y&&d.cat==='service')?.[ck]||0),0);
+  const consTot=yrs.reduce((s,y)=>s+(DATA.recurring_detail.find(d=>d.year===y&&d.cat==='consumables')?.[ck]||0),0);
   charts.recDonut=new Chart(document.getElementById('c-rec-donut'),{
     type:'doughnut',
     data:{labels:['Service','Consumables'],datasets:[{data:[svcTot,consTot],backgroundColor:['#10B981','#F59E0B'],borderWidth:0,hoverOffset:4}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtMK(c.raw)} (${(c.raw/(svcTot+consTot)*100).toFixed(1)}%)`}}}}
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtSm(c.raw)} (${(c.raw/(svcTot+consTot)*100).toFixed(1)}%)`}}}}
   });
 }
 
@@ -501,27 +520,25 @@ function buildOverview(){
 function buildProduct(){
   const yrs=[...selYears].sort();
   const prods=['GMPP','VBP','PicoWay','Others'];
-  const getTot=(p)=>yrs.reduce((s,y)=>s+(DATA.product_by_year.find(d=>d.year===y&&d.product===p)?.usd||0),0);
+  const ck=currency==='KRW'?'krw':'usd';
+  const getTot=(p)=>yrs.reduce((s,y)=>s+(DATA.product_by_year.find(d=>d.year===y&&d.product===p)?.[ck]||0),0);
   const getU=(p)=>yrs.reduce((s,y)=>s+(DATA.product_by_year.find(d=>d.year===y&&d.product===p)?.units||0),0);
-  const totUsd=prods.reduce((s,p)=>s+getTot(p),0);
+  const totAll=prods.reduce((s,p)=>s+getTot(p),0);
+  const gmppTot=getTot('GMPP');
 
-  const gmppUsd=getTot('GMPP');
   setKPI('kpi-prod',[
-    {lbl:'GMPP 매출',val:fmtM(gmppUsd),badge:(gmppUsd/totUsd*100).toFixed(1)+'% 점유',cls:'hi'},
-    {lbl:'VBP 매출',val:fmtM(getTot('VBP')),badge:(getTot('VBP')/totUsd*100).toFixed(1)+'% 점유',cls:'neu'},
-    {lbl:'PicoWay 매출',val:fmtM(getTot('PicoWay')),badge:(getTot('PicoWay')/totUsd*100).toFixed(1)+'% 점유',cls:'neu'},
+    {lbl:`GMPP 매출 · ${currency}`,val:fmt(gmppTot),badge:(gmppTot/totAll*100).toFixed(1)+'% 점유',cls:'hi'},
+    {lbl:'VBP 매출',val:fmt(getTot('VBP')),badge:(getTot('VBP')/totAll*100).toFixed(1)+'% 점유',cls:'neu'},
+    {lbl:'PicoWay 매출',val:fmt(getTot('PicoWay')),badge:(getTot('PicoWay')/totAll*100).toFixed(1)+'% 점유',cls:'neu'},
     {lbl:'총 판매 대수',val:prods.reduce((s,p)=>s+getU(p),0)+'대',badge:'SALES 기준',cls:'neu'},
   ]);
 
-  const donutOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtMK(c.raw)} (${(c.raw/c.dataset.data.reduce((a,b)=>a+b,0)*100).toFixed(1)}%)`}}}};
-  charts.prodDonut=new Chart(document.getElementById('c-prod-donut'),{
-    type:'doughnut',data:{labels:prods,datasets:[{data:prods.map(getTot),backgroundColor:prods.map(p=>PROD_COLORS[p]),borderWidth:0,hoverOffset:4}]},options:donutOpts
-  });
-  charts.unitDonut=new Chart(document.getElementById('c-unit-donut'),{
-    type:'doughnut',data:{labels:prods,datasets:[{data:prods.map(getU),backgroundColor:prods.map(p=>PROD_COLORS[p]),borderWidth:0,hoverOffset:4}]},options:donutOpts
+  const donutOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtSm(c.raw)} (${(c.raw/c.dataset.data.reduce((a,b)=>a+b,0)*100).toFixed(1)}%)`}}}};
+  charts.prodDonut=new Chart(document.getElementById('c-prod-donut'),{type:'doughnut',data:{labels:prods,datasets:[{data:prods.map(getTot),backgroundColor:prods.map(p=>PROD_COLORS[p]),borderWidth:0,hoverOffset:4}]},options:donutOpts});
+  charts.unitDonut=new Chart(document.getElementById('c-unit-donut'),{type:'doughnut',data:{labels:prods,datasets:[{data:prods.map(getU),backgroundColor:prods.map(p=>PROD_COLORS[p]),borderWidth:0,hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw}대 (${(c.raw/c.dataset.data.reduce((a,b)=>a+b,0)*100).toFixed(1)}%)`}}}}
   });
 
-  // 분기별 라인
   const qKeys=getSelQKeys();
   const qByProd={};
   prods.forEach(p=>{qByProd[p]={};qKeys.forEach(k=>qByProd[p][k]=0);});
@@ -529,24 +546,15 @@ function buildProduct(){
     if(!selYears.has(d.year))return;
     const qk=`${String(d.year).slice(2)}Q${d.q.slice(-1)}`;
     if(!qKeys.includes(qk))return;
-    if(qByProd[d.product])qByProd[d.product][qk]=(qByProd[d.product][qk]||0)+d.usd;
+    if(qByProd[d.product])qByProd[d.product][qk]+=(d[ck]||0);
   });
   charts.prodLine=new Chart(document.getElementById('c-prod-line'),{
     type:'line',
-    data:{labels:qKeys.map(qLabel),datasets:prods.map(p=>({
-      label:p,data:qKeys.map(k=>qByProd[p][k]||0),
-      borderColor:PROD_COLORS[p],pointBackgroundColor:PROD_COLORS[p],
-      tension:0.35,fill:false,borderWidth:2,pointRadius:3
-    }))},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtMK(c.raw)}}},scales:{x:{grid:{display:false},ticks:{...TK,maxRotation:0}},y:{grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickY}}}}
+    data:{labels:qKeys.map(qLabel),datasets:prods.map(p=>({label:p,data:qKeys.map(k=>qByProd[p][k]||0),borderColor:PROD_COLORS[p],pointBackgroundColor:PROD_COLORS[p],tension:0.35,fill:false,borderWidth:2,pointRadius:3}))},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtSm(c.raw)}}},scales:{x:{grid:{display:false},ticks:{...TK,maxRotation:0}},y:{grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}}}}
   });
 
-  // GMPP 점유율 라인
-  const gmppShare=qKeys.map(k=>{
-    const g=qByProd['GMPP'][k]||0;
-    const tot=prods.reduce((s,p)=>s+(qByProd[p][k]||0),0);
-    return tot?r1(g/tot*100):0;
-  });
+  const gmppShare=qKeys.map(k=>{const g=qByProd['GMPP'][k]||0;const t=prods.reduce((s,p)=>s+(qByProd[p][k]||0),0);return t?r1(g/t*100):0;});
   charts.gmppShare=new Chart(document.getElementById('c-gmpp-share'),{
     type:'line',
     data:{labels:qKeys.map(qLabel),datasets:[{label:'GMPP 점유율',data:gmppShare,borderColor:'#3B82F6',backgroundColor:'rgba(59,130,246,0.08)',pointBackgroundColor:'#3B82F6',pointRadius:4,fill:true,tension:0.35,borderWidth:2}]},
@@ -559,48 +567,45 @@ function buildProduct(){
    ════════════════════════════════════════ */
 function buildRegion(){
   const yrs=[...selYears].sort();
+  const ck=currency==='KRW'?'krw':'usd';
   const regions=['서울 강남/주요','서울 기타','경기','부산','대구/경북','인천','광주/전라','대전/충청','경남','강원','제주','기타'];
-  const getRegUsd=(r)=>yrs.reduce((s,y)=>s+(DATA.region_by_year.find(d=>d.year===y&&d.region===r)?.usd||0),0);
-  const topRegs=regions.map(r=>({r,usd:getRegUsd(r)})).filter(d=>d.usd>0).sort((a,b)=>b.usd-a.usd);
-  const showRegs=topRegs.filter(d=>d.r!=='기타');
-  const maxUsd=showRegs[0]?.usd||1;
+  const getReg=(r)=>yrs.reduce((s,y)=>s+(DATA.region_by_year.find(d=>d.year===y&&d.region===r)?.[ck]||0),0);
+  const showRegs=regions.map(r=>({r,v:getReg(r)})).filter(d=>d.v>0&&d.r!=='기타').sort((a,b)=>b.v-a.v);
+  const maxV=showRegs[0]?.v||1;
 
   setKPI('kpi-reg',[
-    {lbl:'1위 지역',val:showRegs[0]?.r||'-',badge:fmtM(showRegs[0]?.usd||0),cls:'up'},
-    {lbl:'2위 지역',val:showRegs[1]?.r||'-',badge:fmtM(showRegs[1]?.usd||0),cls:'neu'},
-    {lbl:'3위 지역',val:showRegs[2]?.r||'-',badge:fmtM(showRegs[2]?.usd||0),cls:'neu'},
-    {lbl:'서울 합계',val:fmtM(getRegUsd('서울 강남/주요')+getRegUsd('서울 기타')),badge:'강남/주요+기타',cls:'hi'},
+    {lbl:'1위 지역',val:showRegs[0]?.r||'-',badge:fmt(showRegs[0]?.v||0),cls:'up'},
+    {lbl:'2위 지역',val:showRegs[1]?.r||'-',badge:fmt(showRegs[1]?.v||0),cls:'neu'},
+    {lbl:'3위 지역',val:showRegs[2]?.r||'-',badge:fmt(showRegs[2]?.v||0),cls:'neu'},
+    {lbl:'서울 합계',val:fmt(getReg('서울 강남/주요')+getReg('서울 기타')),badge:'강남/주요+기타',cls:'hi'},
   ]);
 
   charts.regBar=new Chart(document.getElementById('c-reg-bar'),{
     type:'bar',
-    data:{labels:showRegs.map(d=>d.r),datasets:[{label:'매출',data:showRegs.map(d=>d.usd),backgroundColor:'#3B82F6',borderRadius:4}]},
-    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmtM(c.raw)}}},scales:{x:{grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickY}},y:{grid:{display:false},ticks:{...TK,font:{size:11}}}}}
+    data:{labels:showRegs.map(d=>d.r),datasets:[{label:'매출',data:showRegs.map(d=>d.v),backgroundColor:'#3B82F6',borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmtSm(c.raw)}}},scales:{x:{grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}},y:{grid:{display:false},ticks:{...TK,font:{size:11}}}}}
   });
 
   document.getElementById('rank-reg').innerHTML=showRegs.map((d,i)=>`
     <li class="ri"><span class="rn">${i+1}</span><span class="rname">${d.r}</span>
-    <div class="rbg"><div class="rfill" style="width:${(d.usd/maxUsd*100).toFixed(1)}%"></div></div>
-    <span class="rv">${fmtM(d.usd)}</span></li>`).join('');
+    <div class="rbg"><div class="rfill" style="width:${(d.v/maxV*100).toFixed(1)}%"></div></div>
+    <span class="rv">${fmtSm(d.v)}</span></li>`).join('');
 
-  // 주요 지역 연도별
   const top4=['서울 강남/주요','경기','부산','대구/경북'];
   const col4=['#3B82F6','#10B981','#F59E0B','#7C3AED'];
   charts.regYr=new Chart(document.getElementById('c-reg-yr'),{
     type:'bar',
-    data:{labels:yrs.map(String),datasets:top4.map((r,i)=>({
-      label:r,data:yrs.map(y=>DATA.region_by_year.find(d=>d.year===y&&d.region===r)?.usd||0),
-      backgroundColor:col4[i],borderRadius:3
-    }))},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtM(c.raw)}}},scales:{x:{grid:{display:false},ticks:TK},y:{grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickY}}}}
+    data:{labels:yrs.map(String),datasets:top4.map((r,i)=>({label:r,data:yrs.map(y=>DATA.region_by_year.find(d=>d.year===y&&d.region===r)?.[ck]||0),backgroundColor:col4[i],borderRadius:3}))},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtSm(c.raw)}}},scales:{x:{grid:{display:false},ticks:TK},y:{grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}}}}
   });
 }
 
 /* ════════════════════════════════════════
-   TAB: SR (담당자)
+   TAB: SR (담당자) — 항상 KRW (Real revenue 기준)
    ════════════════════════════════════════ */
 function buildSR(){
   const yrs=[...selYears].sort();
+  // 담당자별 매출은 Real revenue (KRW) 고정 — USD 원본 없음
   const srMap={};
   DATA.sr_by_year.forEach(d=>{
     if(!selYears.has(d.year))return;
@@ -612,7 +617,7 @@ function buildSR(){
   const totKRW=srList.reduce((s,[,v])=>s+v,0);
 
   setKPI('kpi-sr',[
-    {lbl:'담당자 총매출',val:fmtB(totKRW),badge:'KRW 합산',cls:'neu'},
+    {lbl:'담당자 총매출 (KRW)',val:fmtB(totKRW),badge:'Real revenue 기준',cls:'neu'},
     {lbl:'1위 담당자',val:topSR?.[0]||'-',badge:fmtB(topSR?.[1]||0),cls:'up'},
     {lbl:'담당자 수',val:srList.length+'명',badge:'현 기준',cls:'neu'},
     {lbl:'1인 평균',val:fmtB(totKRW/(srList.length||1)),badge:'KRW 기준',cls:'neu'},
@@ -630,13 +635,14 @@ function buildSR(){
     <div class="rbg"><div class="rfill" style="width:${(v/mx*100).toFixed(1)}%"></div></div>
     <span class="rv">${fmtB(v)}</span></li>`).join('');
 
-  // Direct vs Dealer
-  const dirTot=yrs.reduce((s,y)=>s+(DATA.direct_dealer.find(d=>d.year===y&&d.seg==='Direct')?.usd||0),0);
-  const dealTot=yrs.reduce((s,y)=>s+(DATA.direct_dealer.find(d=>d.year===y&&d.seg==='Dealer')?.usd||0),0);
+  // Direct vs Dealer — 통화 전환 적용
+  const ck=currency==='KRW'?'krw':'usd';
+  const dirTot=yrs.reduce((s,y)=>s+(DATA.direct_dealer.find(d=>d.year===y&&d.seg==='Direct')?.[ck]||0),0);
+  const dealTot=yrs.reduce((s,y)=>s+(DATA.direct_dealer.find(d=>d.year===y&&d.seg==='Dealer')?.[ck]||0),0);
   charts.ddDonut=new Chart(document.getElementById('c-dd-donut'),{
     type:'doughnut',
     data:{labels:['Direct','Dealer'],datasets:[{data:[dirTot,dealTot],backgroundColor:['#7C3AED','#D1D5DB'],borderWidth:0,hoverOffset:4}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtM(c.raw)} (${(c.raw/(dirTot+dealTot)*100).toFixed(1)}%)`}}}}
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtSm(c.raw)} (${(c.raw/(dirTot+dealTot)*100).toFixed(1)}%)`}}}}
   });
 }
 
@@ -645,26 +651,27 @@ function buildSR(){
    ════════════════════════════════════════ */
 function buildDetail(){
   const qKeys=getSelQKeys();
+  const ck=currency==='KRW'?'krw':'usd';
   const nvMap={};
   DATA.new_vs_existing.forEach(d=>{
     if(!selYears.has(d.year))return;
     const qk=`${String(d.year).slice(2)}Q${d.q.slice(-1)}`;
     if(!qKeys.includes(qk))return;
     if(!nvMap[qk])nvMap[qk]={nb:0,eb:0};
-    if(d.type==='New Business')nvMap[qk].nb+=d.usd;
-    else nvMap[qk].eb+=d.usd;
+    if(d.type==='New Business')nvMap[qk].nb+=(d[ck]||0);
+    else nvMap[qk].eb+=(d[ck]||0);
   });
 
   const nb=qKeys.map(k=>nvMap[k]?.nb||0);
   const eb=qKeys.map(k=>nvMap[k]?.eb||0);
   const tots=nb.map((v,i)=>v+eb[i]);
   const nbPct=nb.map((v,i)=>tots[i]?r1(v/tots[i]*100):0);
-
   const totNb=nb.reduce((s,v)=>s+v,0), totEb=eb.reduce((s,v)=>s+v,0);
+
   setKPI('kpi-det',[
-    {lbl:'New Business',val:fmtM(totNb),badge:(totNb/(totNb+totEb)*100).toFixed(1)+'% 비중',cls:'hi'},
-    {lbl:'Existing Business',val:fmtM(totEb),badge:(totEb/(totNb+totEb)*100).toFixed(1)+'% 비중',cls:'neu'},
-    {lbl:'New Biz 최고 분기',val:qKeys[nb.indexOf(Math.max(...nb))]||'-',badge:fmtM(Math.max(...nb)),cls:'up'},
+    {lbl:`New Business · ${currency}`,val:fmt(totNb),badge:(totNb/(totNb+totEb)*100).toFixed(1)+'% 비중',cls:'hi'},
+    {lbl:'Existing Business',val:fmt(totEb),badge:(totEb/(totNb+totEb)*100).toFixed(1)+'% 비중',cls:'neu'},
+    {lbl:'New Biz 최고 분기',val:qKeys[nb.indexOf(Math.max(...nb))]||'-',badge:fmt(Math.max(...nb)),cls:'up'},
     {lbl:'평균 New Biz 비중',val:r1(nb.reduce((s,v,i)=>s+(tots[i]?v/tots[i]*100:0),0)/(nb.length||1))+'%',badge:'분기 평균',cls:'neu'},
   ]);
 
@@ -674,7 +681,7 @@ function buildDetail(){
       {label:'New',data:nb,backgroundColor:'#3B82F6',borderRadius:2},
       {label:'Existing',data:eb,backgroundColor:'#BFDBFE',borderRadius:2},
     ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtMK(c.raw)}}},scales:{x:{stacked:true,grid:{display:false},ticks:{...TK,maxRotation:0}},y:{stacked:true,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickY}}}}
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtSm(c.raw)}}},scales:{x:{stacked:true,grid:{display:false},ticks:{...TK,maxRotation:0}},y:{stacked:true,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}}}}
   });
 
   charts.nvPct=new Chart(document.getElementById('c-nv-pct'),{
@@ -683,27 +690,27 @@ function buildDetail(){
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' New: '+c.raw+'%'}}},scales:{x:{grid:{display:false},ticks:{...TK,maxRotation:0}},y:{min:0,max:100,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:v=>v+'%'}}}}
   });
 
-  // 상세 테이블
+  // 상세 테이블 — 통화 전환
   const salesByQ={};
   DATA.quarterly.forEach(d=>{
     if(!selYears.has(d.year))return;
     const qk=`${String(d.year).slice(2)}Q${d.q.slice(-1)}`;
     if(!qKeys.includes(qk))return;
     if(!salesByQ[qk])salesByQ[qk]={sales:0,rec:0};
-    if(d.cat==='SALES')salesByQ[qk].sales+=d.usd;
-    else salesByQ[qk].rec+=d.usd;
+    if(d.cat==='SALES')salesByQ[qk].sales+=(d[ck]||0);
+    else salesByQ[qk].rec+=(d[ck]||0);
   });
+  const hdr=currency==='KRW'?'Shipped Local':'Shipped USD';
   const rows=qKeys.map((k)=>{
     const s=salesByQ[k]||{sales:0,rec:0};
     const tot=s.sales+s.rec;
     const qoq=getQoQ(k);
     const qoqTxt=qoq!==null?(qoq>=0?`▲ ${qoq}%`:`▼ ${Math.abs(qoq)}%`):'-';
     const qoqC=qoq!==null?(qoq>=0?'style="color:#059669"':'style="color:#DC2626"'):'';
-    return `<tr><td>${qLabel(k)}</td><td class="r">${fmtMK(s.sales)}</td><td class="r">${fmtMK(s.rec)}</td><td class="r">${fmtMK(tot)}</td>
-    <td class="r" ${qoqC}>${qoqTxt}</td></tr>`;
+    return `<tr><td>${qLabel(k)}</td><td class="r">${fmtSm(s.sales)}</td><td class="r">${fmtSm(s.rec)}</td><td class="r">${fmtSm(tot)}</td><td class="r" ${qoqC}>${qoqTxt}</td></tr>`;
   }).join('');
   document.getElementById('tbl-det').innerHTML=`<table>
-    <thead><tr><th>분기</th><th class="r">SALES</th><th class="r">RECURRING</th><th class="r">합계</th><th class="r">QoQ</th></tr></thead>
+    <thead><tr><th>분기</th><th class="r">SALES</th><th class="r">RECURRING</th><th class="r">합계 (${hdr})</th><th class="r">QoQ</th></tr></thead>
     <tbody>${rows}</tbody></table>`;
 }
 
