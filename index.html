@@ -497,6 +497,35 @@ function buildOverview(){
     else if(d.cat==='RECURRING')recByQ[qk]+=(d[ck]||0);
   });
 
+  // QoQ 라벨을 위한 전역 플러그인 (차트 생성 전에 등록)
+  const qoqData = qKeys.map(k=>getQoQ(k));
+  const qoqPlugin = {
+    id:'qoqLabelPlugin',
+    afterDraw(chart){
+      try{
+        const xS=chart.scales.x, yS=chart.scales.y;
+        if(!xS||!yS)return;
+        const ctx=chart.ctx;
+        const ds=chart.data.datasets;
+        qKeys.forEach((qk,i)=>{
+          const v=qoqData[i];
+          if(v===null||v===undefined)return;
+          const tot=(ds[0]?.data[i]||0)+(ds[1]?.data[i]||0);
+          const px=xS.getPixelForTick(i);
+          const py=yS.getPixelForValue(tot);
+          const sign=v>=0?'▲':'▼';
+          ctx.save();
+          ctx.font='bold 9.5px -apple-system,sans-serif';
+          ctx.fillStyle=v>=0?'#059669':'#DC2626';
+          ctx.textAlign='center';
+          ctx.textBaseline='bottom';
+          ctx.fillText(`${sign}${Math.abs(v)}%`, px, py-4);
+          ctx.restore();
+        });
+      }catch(e){}
+    }
+  };
+
   charts.qStacked=new Chart(document.getElementById('c-q-stacked'),{
     type:'bar',
     data:{labels:qKeys.map(qLabel),datasets:[
@@ -505,52 +534,20 @@ function buildOverview(){
     ]},
     options:{
       responsive:true,maintainAspectRatio:false,
-      layout:{padding:{top:28}},
+      layout:{padding:{top:24}},
       plugins:{
         legend:{display:false},
         tooltip:{callbacks:{
           label:c=>' '+c.dataset.label+': '+fmtSm(c.raw),
-          afterBody:([c])=>{const qoq=getQoQ(qKeys[c.dataIndex]);return qoq===null?['  QoQ: 기준 분기']:[`  QoQ: ${qoq>=0?'▲':'▼'} ${Math.abs(qoq)}%`];}
-        }},
-        // 바 위 QoQ 레이블 커스텀 플러그인
-        qoqLabels:{
-          qKeys,
-          afterDatasetsDraw(chart){
-            const ctx=chart.ctx;
-            const xScale=chart.scales['x'];
-            const yScale=chart.scales['y'];
-            if(!xScale||!yScale)return;
-            const ds=chart.data.datasets;
-            chart.data.labels.forEach((lbl,i)=>{
-              const totalVal=(ds[0].data[i]||0)+(ds[1].data[i]||0);
-              const topY=yScale.getPixelForValue(totalVal);
-              const xPos=xScale.getPixelForTick(i);
-              const qk=qKeys[i];
-              const qoqVal=getQoQ(qk);
-              if(qoqVal===null||qoqVal===undefined)return;
-              const sign=qoqVal>=0?'▲':'▼';
-              const color=qoqVal>=0?'#059669':'#DC2626';
-              const text=`${sign} ${Math.abs(qoqVal)}%`;
-              ctx.save();
-              ctx.font='500 10px -apple-system,sans-serif';
-              ctx.fillStyle=color;
-              ctx.textAlign='center';
-              ctx.textBaseline='bottom';
-              ctx.fillText(text, xPos, topY-3);
-              ctx.restore();
-            });
-          }
-        }
+          afterBody:([c])=>{const qoq=qoqData[c.dataIndex];return qoq==null?['  QoQ: 기준 분기']:[`  QoQ: ${qoq>=0?'▲':'▼'} ${Math.abs(qoq)}%`];}
+        }}
       },
       scales:{
         x:{stacked:true,grid:{display:false},ticks:{...TK,maxRotation:0}},
         y:{stacked:true,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}}
       }
     },
-    plugins:[{
-      id:'qoqLabels',
-      afterDatasetsDraw(chart){chart.options.plugins.qoqLabels.afterDatasetsDraw(chart);}
-    }]
+    plugins:[qoqPlugin]
   });
 
   charts.yrBar=new Chart(document.getElementById('c-yr-bar'),{
