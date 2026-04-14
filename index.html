@@ -176,10 +176,11 @@ footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-t
   <div class="g2">
     <div class="card full">
       <div class="cl">분기별 매출 추이</div>
-      <div class="cs">SALES + RECURRING · Shipped USD</div>
+      <div class="cs" id="cs-q-stacked">SALES + RECURRING · Shipped USD</div>
       <div class="legend">
         <span class="leg"><span class="ld" style="background:#3B82F6"></span>SALES</span>
         <span class="leg"><span class="ld" style="background:#10B981"></span>RECURRING</span>
+        <span style="margin-left:8px;font-size:11px;color:var(--text3)">· 바 위 수치: QoQ 성장률</span>
       </div>
       <div class="cw" style="height:250px"><canvas id="c-q-stacked"></canvas></div>
     </div>
@@ -275,22 +276,17 @@ footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-t
   <div class="g2">
     <div class="card full">
       <div class="cl">New vs Existing Business</div>
-      <div class="cs">분기별 Shipped USD 구성</div>
+      <div class="cs">분기별 구성 · 바 위 수치: QoQ 성장률</div>
       <div class="legend">
         <span class="leg"><span class="ld" style="background:#3B82F6"></span>New Business</span>
         <span class="leg"><span class="ld" style="background:#BFDBFE"></span>Existing Business</span>
       </div>
       <div class="cw" style="height:230px"><canvas id="c-nv-stacked"></canvas></div>
     </div>
-    <div class="card">
+    <div class="card full">
       <div class="cl">New Business 비중 추이</div>
       <div class="cs">분기별 New % 라인</div>
-      <div class="cw" style="height:210px"><canvas id="c-nv-pct"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="cl">분기별 매출 상세 테이블</div>
-      <div class="cs">USD · YoY 성장률</div>
-      <div class="tw" id="tbl-det"></div>
+      <div class="cw" style="height:190px"><canvas id="c-nv-pct"></canvas></div>
     </div>
   </div>
 </div>
@@ -507,10 +503,54 @@ function buildOverview(){
       {label:'SALES',data:qKeys.map(k=>salesByQ[k]||0),backgroundColor:'#3B82F6',borderRadius:2},
       {label:'RECURRING',data:qKeys.map(k=>recByQ[k]||0),backgroundColor:'#10B981',borderRadius:2},
     ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{
-      label:c=>' '+c.dataset.label+': '+fmtSm(c.raw),
-      afterBody:([c])=>{const qoq=getQoQ(qKeys[c.dataIndex]);return qoq===null?['  QoQ: 기준 분기']:[`  QoQ: ${qoq>=0?'▲':'▼'} ${Math.abs(qoq)}%`];}
-    }}},scales:{x:{stacked:true,grid:{display:false},ticks:{...TK,maxRotation:0}},y:{stacked:true,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}}}}
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      layout:{padding:{top:28}},
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{
+          label:c=>' '+c.dataset.label+': '+fmtSm(c.raw),
+          afterBody:([c])=>{const qoq=getQoQ(qKeys[c.dataIndex]);return qoq===null?['  QoQ: 기준 분기']:[`  QoQ: ${qoq>=0?'▲':'▼'} ${Math.abs(qoq)}%`];}
+        }},
+        // 바 위 QoQ 레이블 커스텀 플러그인
+        qoqLabels:{
+          qKeys,
+          afterDatasetsDraw(chart){
+            const ctx=chart.ctx;
+            const xScale=chart.scales['x'];
+            const yScale=chart.scales['y'];
+            if(!xScale||!yScale)return;
+            const ds=chart.data.datasets;
+            chart.data.labels.forEach((lbl,i)=>{
+              const totalVal=(ds[0].data[i]||0)+(ds[1].data[i]||0);
+              const topY=yScale.getPixelForValue(totalVal);
+              const xPos=xScale.getPixelForTick(i);
+              const qk=qKeys[i];
+              const qoqVal=getQoQ(qk);
+              if(qoqVal===null||qoqVal===undefined)return;
+              const sign=qoqVal>=0?'▲':'▼';
+              const color=qoqVal>=0?'#059669':'#DC2626';
+              const text=`${sign} ${Math.abs(qoqVal)}%`;
+              ctx.save();
+              ctx.font='500 10px -apple-system,sans-serif';
+              ctx.fillStyle=color;
+              ctx.textAlign='center';
+              ctx.textBaseline='bottom';
+              ctx.fillText(text, xPos, topY-3);
+              ctx.restore();
+            });
+          }
+        }
+      },
+      scales:{
+        x:{stacked:true,grid:{display:false},ticks:{...TK,maxRotation:0}},
+        y:{stacked:true,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}}
+      }
+    },
+    plugins:[{
+      id:'qoqLabels',
+      afterDatasetsDraw(chart){chart.options.plugins.qoqLabels.afterDatasetsDraw(chart);}
+    }]
   });
 
   charts.yrBar=new Chart(document.getElementById('c-yr-bar'),{
@@ -706,29 +746,6 @@ function buildDetail(){
     data:{labels:qKeys.map(qLabel),datasets:[{label:'New %',data:nbPct,borderColor:'#3B82F6',backgroundColor:'rgba(59,130,246,0.08)',pointBackgroundColor:'#3B82F6',pointRadius:4,fill:true,tension:0.35,borderWidth:2}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' New: '+c.raw+'%'}}},scales:{x:{grid:{display:false},ticks:{...TK,maxRotation:0}},y:{min:0,max:100,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:v=>v+'%'}}}}
   });
-
-  // 상세 테이블 — 통화 전환
-  const salesByQ={};
-  DATA.quarterly.forEach(d=>{
-    if(!selYears.has(d.year))return;
-    const qk=`${String(d.year).slice(2)}Q${d.q.slice(-1)}`;
-    if(!qKeys.includes(qk))return;
-    if(!salesByQ[qk])salesByQ[qk]={sales:0,rec:0};
-    if(d.cat==='SALES')salesByQ[qk].sales+=(d[ck]||0);
-    else salesByQ[qk].rec+=(d[ck]||0);
-  });
-  const hdr=currency==='KRW'?'Shipped Local':'Shipped USD';
-  const rows=qKeys.map((k)=>{
-    const s=salesByQ[k]||{sales:0,rec:0};
-    const tot=s.sales+s.rec;
-    const qoq=getQoQ(k);
-    const qoqTxt=qoq!==null?(qoq>=0?`▲ ${qoq}%`:`▼ ${Math.abs(qoq)}%`):'-';
-    const qoqC=qoq!==null?(qoq>=0?'style="color:#059669"':'style="color:#DC2626"'):'';
-    return `<tr><td>${qLabel(k)}</td><td class="r">${fmtSm(s.sales)}</td><td class="r">${fmtSm(s.rec)}</td><td class="r">${fmtSm(tot)}</td><td class="r" ${qoqC}>${qoqTxt}</td></tr>`;
-  }).join('');
-  document.getElementById('tbl-det').innerHTML=`<table>
-    <thead><tr><th>분기</th><th class="r">SALES</th><th class="r">RECURRING</th><th class="r">합계 (${hdr})</th><th class="r">QoQ</th></tr></thead>
-    <tbody>${rows}</tbody></table>`;
 }
 
 /* ════════════════════════════════════════
