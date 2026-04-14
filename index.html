@@ -6,6 +6,7 @@
 <title>Candela Korea — BI Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" crossorigin="anonymous"></script>
 <script>if(typeof Chart==='undefined'){document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"><\/script>');}</script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js" crossorigin="anonymous"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -123,32 +124,6 @@ tr:hover td{background:var(--surface2)}
 
 footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-top:1rem}
 
-/* ── SR DETAIL SIDEBAR LAYOUT ── */
-.sr-layout{display:flex;gap:0;min-height:calc(100vh - 148px)}
-.sr-sidebar{width:180px;flex-shrink:0;background:var(--surface);border-right:.5px solid var(--border);padding:16px 0}
-.sr-sidebar-title{font-size:10px;font-weight:600;color:var(--text3);padding:0 14px 10px;letter-spacing:.06em;text-transform:uppercase}
-.sr-person-btn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 14px;background:transparent;border:none;border-bottom:.5px solid var(--border2);font-size:12px;font-family:inherit;color:var(--text2);cursor:pointer;transition:all .13s}
-.sr-person-btn:last-child{border-bottom:none}
-.sr-person-btn:hover{background:var(--surface2);color:var(--text)}
-.sr-person-btn.active{background:var(--blue-l);color:var(--blue);font-weight:600;border-left:3px solid var(--blue-m)}
-.sr-person-avatar{width:28px;height:28px;border-radius:50%;background:var(--blue-m);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
-.sr-person-info{flex:1;min-width:0}
-.sr-person-name{font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sr-person-val{font-size:10px;color:var(--text3);margin-top:1px}
-.sr-person-btn.active .sr-person-val{color:var(--blue);opacity:.8}
-.sr-main{flex:1;padding:1.5rem;overflow-x:hidden;min-width:0}
-.sr-kpi-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
-.sr-section-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
-.sr-section-sub{font-size:11px;color:var(--text3);margin-bottom:14px}
-.sr-charts-grid{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px}
-.sr-full{grid-column:1/-1}
-@media(max-width:768px){
-  .sr-layout{flex-direction:column}
-  .sr-sidebar{width:100%;border-right:none;border-bottom:.5px solid var(--border)}
-  .sr-kpi-row{grid-template-columns:repeat(2,1fr)}
-  .sr-charts-grid{grid-template-columns:1fr}
-}
-
 /* ── PRODUCT SIDEBAR ── */
 .prod-layout{display:flex;gap:14px;padding:1.5rem;max-width:1280px;margin:0 auto}
 .prod-sidebar{width:160px;flex-shrink:0}
@@ -200,9 +175,9 @@ footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-t
   <div class="filter-sep"></div>
   <span class="filter-label">분기</span>
   <div class="filter-group" id="q-grp"></div>
-  <div class="filter-sep" id="cat-sep" style="display:none"></div>
-  <span class="filter-label" id="cat-label" style="display:none">구분</span>
-  <div class="filter-group" id="cat-filter-group" style="display:none">
+  <div class="filter-sep"></div>
+  <span class="filter-label" id="cat-filter-label">구분</span>
+  <div class="filter-group" id="cat-filter-group">
     <button id="cat-btn-ALL"      class="fb on" onclick="setCat('ALL')">전체</button>
     <button id="cat-btn-SALES"    class="fb"    onclick="setCat('SALES')">SALES</button>
     <button id="cat-btn-RECURRING" class="fb"   onclick="setCat('RECURRING')">RECURRING</button>
@@ -215,7 +190,6 @@ footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-t
   <button class="tab" onclick="goTab('region')">📍 지역별 현황</button>
   <button class="tab" onclick="goTab('sr')">👤 담당자 성과</button>
   <button class="tab" onclick="goTab('detail')">📋 상세 현황</button>
-  <button class="tab" onclick="goTab('srdetail')">🎯 담당자 상세</button>
 </div>
 
 <div class="page on" id="page-overview">
@@ -306,28 +280,22 @@ footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-t
   <div class="kpi-row" id="kpi-sr"></div>
   <div class="g2">
     <div class="card full">
-      <div class="cl" id="sr-bar-title">담당자별 매출 (KRW)</div>
-      <div class="cs" id="sr-bar-sub">Real revenue 기준 · 현 재직자 중심 · 클릭하면 제품별 상세 보기</div>
+      <div class="cl" id="sr-bar-title">담당자별 매출</div>
+      <div class="cs" id="sr-bar-sub">BI Data 기준 · 현 재직자</div>
       <div class="cw" style="height:240px"><canvas id="c-sr-bar"></canvas></div>
     </div>
-    <!-- 담당자 상세 패널 -->
-    <div class="card full" id="sr-detail-panel" style="display:none">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
-        <div class="cl" id="sr-detail-title">담당자 상세</div>
-        <button onclick="closeSRDetail()" style="font-size:11px;font-family:inherit;padding:3px 10px;border:.5px solid var(--border);border-radius:999px;background:transparent;color:var(--text2);cursor:pointer">✕ 닫기</button>
-      </div>
-      <div class="cs" id="sr-detail-sub">제품별 판매 대수 · 매출</div>
-      <div class="tw" id="sr-detail-table"></div>
-    </div>
     <div class="card">
-      <div class="cl">담당자 순위</div>
-      <div class="cs" id="sr-rank-sub">KRW 기준</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div class="cl" id="rank-sr-title">담당자 순위</div>
+        <button id="sr-back-btn" onclick="srDrillUp()" style="display:none;font-size:11px;font-family:inherit;padding:3px 10px;border:.5px solid var(--border);border-radius:999px;background:transparent;color:var(--text2);cursor:pointer">← 전체</button>
+      </div>
+      <div class="cs" id="rank-sr-sub">클릭 → 제품별 상세</div>
       <ul class="rank-list" id="rank-sr"></ul>
     </div>
     <div class="card">
-      <div class="cl">Direct vs Dealer 채널 비중</div>
-      <div class="cs">Shipped USD 기준</div>
-      <div class="cw" style="height:220px"><canvas id="c-dd-donut"></canvas></div>
+      <div class="cl" id="sr-prod-title">제품별 매출 비중</div>
+      <div class="cs" id="sr-prod-sub">전체 담당자 합산</div>
+      <div class="cw" style="height:220px"><canvas id="c-sr-prod-donut"></canvas></div>
     </div>
   </div>
 </div>
@@ -361,36 +329,6 @@ footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-t
   </div>
 </div>
 
-<!-- ── 담당자 상세 페이지 ── -->
-<div class="page" id="page-srdetail" style="padding:0;max-width:none">
-  <div class="sr-layout">
-    <div class="sr-sidebar">
-      <div class="sr-sidebar-title">재직자 담당자</div>
-      <div id="sr-person-list"></div>
-    </div>
-    <div class="sr-main" id="sr-detail-main">
-      <div class="sr-kpi-row" id="srd-kpi"></div>
-      <div class="card sr-full" style="margin-bottom:12px">
-        <div class="sr-section-title" id="srd-bar-title">연도별 매출 추이</div>
-        <div class="sr-section-sub" id="srd-bar-sub">pivot.csv 기준</div>
-        <div class="cw" style="height:240px"><canvas id="c-srd-yr-bar"></canvas></div>
-      </div>
-      <div class="sr-charts-grid">
-        <div class="card">
-          <div class="sr-section-title">제품별 매출 비중 <span style="font-size:10px;font-weight:400;color:var(--text3)">(카테고리 기준)</span></div>
-          <div class="sr-section-sub" id="srd-donut-sub">선택 기간</div>
-          <div class="cw" style="height:240px"><canvas id="c-srd-prod-donut"></canvas></div>
-        </div>
-        <div class="card">
-          <div class="sr-section-title">제품별 상세 매출</div>
-          <div class="sr-section-sub" id="srd-tbl-sub">KRW(억 원) / USD</div>
-          <div class="tw" id="srd-prod-table"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <footer>Candela Korea Sales Ops · 데이터: 26년.xlsx &nbsp;·&nbsp; BI Data + total(Raw) + Real revenue 기반</footer>
 
 <script>
@@ -399,12 +337,14 @@ footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-t
    (data.json 파일로 교체하면 자동 갱신)
    ════════════════════════════════════════ */
 // total(Raw) 기준 — 피벗 수치 일치 · 음수(반품/조정) 포함 · 26Q1까지만
-const DATA = {"yearly_total": {"2023": {"sales": 12639940.0, "recurring": 2397567.0, "total": 15037507.0, "sales_krw": 16558840827.0, "recurring_krw": 3133442037.0, "total_krw": 19692282864.0}, "2024": {"sales": 15974520.0, "recurring": 2676245.0, "total": 18650765.0, "sales_krw": 21262080860.0, "recurring_krw": 3562080805.0, "total_krw": 24824161665.0}, "2025": {"sales": 19290572.0, "recurring": 3198834.0, "total": 22489406.0, "sales_krw": 27410415211.0, "recurring_krw": 4544639694.0, "total_krw": 31955054904.0}, "2026": {"sales": 6151986.0, "recurring": 882882.0, "total": 7034868.0, "sales_krw": 9080998549.0, "recurring_krw": 1292633691.0, "total_krw": 10373632240.0}}, "quarterly": [{"year": 2023, "q": "23Q1", "cat": "RECURRING", "usd": 618977.0, "krw": 788849416.0}, {"year": 2023, "q": "23Q1", "cat": "SALES", "usd": 2688795.0, "krw": 3475215818.0}, {"year": 2023, "q": "23Q2", "cat": "RECURRING", "usd": 658769.0, "krw": 866768474.0}, {"year": 2023, "q": "23Q2", "cat": "SALES", "usd": 3374974.0, "krw": 4427334818.0}, {"year": 2023, "q": "23Q3", "cat": "RECURRING", "usd": 533819.0, "krw": 704508304.0}, {"year": 2023, "q": "23Q3", "cat": "SALES", "usd": 3192480.0, "krw": 4213177004.0}, {"year": 2023, "q": "23Q4", "cat": "RECURRING", "usd": 586002.0, "krw": 773315843.0}, {"year": 2023, "q": "23Q4", "cat": "SALES", "usd": 3383691.0, "krw": 4443113187.0}, {"year": 2024, "q": "24Q1", "cat": "RECURRING", "usd": 613927.0, "krw": 817136656.0}, {"year": 2024, "q": "24Q1", "cat": "SALES", "usd": 3023439.0, "krw": 4024196098.0}, {"year": 2024, "q": "24Q2", "cat": "RECURRING", "usd": 649321.0, "krw": 864245616.0}, {"year": 2024, "q": "24Q2", "cat": "SALES", "usd": 4378477.0, "krw": 5827751827.0}, {"year": 2024, "q": "24Q3", "cat": "RECURRING", "usd": 693501.0, "krw": 923049718.0}, {"year": 2024, "q": "24Q3", "cat": "SALES", "usd": 4136984.0, "krw": 5506324192.0}, {"year": 2024, "q": "24Q4", "cat": "RECURRING", "usd": 719496.0, "krw": 957648814.0}, {"year": 2024, "q": "24Q4", "cat": "SALES", "usd": 4435620.0, "krw": 5903808743.0}, {"year": 2025, "q": "25Q1", "cat": "RECURRING", "usd": 646336.0, "krw": 939928438.0}, {"year": 2025, "q": "25Q1", "cat": "SALES", "usd": 4664251.0, "krw": 6791468922.0}, {"year": 2025, "q": "25Q2", "cat": "RECURRING", "usd": 790112.0, "krw": 1107688004.0}, {"year": 2025, "q": "25Q2", "cat": "SALES", "usd": 4911524.0, "krw": 6815000820.0}, {"year": 2025, "q": "25Q3", "cat": "RECURRING", "usd": 842598.0, "krw": 1166879318.0}, {"year": 2025, "q": "25Q3", "cat": "SALES", "usd": 4865918.0, "krw": 6752450734.0}, {"year": 2025, "q": "25Q4", "cat": "RECURRING", "usd": 919789.0, "krw": 1330143933.0}, {"year": 2025, "q": "25Q4", "cat": "SALES", "usd": 4848880.0, "krw": 7051494735.0}, {"year": 2026, "q": "26Q1", "cat": "RECURRING", "usd": 882882.0, "krw": 1292633691.0}, {"year": 2026, "q": "26Q1", "cat": "SALES", "usd": 6151986.0, "krw": 9080998549.0}], "qoq": [{"q": "23Q1", "total": 3307773.0, "total_krw": 3475215818, "qoq": null, "qoq_krw": null}, {"q": "23Q2", "total": 4033742.0, "total_krw": 4427334818, "qoq": 27.4, "qoq_krw": 27.4}, {"q": "23Q3", "total": 3726299.0, "total_krw": 4213177004, "qoq": -4.84, "qoq_krw": -4.84}, {"q": "23Q4", "total": 3969693.0, "total_krw": 4443113187, "qoq": 5.46, "qoq_krw": 5.46}, {"q": "24Q1", "total": 3637366.0, "total_krw": 4024196098, "qoq": -9.43, "qoq_krw": -9.43}, {"q": "24Q2", "total": 5027798.0, "total_krw": 5827751827, "qoq": 44.82, "qoq_krw": 44.82}, {"q": "24Q3", "total": 4830485.0, "total_krw": 5506324192, "qoq": -5.52, "qoq_krw": -5.52}, {"q": "24Q4", "total": 5155116.0, "total_krw": 5903808743, "qoq": 7.22, "qoq_krw": 7.22}, {"q": "25Q1", "total": 5310586.0, "total_krw": 6791468922, "qoq": 15.04, "qoq_krw": 15.04}, {"q": "25Q2", "total": 5701635.0, "total_krw": 6815000820, "qoq": 0.35, "qoq_krw": 0.35}, {"q": "25Q3", "total": 5708516.0, "total_krw": 6752450734, "qoq": -0.92, "qoq_krw": -0.92}, {"q": "25Q4", "total": 5768669.0, "total_krw": 7051494735, "qoq": 4.43, "qoq_krw": 4.43}, {"q": "26Q1", "total": 7034868.0, "total_krw": 9080998549, "qoq": 28.78, "qoq_krw": 28.78}], "product_by_year": [{"year": 2023, "product": "Gentle Series", "usd": 5776124.0, "krw": 7318988554.0, "units": 57}, {"year": 2023, "product": "Others", "usd": 790640.0, "krw": 1035013636.0, "units": 31}, {"year": 2023, "product": "PicoWay", "usd": 2052368.0, "krw": 2664090910.0, "units": 17}, {"year": 2023, "product": "VBP", "usd": 4225619.0, "krw": 5540747727.0, "units": 53}, {"year": 2024, "product": "Gentle Series", "usd": 10996861.0, "krw": 14636818294.0, "units": 109}, {"year": 2024, "product": "Others", "usd": 397821.0, "krw": 529500004.0, "units": 24}, {"year": 2024, "product": "PicoWay", "usd": 1586653.0, "krw": 2111834638.0, "units": 16}, {"year": 2024, "product": "VBP", "usd": 2993185.0, "krw": 3983927924.0, "units": 37}, {"year": 2025, "product": "Gentle Series", "usd": 14325385.0, "krw": 20113963008.0, "units": 147}, {"year": 2025, "product": "Others", "usd": 848071.0, "krw": 1178234003.0, "units": 58}, {"year": 2025, "product": "PicoWay", "usd": 1577284.0, "krw": 2220850640.0, "units": 15}, {"year": 2025, "product": "VBP", "usd": 2765228.0, "krw": 3897367560.0, "units": 36}, {"year": 2026, "product": "Gentle Series", "usd": 5175060.0, "krw": 7629272458.0, "units": 52}, {"year": 2026, "product": "Others", "usd": 180660.0, "krw": 266290908.0, "units": 19}, {"year": 2026, "product": "PicoWay", "usd": 276639.0, "krw": 417281818.0, "units": 3}, {"year": 2026, "product": "VBP", "usd": 519627.0, "krw": 768153365.0, "units": 7}], "product_by_quarter": [{"year": 2023, "q": "23Q1", "product": "Gentle Series", "usd": 1295320.0, "krw": 1416820365.0, "units": 11}, {"year": 2023, "q": "23Q1", "product": "Others", "usd": 351202.0, "krw": 457954544.0, "units": 11}, {"year": 2023, "q": "23Q1", "product": "PicoWay", "usd": 592116.0, "krw": 755554546.0, "units": 5}, {"year": 2023, "q": "23Q1", "product": "VBP", "usd": 653661.0, "krw": 844886363.0, "units": 8}, {"year": 2023, "q": "23Q2", "product": "Gentle Series", "usd": 1102074.0, "krw": 1446059821.0, "units": 12}, {"year": 2023, "q": "23Q2", "product": "Others", "usd": 207391.0, "krw": 270218182.0, "units": 13}, {"year": 2023, "q": "23Q2", "product": "PicoWay", "usd": 981976.0, "krw": 1287309091.0, "units": 8}, {"year": 2023, "q": "23Q2", "product": "VBP", "usd": 1084839.0, "krw": 1423747724.0, "units": 14}, {"year": 2023, "q": "23Q3", "product": "Gentle Series", "usd": 2001565.0, "krw": 2633731548.0, "units": 20}, {"year": 2023, "q": "23Q3", "product": "Others", "usd": 83046.0, "krw": 110418182.0, "units": 2}, {"year": 2023, "q": "23Q3", "product": "VBP", "usd": 1107869.0, "krw": 1469027274.0, "units": 14}, {"year": 2023, "q": "23Q4", "product": "Gentle Series", "usd": 1377165.0, "krw": 1822376820.0, "units": 14}, {"year": 2023, "q": "23Q4", "product": "Others", "usd": 149001.0, "krw": 196422728.0, "units": 5}, {"year": 2023, "q": "23Q4", "product": "PicoWay", "usd": 478276.0, "krw": 621227273.0, "units": 4}, {"year": 2023, "q": "23Q4", "product": "VBP", "usd": 1379249.0, "krw": 1803086366.0, "units": 17}, {"year": 2024, "q": "24Q1", "product": "Gentle Series", "usd": 1616812.0, "krw": 2151976184.0, "units": 16}, {"year": 2024, "q": "24Q1", "product": "Others", "usd": 63746.0, "krw": 84845455.0, "units": 3}, {"year": 2024, "q": "24Q1", "product": "PicoWay", "usd": 439693.0, "krw": 585230637.0, "units": 4}, {"year": 2024, "q": "24Q1", "product": "VBP", "usd": 903189.0, "krw": 1202143822.0, "units": 11}, {"year": 2024, "q": "24Q2", "product": "Gentle Series", "usd": 2969751.0, "krw": 3952737095.0, "units": 30}, {"year": 2024, "q": "24Q2", "product": "Others", "usd": 50714.0, "krw": 67500000.0, "units": 5}, {"year": 2024, "q": "24Q2", "product": "PicoWay", "usd": 546634.0, "krw": 727570182.0, "units": 6}, {"year": 2024, "q": "24Q2", "product": "VBP", "usd": 811379.0, "krw": 1079944550.0, "units": 10}, {"year": 2024, "q": "24Q3", "product": "Gentle Series", "usd": 2936251.0, "krw": 3908149003.0, "units": 29}, {"year": 2024, "q": "24Q3", "product": "Others", "usd": 207479.0, "krw": 276154549.0, "units": 8}, {"year": 2024, "q": "24Q3", "product": "PicoWay", "usd": 278271.0, "krw": 370378273.0, "units": 3}, {"year": 2024, "q": "24Q3", "product": "VBP", "usd": 714983.0, "krw": 951642367.0, "units": 9}, {"year": 2024, "q": "24Q4", "product": "Gentle Series", "usd": 3474048.0, "krw": 4623956012.0, "units": 34}, {"year": 2024, "q": "24Q4", "product": "Others", "usd": 75883.0, "krw": 101000000.0, "units": 8}, {"year": 2024, "q": "24Q4", "product": "PicoWay", "usd": 322055.0, "krw": 428655546.0, "units": 3}, {"year": 2024, "q": "24Q4", "product": "VBP", "usd": 563634.0, "krw": 750197185.0, "units": 7}, {"year": 2025, "q": "25Q1", "product": "Gentle Series", "usd": 3600618.0, "krw": 5001073373.0, "units": 37}, {"year": 2025, "q": "25Q1", "product": "Others", "usd": 194761.0, "krw": 270512455.0, "units": 11}, {"year": 2025, "q": "25Q1", "product": "PicoWay", "usd": 539413.0, "krw": 749216819.0, "units": 5}, {"year": 2025, "q": "25Q1", "product": "VBP", "usd": 554856.0, "krw": 770666275.0, "units": 7}, {"year": 2025, "q": "25Q2", "product": "Gentle Series", "usd": 3834891.0, "krw": 5313326271.0, "units": 39}, {"year": 2025, "q": "25Q2", "product": "Others", "usd": 310222.0, "krw": 425976091.0, "units": 17}, {"year": 2025, "q": "25Q2", "product": "PicoWay", "usd": 227277.0, "krw": 320561273.0, "units": 2}, {"year": 2025, "q": "25Q2", "product": "VBP", "usd": 539134.0, "krw": 755137185.0, "units": 7}, {"year": 2025, "q": "25Q3", "product": "Gentle Series", "usd": 3442103.0, "krw": 4778925180.0, "units": 35}, {"year": 2025, "q": "25Q3", "product": "Others", "usd": 259991.0, "krw": 360645457.0, "units": 21}, {"year": 2025, "q": "25Q3", "product": "PicoWay", "usd": 397683.0, "krw": 552472547.0, "units": 4}, {"year": 2025, "q": "25Q3", "product": "VBP", "usd": 766141.0, "krw": 1060407550.0, "units": 10}, {"year": 2025, "q": "25Q4", "product": "Gentle Series", "usd": 3447773.0, "krw": 5020638184.0, "units": 36}, {"year": 2025, "q": "25Q4", "product": "Others", "usd": 83098.0, "krw": 121100000.0, "units": 9}, {"year": 2025, "q": "25Q4", "product": "PicoWay", "usd": 412912.0, "krw": 598600001.0, "units": 4}, {"year": 2025, "q": "25Q4", "product": "VBP", "usd": 905097.0, "krw": 1311156550.0, "units": 12}, {"year": 2026, "q": "26Q1", "product": "Gentle Series", "usd": 5175060.0, "krw": 7629272458.0, "units": 52}, {"year": 2026, "q": "26Q1", "product": "Others", "usd": 180660.0, "krw": 266290908.0, "units": 19}, {"year": 2026, "q": "26Q1", "product": "PicoWay", "usd": 276639.0, "krw": 417281818.0, "units": 3}, {"year": 2026, "q": "26Q1", "product": "VBP", "usd": 519627.0, "krw": 768153365.0, "units": 7}], "region_by_year": [{"year": 2023, "region": "경기도", "krw": 3414678820.0, "usd": 2611464.0}, {"year": 2023, "region": "경상남도", "krw": 380604637.0, "usd": 290918.0}, {"year": 2023, "region": "경상북도", "krw": 183965091.0, "usd": 140965.0}, {"year": 2023, "region": "광주", "krw": 657955092.0, "usd": 502245.0}, {"year": 2023, "region": "대구 광역시", "krw": 1163612455.0, "usd": 891853.0}, {"year": 2023, "region": "대전", "krw": 264577091.0, "usd": 198820.0}, {"year": 2023, "region": "부산", "krw": 1983302909.0, "usd": 1512390.0}, {"year": 2023, "region": "서울시", "krw": 6365396913.0, "usd": 4864795.0}, {"year": 2023, "region": "세종", "krw": 275774182.0, "usd": 207123.0}, {"year": 2023, "region": "울산", "krw": 324616909.0, "usd": 248845.0}, {"year": 2023, "region": "인천", "krw": 372861454.0, "usd": 287138.0}, {"year": 2023, "region": "충청남도", "krw": 348941636.0, "usd": 262900.0}, {"year": 2023, "region": "충청북도", "krw": 822553638.0, "usd": 620484.0}, {"year": 2024, "region": "강원도", "krw": 303292364.0, "usd": 227868.0}, {"year": 2024, "region": "경기도", "krw": 4397700559.0, "usd": 3304058.0}, {"year": 2024, "region": "경상남도", "krw": 518390728.0, "usd": 389475.0}, {"year": 2024, "region": "경상북도", "krw": 360140910.0, "usd": 270579.0}, {"year": 2024, "region": "광주", "krw": 932196002.0, "usd": 700373.0}, {"year": 2024, "region": "대구 광역시", "krw": 1701896365.0, "usd": 1278660.0}, {"year": 2024, "region": "대전", "krw": 763799274.0, "usd": 573854.0}, {"year": 2024, "region": "부산", "krw": 2210984730.0, "usd": 1661146.0}, {"year": 2024, "region": "서울시", "krw": 7252874833.0, "usd": 5449194.0}, {"year": 2024, "region": "울산", "krw": 695668456.0, "usd": 522666.0}, {"year": 2024, "region": "인천", "krw": 999307911.0, "usd": 750795.0}, {"year": 2024, "region": "전라남도", "krw": 128163182.0, "usd": 96291.0}, {"year": 2024, "region": "전라북도", "krw": 364643727.0, "usd": 273962.0}, {"year": 2024, "region": "충청남도", "krw": 244595000.0, "usd": 183768.0}, {"year": 2024, "region": "충청북도", "krw": 388426819.0, "usd": 291831.0}, {"year": 2025, "region": "강원도", "krw": 414601727.0, "usd": 291822.0}, {"year": 2025, "region": "경기도", "krw": 5939288732.0, "usd": 4258692.0}, {"year": 2025, "region": "경상남도", "krw": 1146985182.0, "usd": 810191.0}, {"year": 2025, "region": "경상북도", "krw": 290882637.0, "usd": 204329.0}, {"year": 2025, "region": "광주", "krw": 799268638.0, "usd": 565077.0}, {"year": 2025, "region": "대구 광역시", "krw": 1321574364.0, "usd": 949781.0}, {"year": 2025, "region": "대전", "krw": 433043909.0, "usd": 309161.0}, {"year": 2025, "region": "부산", "krw": 2518462004.0, "usd": 1777913.0}, {"year": 2025, "region": "서울시", "krw": 10420511196.0, "usd": 7409455.0}, {"year": 2025, "region": "세종", "krw": 154566909.0, "usd": 107374.0}, {"year": 2025, "region": "울산", "krw": 948185364.0, "usd": 689435.0}, {"year": 2025, "region": "인천", "krw": 1046242183.0, "usd": 732705.0}, {"year": 2025, "region": "전라남도", "krw": 456345092.0, "usd": 320535.0}, {"year": 2025, "region": "전라북도", "krw": 423489273.0, "usd": 304388.0}, {"year": 2025, "region": "제주도", "krw": 128061182.0, "usd": 92781.0}, {"year": 2025, "region": "충청남도", "krw": 547174546.0, "usd": 392205.0}, {"year": 2025, "region": "충청북도", "krw": 421732273.0, "usd": 300124.0}, {"year": 2026, "region": "강원도", "krw": 108895455.0, "usd": 72193.0}, {"year": 2026, "region": "경기도", "krw": 2952392093.0, "usd": 1997565.0}, {"year": 2026, "region": "경상남도", "krw": 316385091.0, "usd": 216735.0}, {"year": 2026, "region": "경상북도", "krw": 133239636.0, "usd": 89100.0}, {"year": 2026, "region": "광주", "krw": 256056637.0, "usd": 175973.0}, {"year": 2026, "region": "대구 광역시", "krw": 305355364.0, "usd": 209134.0}, {"year": 2026, "region": "대전", "krw": 162188455.0, "usd": 110982.0}, {"year": 2026, "region": "부산", "krw": 410533819.0, "usd": 274027.0}, {"year": 2026, "region": "서울시", "krw": 2983765362.0, "usd": 2025145.0}, {"year": 2026, "region": "울산", "krw": 146243000.0, "usd": 99394.0}, {"year": 2026, "region": "인천", "krw": 304588364.0, "usd": 204100.0}, {"year": 2026, "region": "전라북도", "krw": 122504545.0, "usd": 82255.0}, {"year": 2026, "region": "충청남도", "krw": 612738364.0, "usd": 411498.0}, {"year": 2026, "region": "충청북도", "krw": 266112364.0, "usd": 183886.0}], "pivot_region_total": {"서울시": 27022548304, "경기도": 16704060204, "부산": 7123283462, "대구 광역시": 4492438548, "인천": 2722999912, "광주": 2645476369, "경상남도": 2362365638, "울산": 2114713729, "충청북도": 1898825094, "충청남도": 1753449546, "대전": 1623608729, "경상북도": 968228274, "전라북도": 910637545, "강원도": 826789546, "전라남도": 584508274, "세종": 430341091, "제주도": 128061182}, "sr_total": [{"sr": "Baek Seung Chul", "krw": 18725314757.0, "usd": 13608530.0}, {"sr": "Oh Sang Geol", "krw": 18392834843.0, "usd": 13399215.0}, {"sr": "LIM YONG CHUL", "krw": 12612083556.0, "usd": 9275667.0}, {"sr": "Kim Sung Hoon", "krw": 6183859097.0, "usd": 4361479.0}, {"sr": "Lee Garam", "krw": 3991025366.0, "usd": 2834285.0}], "pivot_sr": [{"sr": "Baek Seung Chul", "krw": 18725314757}, {"sr": "Oh Sang Geol", "krw": 18392834843}, {"sr": "LIM YONG CHUL", "krw": 12612083556}, {"sr": "Kim Sung Hoon", "krw": 6183859097}, {"sr": "Lee Garam", "krw": 3991025366}], "sr_by_year": [{"year": 2023, "sr": "Baek Seung Chul", "krw": 2711106730.0, "usd": 2066531.0}, {"year": 2023, "sr": "LIM YONG CHUL", "krw": 6452652456.0, "usd": 4927131.0}, {"year": 2023, "sr": "Oh Sang Geol", "krw": 2945985458.0, "usd": 2234279.0}, {"year": 2024, "sr": "Baek Seung Chul", "krw": 6335480381.0, "usd": 4759941.0}, {"year": 2024, "sr": "LIM YONG CHUL", "krw": 1238102275.0, "usd": 930205.0}, {"year": 2024, "sr": "Lee Garam", "krw": 815417092.0, "usd": 612635.0}, {"year": 2024, "sr": "Oh Sang Geol", "krw": 6138985650.0, "usd": 4612312.0}, {"year": 2025, "sr": "Baek Seung Chul", "krw": 6456850734.0, "usd": 4597620.0}, {"year": 2025, "sr": "Kim Sung Hoon", "krw": 4700228366.0, "usd": 3353675.0}, {"year": 2025, "sr": "LIM YONG CHUL", "krw": 3376047097.0, "usd": 2375484.0}, {"year": 2025, "sr": "Lee Garam", "krw": 2244488638.0, "usd": 1587436.0}, {"year": 2025, "sr": "Oh Sang Geol", "krw": 7408774193.0, "usd": 5269940.0}, {"year": 2026, "sr": "Baek Seung Chul", "krw": 3221876912.0, "usd": 2184438.0}, {"year": 2026, "sr": "Kim Sung Hoon", "krw": 1483630731.0, "usd": 1007804.0}, {"year": 2026, "sr": "LIM YONG CHUL", "krw": 1545281728.0, "usd": 1042846.0}, {"year": 2026, "sr": "Lee Garam", "krw": 931119636.0, "usd": 634214.0}, {"year": 2026, "sr": "Oh Sang Geol", "krw": 1899089542.0, "usd": 1282684.0}], "new_vs_existing": [{"year": 2023, "q": "23Q1", "type": "Existing Business", "usd": 1454302.0, "krw": 1872329454.0}, {"year": 2023, "q": "23Q1", "type": "New Business", "usd": 1234493.0, "krw": 1602886364.0}, {"year": 2023, "q": "23Q2", "type": "Existing Business", "usd": 1462648.0, "krw": 1916448545.0}, {"year": 2023, "q": "23Q2", "type": "New Business", "usd": 1912326.0, "krw": 2510886273.0}, {"year": 2023, "q": "23Q3", "type": "Existing Business", "usd": 973404.0, "krw": 1285371637.0}, {"year": 2023, "q": "23Q3", "type": "New Business", "usd": 2219076.0, "krw": 2927805367.0}, {"year": 2023, "q": "23Q4", "type": "Existing Business", "usd": 1242568.0, "krw": 1635216001.0}, {"year": 2023, "q": "23Q4", "type": "New Business", "usd": 2141123.0, "krw": 2807897186.0}, {"year": 2024, "q": "24Q1", "type": "Existing Business", "usd": 896778.0, "krw": 1193611638.0}, {"year": 2024, "q": "24Q1", "type": "New Business", "usd": 2126661.0, "krw": 2830584460.0}, {"year": 2024, "q": "24Q2", "type": "Existing Business", "usd": 1527124.0, "krw": 2032601275.0}, {"year": 2024, "q": "24Q2", "type": "New Business", "usd": 2851354.0, "krw": 3795150552.0}, {"year": 2024, "q": "24Q3", "type": "Existing Business", "usd": 961867.0, "krw": 1280244913.0}, {"year": 2024, "q": "24Q3", "type": "New Business", "usd": 3175117.0, "krw": 4226079279.0}, {"year": 2024, "q": "24Q4", "type": "Existing Business", "usd": 770119.0, "krw": 1025028183.0}, {"year": 2024, "q": "24Q4", "type": "New Business", "usd": 3665501.0, "krw": 4878780560.0}, {"year": 2025, "q": "25Q1", "type": "Existing Business", "usd": 922448.0, "krw": 1281233547.0}, {"year": 2025, "q": "25Q1", "type": "New Business", "usd": 3967199.0, "krw": 5510235375.0}, {"year": 2025, "q": "25Q2", "type": "Existing Business", "usd": 1489016.0, "krw": 2054647274.0}, {"year": 2025, "q": "25Q2", "type": "New Business", "usd": 3422508.0, "krw": 4760353546.0}, {"year": 2025, "q": "25Q3", "type": "Existing Business", "usd": 1033668.0, "krw": 1435417733.0}, {"year": 2025, "q": "25Q3", "type": "New Business", "usd": 3832250.0, "krw": 5317033001.0}, {"year": 2025, "q": "25Q4", "type": "Existing Business", "usd": 1102688.0, "krw": 1607970638.0}, {"year": 2025, "q": "25Q4", "type": "New Business", "usd": 3746192.0, "krw": 5443524097.0}, {"year": 2026, "q": "26Q1", "type": "Existing Business", "usd": 1798502.0, "krw": 2664820905.0}, {"year": 2026, "q": "26Q1", "type": "New Business", "usd": 4353484.0, "krw": 6416177644.0}], "direct_dealer": [{"year": 2023, "seg": "Dealer", "usd": 3551564.0, "krw": 4643758732.0}, {"year": 2023, "seg": "Direct", "usd": 9088376.0, "krw": 11915082095.0}, {"year": 2024, "seg": "Dealer", "usd": 7103414.0, "krw": 9454641563.0}, {"year": 2024, "seg": "Direct", "usd": 8871106.0, "krw": 11807439297.0}, {"year": 2025, "seg": "Dealer", "usd": 8011133.0, "krw": 11219143911.0}, {"year": 2025, "seg": "Direct", "usd": 11504836.0, "krw": 16191271300.0}, {"year": 2026, "seg": "Dealer", "usd": 1081995.0, "krw": 1608457545.0}, {"year": 2026, "seg": "Direct", "usd": 5069991.0, "krw": 7472541004.0}], "recurring_detail": [{"year": 2023, "cat": "consumables", "usd": 344310.0, "krw": 446913761.0}, {"year": 2023, "cat": "service", "usd": 2053257.0, "krw": 2686528275.0}, {"year": 2024, "cat": "consumables", "usd": 881470.0, "krw": 1173236221.0}, {"year": 2024, "cat": "service", "usd": 1794775.0, "krw": 2388844584.0}, {"year": 2025, "cat": "consumables", "usd": 859727.0, "krw": 1222877154.0}, {"year": 2025, "cat": "service", "usd": 2339107.0, "krw": 3321762539.0}, {"year": 2026, "cat": "consumables", "usd": 268971.0, "krw": 395248093.0}, {"year": 2026, "cat": "service", "usd": 613911.0, "krw": 897385598.0}], "meta": {"years": [2023, 2024, 2025, 2026], "quarters": ["Q1", "Q2", "Q3", "Q4"], "products": ["Gentle Series", "VBP", "PicoWay", "Others"]}, "product_detail": [{"prod": "GentleMax Pro+", "usd": 33936978.0, "krw": 46582885857.0, "units": 338}, {"prod": "Vbeam Perfecta", "usd": 10503659.0, "krw": 14190196576.0, "units": 133}, {"prod": "Picoway", "usd": 5492944.0, "krw": 7414058006.0, "units": 51}, {"prod": "Gmax Pro", "usd": 1979209.0, "krw": 2644946820.0, "units": 22}, {"prod": "Zimmer", "usd": 657379.0, "krw": 917186364.0, "units": 71}, {"prod": "FRAX PRO", "usd": 501069.0, "krw": 662590911.0, "units": 12}, {"prod": "Profound", "usd": 418583.0, "krw": 554709094.0, "units": 13}, {"prod": "GLP", "usd": 357244.0, "krw": 471209637.0, "units": 5}, {"prod": "HP", "usd": 296935.0, "krw": 405381819.0, "units": 28}, {"prod": "Nordlys Mini", "usd": 186299.0, "krw": 256381818.0, "units": 5}, {"prod": "Nordlys", "usd": 156930.0, "krw": 212788545.0, "units": 3}], "product_by_year_detail": [{"year": 2023, "prod": "FRAX PRO", "usd": 340861.0, "krw": 447809091.0, "units": 8}, {"year": 2023, "prod": "GLP", "usd": 223917.0, "krw": 293752183.0, "units": 3}, {"year": 2023, "prod": "GentleMax Pro+", "usd": 4544874.0, "krw": 5704294370.0, "units": 43}, {"year": 2023, "prod": "Gmax Pro", "usd": 1007333.0, "krw": 1320942001.0, "units": 11}, {"year": 2023, "prod": "HP", "usd": 105498.0, "krw": 137627272.0, "units": 10}, {"year": 2023, "prod": "Nordlys", "usd": 42651.0, "krw": 55590909.0, "units": 1}, {"year": 2023, "prod": "Picoway", "usd": 2052368.0, "krw": 2664090910.0, "units": 17}, {"year": 2023, "prod": "Profound", "usd": 240576.0, "krw": 313800000.0, "units": 6}, {"year": 2023, "prod": "Vbeam Perfecta", "usd": 4225619.0, "krw": 5540747727.0, "units": 53}, {"year": 2023, "prod": "Zimmer", "usd": 61055.0, "krw": 80186364.0, "units": 6}, {"year": 2024, "prod": "FRAX PRO", "usd": 121064.0, "krw": 161136365.0, "units": 3}, {"year": 2024, "prod": "GLP", "usd": 133326.0, "krw": 177457454.0, "units": 2}, {"year": 2024, "prod": "GentleMax Pro+", "usd": 10310651.0, "krw": 13723473476.0, "units": 101}, {"year": 2024, "prod": "Gmax Pro", "usd": 552883.0, "krw": 735887364.0, "units": 6}, {"year": 2024, "prod": "HP", "usd": 44259.0, "krw": 58909091.0, "units": 4}, {"year": 2024, "prod": "Picoway", "usd": 1586653.0, "krw": 2111834638.0, "units": 16}, {"year": 2024, "prod": "Profound", "usd": 109282.0, "krw": 145454548.0, "units": 4}, {"year": 2024, "prod": "Vbeam Perfecta", "usd": 2993185.0, "krw": 3983927924.0, "units": 37}, {"year": 2024, "prod": "Zimmer", "usd": 123216.0, "krw": 164000000.0, "units": 13}, {"year": 2025, "prod": "FRAX PRO", "usd": 39144.0, "krw": 53645455.0, "units": 1}, {"year": 2025, "prod": "GentleMax Pro+", "usd": 13906393.0, "krw": 19525845553.0, "units": 142}, {"year": 2025, "prod": "Gmax Pro", "usd": 418993.0, "krw": 588117455.0, "units": 5}, {"year": 2025, "prod": "HP", "usd": 101543.0, "krw": 141554548.0, "units": 10}, {"year": 2025, "prod": "Nordlys", "usd": 114279.0, "krw": 157197636.0, "units": 2}, {"year": 2025, "prod": "Nordlys Mini", "usd": 186299.0, "krw": 256381818.0, "units": 5}, {"year": 2025, "prod": "Picoway", "usd": 1577284.0, "krw": 2220850640.0, "units": 15}, {"year": 2025, "prod": "Profound", "usd": 68724.0, "krw": 95454546.0, "units": 3}, {"year": 2025, "prod": "Vbeam Perfecta", "usd": 2765228.0, "krw": 3897367560.0, "units": 36}, {"year": 2025, "prod": "Zimmer", "usd": 338083.0, "krw": 474000000.0, "units": 37}, {"year": 2026, "prod": "GentleMax Pro+", "usd": 5175060.0, "krw": 7629272458.0, "units": 52}, {"year": 2026, "prod": "HP", "usd": 45635.0, "krw": 67290908.0, "units": 4}, {"year": 2026, "prod": "Picoway", "usd": 276639.0, "krw": 417281818.0, "units": 3}, {"year": 2026, "prod": "Vbeam Perfecta", "usd": 519627.0, "krw": 768153365.0, "units": 7}, {"year": 2026, "prod": "Zimmer", "usd": 135025.0, "krw": 199000000.0, "units": 15}], "region_total": [{"region": "서울시", "krw": 27022548304.0, "usd": 19748588.0}, {"region": "경기도", "krw": 16704060204.0, "usd": 12171779.0}, {"region": "부산", "krw": 7123283462.0, "usd": 5225477.0}, {"region": "대구 광역시", "krw": 4492438548.0, "usd": 3329429.0}, {"region": "인천", "krw": 2722999912.0, "usd": 1974738.0}, {"region": "광주", "krw": 2645476369.0, "usd": 1943668.0}, {"region": "경상남도", "krw": 2362365638.0, "usd": 1707319.0}, {"region": "울산", "krw": 2114713729.0, "usd": 1560340.0}, {"region": "충청북도", "krw": 1898825094.0, "usd": 1396325.0}, {"region": "충청남도", "krw": 1753449546.0, "usd": 1250371.0}, {"region": "대전", "krw": 1623608729.0, "usd": 1192817.0}, {"region": "경상북도", "krw": 968228274.0, "usd": 704973.0}, {"region": "전라북도", "krw": 910637545.0, "usd": 660605.0}, {"region": "강원도", "krw": 826789546.0, "usd": 591883.0}, {"region": "전라남도", "krw": 584508274.0, "usd": 416826.0}, {"region": "세종", "krw": 430341091.0, "usd": 314498.0}, {"region": "제주도", "krw": 128061182.0, "usd": 92781.0}], "region_detail": {"강원도": [{"sub": "춘천시", "krw": 431383546.0, "usd": 308587.0}, {"sub": "원주시", "krw": 395406000.0, "usd": 283296.0}], "경기도": [{"sub": "수원시", "krw": 3140978819.0, "usd": 2305040.0}, {"sub": "성남시", "krw": 2782434822.0, "usd": 2004199.0}, {"sub": "평택시", "krw": 1309707910.0, "usd": 916823.0}, {"sub": "고양시", "krw": 1258482274.0, "usd": 915502.0}, {"sub": "화성시", "krw": 1167091728.0, "usd": 871698.0}, {"sub": "안양시", "krw": 1078497638.0, "usd": 781353.0}, {"sub": "용인시", "krw": 913407369.0, "usd": 680261.0}, {"sub": "남양주시", "krw": 694499183.0, "usd": 511779.0}, {"sub": "광명시", "krw": 483889092.0, "usd": 363553.0}, {"sub": "안산시", "krw": 479780182.0, "usd": 341709.0}, {"sub": "의정부시", "krw": 432016546.0, "usd": 307332.0}, {"sub": "하남시", "krw": 406399182.0, "usd": 305079.0}, {"sub": "경기도", "krw": 393621819.0, "usd": 293219.0}, {"sub": "부천시", "krw": 273639182.0, "usd": 202098.0}, {"sub": "시흥시", "krw": 264186182.0, "usd": 195479.0}, {"sub": "구리시", "krw": 237124818.0, "usd": 175660.0}, {"sub": "과천시", "krw": 232631637.0, "usd": 178567.0}, {"sub": "남양주", "krw": 162188455.0, "usd": 118148.0}, {"sub": "김포시", "krw": 151766909.0, "usd": 103148.0}, {"sub": "안성시", "krw": 150021455.0, "usd": 100322.0}, {"sub": "양주시", "krw": 149388455.0, "usd": 105234.0}, {"sub": "군포시", "krw": 149358455.0, "usd": 112215.0}, {"sub": "파주시", "krw": 149358455.0, "usd": 112215.0}, {"sub": "광주시", "krw": 140694182.0, "usd": 102058.0}, {"sub": "굉명시", "krw": 102895455.0, "usd": 69088.0}], "경상남도": [{"sub": "창원시", "krw": 1203096091.0, "usd": 870784.0}, {"sub": "진주시", "krw": 623196910.0, "usd": 454480.0}, {"sub": "김해시", "krw": 290623818.0, "usd": 207820.0}, {"sub": "통영시", "krw": 107545455.0, "usd": 73212.0}, {"sub": "양산시", "krw": 84057909.0, "usd": 60519.0}, {"sub": "진해구", "krw": 53845455.0, "usd": 40504.0}], "경상북도": [{"sub": "김천시", "krw": 306692364.0, "usd": 233172.0}, {"sub": "구미시", "krw": 261933818.0, "usd": 176658.0}, {"sub": "포항시", "krw": 237413637.0, "usd": 178372.0}, {"sub": "경산시", "krw": 162188455.0, "usd": 116771.0}], "광주": [{"sub": "서구", "krw": 1236629366.0, "usd": 903863.0}, {"sub": "남구", "krw": 455413456.0, "usd": 345732.0}, {"sub": "광산구", "krw": 453452819.0, "usd": 321906.0}, {"sub": "북구", "krw": 262922091.0, "usd": 198722.0}, {"sub": "광주시", "krw": 128796182.0, "usd": 98669.0}], "대구 광역시": [{"sub": "수성구", "krw": 1698276547.0, "usd": 1268299.0}, {"sub": "중구", "krw": 1239477002.0, "usd": 911431.0}, {"sub": "달서구", "krw": 788039545.0, "usd": 583505.0}, {"sub": "동구", "krw": 277019636.0, "usd": 204257.0}, {"sub": "북구", "krw": 249941909.0, "usd": 185711.0}, {"sub": "대구시", "krw": 239683909.0, "usd": 176227.0}], "대전": [{"sub": "서구", "krw": 915892546.0, "usd": 670629.0}, {"sub": "유성구", "krw": 707716183.0, "usd": 522188.0}], "부산": [{"sub": "부산광역시", "krw": 1558113457.0, "usd": 1138505.0}, {"sub": "부산진구", "krw": 1194667183.0, "usd": 876330.0}, {"sub": "진구", "krw": 922908728.0, "usd": 669053.0}, {"sub": "부산시", "krw": 783305363.0, "usd": 593243.0}, {"sub": "해운대구", "krw": 765760364.0, "usd": 575017.0}, {"sub": "부산", "krw": 366014637.0, "usd": 266489.0}, {"sub": "동래구", "krw": 227232728.0, "usd": 163601.0}, {"sub": "수영구", "krw": 163336364.0, "usd": 123066.0}, {"sub": "중동", "krw": 159112364.0, "usd": 105483.0}, {"sub": "부산시 연제구", "krw": 140267545.0, "usd": 105385.0}, {"sub": "북구", "krw": 128694182.0, "usd": 89109.0}, {"sub": "중구", "krw": 128694182.0, "usd": 87181.0}, {"sub": "부산시 해운대구", "krw": 128061182.0, "usd": 96214.0}, {"sub": "서구", "krw": 120500000.0, "usd": 92998.0}, {"sub": "연제구", "krw": 109352455.0, "usd": 82158.0}, {"sub": "남구", "krw": 104535455.0, "usd": 80281.0}], "서울시": [{"sub": "강남구", "krw": 8666888004.0, "usd": 6330191.0}, {"sub": "서초구", "krw": 4144168915.0, "usd": 3051657.0}, {"sub": "마포구", "krw": 1885530000.0, "usd": 1364069.0}, {"sub": "강서구", "krw": 1619946729.0, "usd": 1183042.0}, {"sub": "중구", "krw": 1570966461.0, "usd": 1157414.0}, {"sub": "영등포구", "krw": 1505974999.0, "usd": 1079754.0}, {"sub": "송파구", "krw": 1225169731.0, "usd": 867076.0}, {"sub": "용산구", "krw": 965253094.0, "usd": 721854.0}, {"sub": "강동구", "krw": 963315820.0, "usd": 692331.0}, {"sub": "서대문구", "krw": 629174819.0, "usd": 465341.0}, {"sub": "동대문구", "krw": 609724364.0, "usd": 444912.0}, {"sub": "광진구", "krw": 556000909.0, "usd": 396051.0}, {"sub": "성동구", "krw": 523469001.0, "usd": 402451.0}, {"sub": "노원구", "krw": 507332364.0, "usd": 373052.0}, {"sub": "은평구", "krw": 403900728.0, "usd": 310199.0}, {"sub": "강북구", "krw": 299755364.0, "usd": 216406.0}, {"sub": "성북구", "krw": 258283910.0, "usd": 182968.0}, {"sub": "동작구", "krw": 226532455.0, "usd": 171365.0}, {"sub": "양천구", "krw": 212307910.0, "usd": 155275.0}, {"sub": "구로구", "krw": 128031182.0, "usd": 96192.0}, {"sub": "종로구", "krw": 120821545.0, "usd": 86988.0}], "세종": [{"sub": "세종시", "krw": 430341091.0, "usd": 314498.0}], "울산": [{"sub": "남구", "krw": 1548090457.0, "usd": 1150402.0}, {"sub": "동구", "krw": 280500909.0, "usd": 205118.0}, {"sub": "중구", "krw": 146243000.0, "usd": 99394.0}, {"sub": "북구", "krw": 123515727.0, "usd": 92799.0}, {"sub": "울주군", "krw": 16363636.0, "usd": 12627.0}], "인천": [{"sub": "서구", "krw": 794119456.0, "usd": 567208.0}, {"sub": "부평구", "krw": 595269364.0, "usd": 425771.0}, {"sub": "연수구", "krw": 401035364.0, "usd": 294086.0}, {"sub": "인천광역시 부평", "krw": 309839819.0, "usd": 232787.0}, {"sub": "남동구", "krw": 256725364.0, "usd": 183533.0}, {"sub": "인천시 서구", "krw": 132606636.0, "usd": 95158.0}, {"sub": "인천시 연수구", "krw": 128031182.0, "usd": 96192.0}, {"sub": "인천광역시 남동구", "krw": 105372727.0, "usd": 80003.0}], "전라남도": [{"sub": "여수시", "krw": 302249637.0, "usd": 213700.0}, {"sub": "광양시", "krw": 154095455.0, "usd": 106835.0}, {"sub": "순천시", "krw": 128163182.0, "usd": 96291.0}], "전라북도": [{"sub": "전주시", "krw": 532040636.0, "usd": 389147.0}, {"sub": "완주군", "krw": 128061182.0, "usd": 93012.0}, {"sub": "전북 군산", "krw": 128031182.0, "usd": 96192.0}], "제주도": [{"sub": "제주", "krw": 128061182.0, "usd": 92781.0}], "충청남도": [{"sub": "천안시", "krw": 1072533817.0, "usd": 770018.0}, {"sub": "서산시", "krw": 386345092.0, "usd": 272933.0}, {"sub": "아산시", "krw": 294570637.0, "usd": 207420.0}], "충청북도": [{"sub": "청주시", "krw": 1358077457.0, "usd": 1009181.0}, {"sub": "충주시", "krw": 287908546.0, "usd": 205282.0}, {"sub": "충북 청주", "krw": 252839091.0, "usd": 181862.0}]}, "nv_data": {"by_cat": [{"type": "Existing Business", "product": "Gentle Series", "count": 85}, {"type": "Existing Business", "product": "Others", "count": 61}, {"type": "Existing Business", "product": "PicoWay", "count": 26}, {"type": "Existing Business", "product": "VBP", "count": 32}, {"type": "New Business", "product": "Gentle Series", "count": 278}, {"type": "New Business", "product": "Others", "count": 49}, {"type": "New Business", "product": "PicoWay", "count": 19}, {"type": "New Business", "product": "VBP", "count": 101}], "by_year_cat": [{"year": 2023, "type": "Existing Business", "product": "Gentle Series", "count": 20}, {"year": 2023, "type": "Existing Business", "product": "Others", "count": 13}, {"year": 2023, "type": "Existing Business", "product": "PicoWay", "count": 9}, {"year": 2023, "type": "Existing Business", "product": "VBP", "count": 18}, {"year": 2023, "type": "New Business", "product": "Gentle Series", "count": 37}, {"year": 2023, "type": "New Business", "product": "Others", "count": 4}, {"year": 2023, "type": "New Business", "product": "PicoWay", "count": 8}, {"year": 2023, "type": "New Business", "product": "VBP", "count": 35}, {"year": 2024, "type": "Existing Business", "product": "Gentle Series", "count": 27}, {"year": 2024, "type": "Existing Business", "product": "Others", "count": 12}, {"year": 2024, "type": "Existing Business", "product": "PicoWay", "count": 7}, {"year": 2024, "type": "Existing Business", "product": "VBP", "count": 4}, {"year": 2024, "type": "New Business", "product": "Gentle Series", "count": 80}, {"year": 2024, "type": "New Business", "product": "Others", "count": 7}, {"year": 2024, "type": "New Business", "product": "PicoWay", "count": 6}, {"year": 2024, "type": "New Business", "product": "VBP", "count": 33}, {"year": 2025, "type": "Existing Business", "product": "Gentle Series", "count": 25}, {"year": 2025, "type": "Existing Business", "product": "Others", "count": 27}, {"year": 2025, "type": "Existing Business", "product": "PicoWay", "count": 7}, {"year": 2025, "type": "Existing Business", "product": "VBP", "count": 8}, {"year": 2025, "type": "New Business", "product": "Gentle Series", "count": 122}, {"year": 2025, "type": "New Business", "product": "Others", "count": 28}, {"year": 2025, "type": "New Business", "product": "PicoWay", "count": 5}, {"year": 2025, "type": "New Business", "product": "VBP", "count": 28}, {"year": 2026, "type": "Existing Business", "product": "Gentle Series", "count": 13}, {"year": 2026, "type": "Existing Business", "product": "Others", "count": 9}, {"year": 2026, "type": "Existing Business", "product": "PicoWay", "count": 3}, {"year": 2026, "type": "Existing Business", "product": "VBP", "count": 2}, {"year": 2026, "type": "New Business", "product": "Gentle Series", "count": 39}, {"year": 2026, "type": "New Business", "product": "Others", "count": 10}, {"year": 2026, "type": "New Business", "product": "VBP", "count": 5}], "by_q_cat": [{"q": "23Q1", "type": "Existing Business", "product": "Gentle Series", "count": 7}, {"q": "23Q1", "type": "Existing Business", "product": "Others", "count": 4}, {"q": "23Q1", "type": "Existing Business", "product": "PicoWay", "count": 2}, {"q": "23Q1", "type": "Existing Business", "product": "VBP", "count": 2}, {"q": "23Q1", "type": "New Business", "product": "Gentle Series", "count": 4}, {"q": "23Q1", "type": "New Business", "product": "PicoWay", "count": 3}, {"q": "23Q1", "type": "New Business", "product": "VBP", "count": 6}, {"q": "23Q2", "type": "Existing Business", "product": "Gentle Series", "count": 2}, {"q": "23Q2", "type": "Existing Business", "product": "Others", "count": 3}, {"q": "23Q2", "type": "Existing Business", "product": "PicoWay", "count": 6}, {"q": "23Q2", "type": "Existing Business", "product": "VBP", "count": 5}, {"q": "23Q2", "type": "New Business", "product": "Gentle Series", "count": 10}, {"q": "23Q2", "type": "New Business", "product": "Others", "count": 3}, {"q": "23Q2", "type": "New Business", "product": "PicoWay", "count": 2}, {"q": "23Q2", "type": "New Business", "product": "VBP", "count": 9}, {"q": "23Q3", "type": "Existing Business", "product": "Gentle Series", "count": 5}, {"q": "23Q3", "type": "Existing Business", "product": "Others", "count": 2}, {"q": "23Q3", "type": "Existing Business", "product": "VBP", "count": 5}, {"q": "23Q3", "type": "New Business", "product": "Gentle Series", "count": 15}, {"q": "23Q3", "type": "New Business", "product": "VBP", "count": 9}, {"q": "23Q4", "type": "Existing Business", "product": "Gentle Series", "count": 6}, {"q": "23Q4", "type": "Existing Business", "product": "Others", "count": 4}, {"q": "23Q4", "type": "Existing Business", "product": "PicoWay", "count": 1}, {"q": "23Q4", "type": "Existing Business", "product": "VBP", "count": 6}, {"q": "23Q4", "type": "New Business", "product": "Gentle Series", "count": 8}, {"q": "23Q4", "type": "New Business", "product": "Others", "count": 1}, {"q": "23Q4", "type": "New Business", "product": "PicoWay", "count": 3}, {"q": "23Q4", "type": "New Business", "product": "VBP", "count": 11}, {"q": "24Q1", "type": "Existing Business", "product": "Gentle Series", "count": 5}, {"q": "24Q1", "type": "Existing Business", "product": "Others", "count": 2}, {"q": "24Q1", "type": "Existing Business", "product": "PicoWay", "count": 2}, {"q": "24Q1", "type": "Existing Business", "product": "VBP", "count": 2}, {"q": "24Q1", "type": "New Business", "product": "Gentle Series", "count": 10}, {"q": "24Q1", "type": "New Business", "product": "Others", "count": 1}, {"q": "24Q1", "type": "New Business", "product": "PicoWay", "count": 2}, {"q": "24Q1", "type": "New Business", "product": "VBP", "count": 9}, {"q": "24Q2", "type": "Existing Business", "product": "Gentle Series", "count": 10}, {"q": "24Q2", "type": "Existing Business", "product": "Others", "count": 4}, {"q": "24Q2", "type": "Existing Business", "product": "PicoWay", "count": 2}, {"q": "24Q2", "type": "Existing Business", "product": "VBP", "count": 1}, {"q": "24Q2", "type": "New Business", "product": "Gentle Series", "count": 20}, {"q": "24Q2", "type": "New Business", "product": "PicoWay", "count": 1}, {"q": "24Q2", "type": "New Business", "product": "VBP", "count": 9}, {"q": "24Q3", "type": "Existing Business", "product": "Gentle Series", "count": 6}, {"q": "24Q3", "type": "Existing Business", "product": "Others", "count": 3}, {"q": "24Q3", "type": "Existing Business", "product": "PicoWay", "count": 2}, {"q": "24Q3", "type": "New Business", "product": "Gentle Series", "count": 23}, {"q": "24Q3", "type": "New Business", "product": "Others", "count": 2}, {"q": "24Q3", "type": "New Business", "product": "PicoWay", "count": 1}, {"q": "24Q3", "type": "New Business", "product": "VBP", "count": 9}, {"q": "24Q4", "type": "Existing Business", "product": "Gentle Series", "count": 6}, {"q": "24Q4", "type": "Existing Business", "product": "Others", "count": 3}, {"q": "24Q4", "type": "Existing Business", "product": "PicoWay", "count": 1}, {"q": "24Q4", "type": "Existing Business", "product": "VBP", "count": 1}, {"q": "24Q4", "type": "New Business", "product": "Gentle Series", "count": 27}, {"q": "24Q4", "type": "New Business", "product": "Others", "count": 4}, {"q": "24Q4", "type": "New Business", "product": "PicoWay", "count": 2}, {"q": "24Q4", "type": "New Business", "product": "VBP", "count": 6}, {"q": "25Q1", "type": "Existing Business", "product": "Gentle Series", "count": 5}, {"q": "25Q1", "type": "Existing Business", "product": "Others", "count": 2}, {"q": "25Q1", "type": "Existing Business", "product": "PicoWay", "count": 3}, {"q": "25Q1", "type": "New Business", "product": "Gentle Series", "count": 32}, {"q": "25Q1", "type": "New Business", "product": "Others", "count": 7}, {"q": "25Q1", "type": "New Business", "product": "PicoWay", "count": 2}, {"q": "25Q1", "type": "New Business", "product": "VBP", "count": 7}, {"q": "25Q2", "type": "Existing Business", "product": "Gentle Series", "count": 10}, {"q": "25Q2", "type": "Existing Business", "product": "Others", "count": 10}, {"q": "25Q2", "type": "Existing Business", "product": "PicoWay", "count": 1}, {"q": "25Q2", "type": "Existing Business", "product": "VBP", "count": 2}, {"q": "25Q2", "type": "New Business", "product": "Gentle Series", "count": 29}, {"q": "25Q2", "type": "New Business", "product": "Others", "count": 6}, {"q": "25Q2", "type": "New Business", "product": "PicoWay", "count": 1}, {"q": "25Q2", "type": "New Business", "product": "VBP", "count": 5}, {"q": "25Q3", "type": "Existing Business", "product": "Gentle Series", "count": 3}, {"q": "25Q3", "type": "Existing Business", "product": "Others", "count": 12}, {"q": "25Q3", "type": "Existing Business", "product": "PicoWay", "count": 2}, {"q": "25Q3", "type": "Existing Business", "product": "VBP", "count": 3}, {"q": "25Q3", "type": "New Business", "product": "Gentle Series", "count": 32}, {"q": "25Q3", "type": "New Business", "product": "Others", "count": 9}, {"q": "25Q3", "type": "New Business", "product": "VBP", "count": 7}, {"q": "25Q4", "type": "Existing Business", "product": "Gentle Series", "count": 7}, {"q": "25Q4", "type": "Existing Business", "product": "Others", "count": 3}, {"q": "25Q4", "type": "Existing Business", "product": "PicoWay", "count": 1}, {"q": "25Q4", "type": "Existing Business", "product": "VBP", "count": 3}, {"q": "25Q4", "type": "New Business", "product": "Gentle Series", "count": 29}, {"q": "25Q4", "type": "New Business", "product": "Others", "count": 6}, {"q": "25Q4", "type": "New Business", "product": "PicoWay", "count": 2}, {"q": "25Q4", "type": "New Business", "product": "VBP", "count": 9}, {"q": "26Q1", "type": "Existing Business", "product": "Gentle Series", "count": 13}, {"q": "26Q1", "type": "Existing Business", "product": "Others", "count": 9}, {"q": "26Q1", "type": "Existing Business", "product": "PicoWay", "count": 3}, {"q": "26Q1", "type": "Existing Business", "product": "VBP", "count": 2}, {"q": "26Q1", "type": "New Business", "product": "Gentle Series", "count": 39}, {"q": "26Q1", "type": "New Business", "product": "Others", "count": 10}, {"q": "26Q1", "type": "New Business", "product": "VBP", "count": 5}], "units_by_cat": [{"type": "Existing Business", "product": "Gentle Series", "units": 85}, {"type": "Existing Business", "product": "Others", "units": 71}, {"type": "Existing Business", "product": "PicoWay", "units": 32}, {"type": "Existing Business", "product": "VBP", "units": 32}, {"type": "New Business", "product": "Gentle Series", "units": 280}, {"type": "New Business", "product": "Others", "units": 49}, {"type": "New Business", "product": "PicoWay", "units": 19}, {"type": "New Business", "product": "VBP", "units": 101}], "units_by_year": [{"year": 2023, "type": "Existing Business", "product": "Gentle Series", "units": 20}, {"year": 2023, "type": "Existing Business", "product": "Others", "units": 17}, {"year": 2023, "type": "Existing Business", "product": "PicoWay", "units": 9}, {"year": 2023, "type": "Existing Business", "product": "VBP", "units": 18}, {"year": 2023, "type": "New Business", "product": "Gentle Series", "units": 37}, {"year": 2023, "type": "New Business", "product": "Others", "units": 4}, {"year": 2023, "type": "New Business", "product": "PicoWay", "units": 8}, {"year": 2023, "type": "New Business", "product": "VBP", "units": 35}, {"year": 2024, "type": "Existing Business", "product": "Gentle Series", "units": 27}, {"year": 2024, "type": "Existing Business", "product": "Others", "units": 16}, {"year": 2024, "type": "Existing Business", "product": "PicoWay", "units": 10}, {"year": 2024, "type": "Existing Business", "product": "VBP", "units": 4}, {"year": 2024, "type": "New Business", "product": "Gentle Series", "units": 82}, {"year": 2024, "type": "New Business", "product": "Others", "units": 7}, {"year": 2024, "type": "New Business", "product": "PicoWay", "units": 6}, {"year": 2024, "type": "New Business", "product": "VBP", "units": 33}, {"year": 2025, "type": "Existing Business", "product": "Gentle Series", "units": 25}, {"year": 2025, "type": "Existing Business", "product": "Others", "units": 29}, {"year": 2025, "type": "Existing Business", "product": "PicoWay", "units": 10}, {"year": 2025, "type": "Existing Business", "product": "VBP", "units": 8}, {"year": 2025, "type": "New Business", "product": "Gentle Series", "units": 122}, {"year": 2025, "type": "New Business", "product": "Others", "units": 28}, {"year": 2025, "type": "New Business", "product": "PicoWay", "units": 5}, {"year": 2025, "type": "New Business", "product": "VBP", "units": 28}, {"year": 2026, "type": "Existing Business", "product": "Gentle Series", "units": 13}, {"year": 2026, "type": "Existing Business", "product": "Others", "units": 9}, {"year": 2026, "type": "Existing Business", "product": "PicoWay", "units": 3}, {"year": 2026, "type": "Existing Business", "product": "VBP", "units": 2}, {"year": 2026, "type": "New Business", "product": "Gentle Series", "units": 39}, {"year": 2026, "type": "New Business", "product": "Others", "units": 10}, {"year": 2026, "type": "New Business", "product": "VBP", "units": 5}]}};
+const DATA = {"yearly_total": {"2023": {"sales": 12639940.0, "recurring": 2397567.0, "total": 15037507.0, "sales_krw": 16558840827.0, "recurring_krw": 3133442037.0, "total_krw": 19692282864.0}, "2024": {"sales": 15974520.0, "recurring": 2676245.0, "total": 18650765.0, "sales_krw": 21262080860.0, "recurring_krw": 3562080805.0, "total_krw": 24824161665.0}, "2025": {"sales": 19290572.0, "recurring": 3198834.0, "total": 22489406.0, "sales_krw": 27410415211.0, "recurring_krw": 4544639694.0, "total_krw": 31955054904.0}, "2026": {"sales": 6151986.0, "recurring": 882882.0, "total": 7034868.0, "sales_krw": 9080998549.0, "recurring_krw": 1292633691.0, "total_krw": 10373632240.0}}, "quarterly": [{"year": 2023, "q": "23Q1", "cat": "RECURRING", "usd": 618977.0, "krw": 788849416.0}, {"year": 2023, "q": "23Q1", "cat": "SALES", "usd": 2688795.0, "krw": 3475215818.0}, {"year": 2023, "q": "23Q2", "cat": "RECURRING", "usd": 658769.0, "krw": 866768474.0}, {"year": 2023, "q": "23Q2", "cat": "SALES", "usd": 3374974.0, "krw": 4427334818.0}, {"year": 2023, "q": "23Q3", "cat": "RECURRING", "usd": 533819.0, "krw": 704508304.0}, {"year": 2023, "q": "23Q3", "cat": "SALES", "usd": 3192480.0, "krw": 4213177004.0}, {"year": 2023, "q": "23Q4", "cat": "RECURRING", "usd": 586002.0, "krw": 773315843.0}, {"year": 2023, "q": "23Q4", "cat": "SALES", "usd": 3383691.0, "krw": 4443113187.0}, {"year": 2024, "q": "24Q1", "cat": "RECURRING", "usd": 613927.0, "krw": 817136656.0}, {"year": 2024, "q": "24Q1", "cat": "SALES", "usd": 3023439.0, "krw": 4024196098.0}, {"year": 2024, "q": "24Q2", "cat": "RECURRING", "usd": 649321.0, "krw": 864245616.0}, {"year": 2024, "q": "24Q2", "cat": "SALES", "usd": 4378477.0, "krw": 5827751827.0}, {"year": 2024, "q": "24Q3", "cat": "RECURRING", "usd": 693501.0, "krw": 923049718.0}, {"year": 2024, "q": "24Q3", "cat": "SALES", "usd": 4136984.0, "krw": 5506324192.0}, {"year": 2024, "q": "24Q4", "cat": "RECURRING", "usd": 719496.0, "krw": 957648814.0}, {"year": 2024, "q": "24Q4", "cat": "SALES", "usd": 4435620.0, "krw": 5903808743.0}, {"year": 2025, "q": "25Q1", "cat": "RECURRING", "usd": 646336.0, "krw": 939928438.0}, {"year": 2025, "q": "25Q1", "cat": "SALES", "usd": 4664251.0, "krw": 6791468922.0}, {"year": 2025, "q": "25Q2", "cat": "RECURRING", "usd": 790112.0, "krw": 1107688004.0}, {"year": 2025, "q": "25Q2", "cat": "SALES", "usd": 4911524.0, "krw": 6815000820.0}, {"year": 2025, "q": "25Q3", "cat": "RECURRING", "usd": 842598.0, "krw": 1166879318.0}, {"year": 2025, "q": "25Q3", "cat": "SALES", "usd": 4865918.0, "krw": 6752450734.0}, {"year": 2025, "q": "25Q4", "cat": "RECURRING", "usd": 919789.0, "krw": 1330143933.0}, {"year": 2025, "q": "25Q4", "cat": "SALES", "usd": 4848880.0, "krw": 7051494735.0}, {"year": 2026, "q": "26Q1", "cat": "RECURRING", "usd": 882882.0, "krw": 1292633691.0}, {"year": 2026, "q": "26Q1", "cat": "SALES", "usd": 6151986.0, "krw": 9080998549.0}], "qoq": [{"q": "23Q1", "total": 3307773.0, "total_krw": 3475215818, "qoq": null, "qoq_krw": null}, {"q": "23Q2", "total": 4033742.0, "total_krw": 4427334818, "qoq": 27.4, "qoq_krw": 27.4}, {"q": "23Q3", "total": 3726299.0, "total_krw": 4213177004, "qoq": -4.84, "qoq_krw": -4.84}, {"q": "23Q4", "total": 3969693.0, "total_krw": 4443113187, "qoq": 5.46, "qoq_krw": 5.46}, {"q": "24Q1", "total": 3637366.0, "total_krw": 4024196098, "qoq": -9.43, "qoq_krw": -9.43}, {"q": "24Q2", "total": 5027798.0, "total_krw": 5827751827, "qoq": 44.82, "qoq_krw": 44.82}, {"q": "24Q3", "total": 4830485.0, "total_krw": 5506324192, "qoq": -5.52, "qoq_krw": -5.52}, {"q": "24Q4", "total": 5155116.0, "total_krw": 5903808743, "qoq": 7.22, "qoq_krw": 7.22}, {"q": "25Q1", "total": 5310586.0, "total_krw": 6791468922, "qoq": 15.04, "qoq_krw": 15.04}, {"q": "25Q2", "total": 5701635.0, "total_krw": 6815000820, "qoq": 0.35, "qoq_krw": 0.35}, {"q": "25Q3", "total": 5708516.0, "total_krw": 6752450734, "qoq": -0.92, "qoq_krw": -0.92}, {"q": "25Q4", "total": 5768669.0, "total_krw": 7051494735, "qoq": 4.43, "qoq_krw": 4.43}, {"q": "26Q1", "total": 7034868.0, "total_krw": 9080998549, "qoq": 28.78, "qoq_krw": 28.78}], "product_by_year": [{"year": 2023, "product": "Gentle Series", "usd": 5776124.0, "krw": 7318988554.0, "units": 57}, {"year": 2023, "product": "Others", "usd": 790640.0, "krw": 1035013636.0, "units": 31}, {"year": 2023, "product": "PicoWay", "usd": 2052368.0, "krw": 2664090910.0, "units": 17}, {"year": 2023, "product": "VBP", "usd": 4225619.0, "krw": 5540747727.0, "units": 53}, {"year": 2024, "product": "Gentle Series", "usd": 10996861.0, "krw": 14636818294.0, "units": 109}, {"year": 2024, "product": "Others", "usd": 397821.0, "krw": 529500004.0, "units": 24}, {"year": 2024, "product": "PicoWay", "usd": 1586653.0, "krw": 2111834638.0, "units": 16}, {"year": 2024, "product": "VBP", "usd": 2993185.0, "krw": 3983927924.0, "units": 37}, {"year": 2025, "product": "Gentle Series", "usd": 14325385.0, "krw": 20113963008.0, "units": 147}, {"year": 2025, "product": "Others", "usd": 848071.0, "krw": 1178234003.0, "units": 58}, {"year": 2025, "product": "PicoWay", "usd": 1577284.0, "krw": 2220850640.0, "units": 15}, {"year": 2025, "product": "VBP", "usd": 2765228.0, "krw": 3897367560.0, "units": 36}, {"year": 2026, "product": "Gentle Series", "usd": 5175060.0, "krw": 7629272458.0, "units": 52}, {"year": 2026, "product": "Others", "usd": 180660.0, "krw": 266290908.0, "units": 19}, {"year": 2026, "product": "PicoWay", "usd": 276639.0, "krw": 417281818.0, "units": 3}, {"year": 2026, "product": "VBP", "usd": 519627.0, "krw": 768153365.0, "units": 7}], "product_by_quarter": [{"year": 2023, "q": "23Q1", "product": "Gentle Series", "usd": 1295320.0, "krw": 1416820365.0, "units": 11}, {"year": 2023, "q": "23Q1", "product": "Others", "usd": 351202.0, "krw": 457954544.0, "units": 11}, {"year": 2023, "q": "23Q1", "product": "PicoWay", "usd": 592116.0, "krw": 755554546.0, "units": 5}, {"year": 2023, "q": "23Q1", "product": "VBP", "usd": 653661.0, "krw": 844886363.0, "units": 8}, {"year": 2023, "q": "23Q2", "product": "Gentle Series", "usd": 1102074.0, "krw": 1446059821.0, "units": 12}, {"year": 2023, "q": "23Q2", "product": "Others", "usd": 207391.0, "krw": 270218182.0, "units": 13}, {"year": 2023, "q": "23Q2", "product": "PicoWay", "usd": 981976.0, "krw": 1287309091.0, "units": 8}, {"year": 2023, "q": "23Q2", "product": "VBP", "usd": 1084839.0, "krw": 1423747724.0, "units": 14}, {"year": 2023, "q": "23Q3", "product": "Gentle Series", "usd": 2001565.0, "krw": 2633731548.0, "units": 20}, {"year": 2023, "q": "23Q3", "product": "Others", "usd": 83046.0, "krw": 110418182.0, "units": 2}, {"year": 2023, "q": "23Q3", "product": "VBP", "usd": 1107869.0, "krw": 1469027274.0, "units": 14}, {"year": 2023, "q": "23Q4", "product": "Gentle Series", "usd": 1377165.0, "krw": 1822376820.0, "units": 14}, {"year": 2023, "q": "23Q4", "product": "Others", "usd": 149001.0, "krw": 196422728.0, "units": 5}, {"year": 2023, "q": "23Q4", "product": "PicoWay", "usd": 478276.0, "krw": 621227273.0, "units": 4}, {"year": 2023, "q": "23Q4", "product": "VBP", "usd": 1379249.0, "krw": 1803086366.0, "units": 17}, {"year": 2024, "q": "24Q1", "product": "Gentle Series", "usd": 1616812.0, "krw": 2151976184.0, "units": 16}, {"year": 2024, "q": "24Q1", "product": "Others", "usd": 63746.0, "krw": 84845455.0, "units": 3}, {"year": 2024, "q": "24Q1", "product": "PicoWay", "usd": 439693.0, "krw": 585230637.0, "units": 4}, {"year": 2024, "q": "24Q1", "product": "VBP", "usd": 903189.0, "krw": 1202143822.0, "units": 11}, {"year": 2024, "q": "24Q2", "product": "Gentle Series", "usd": 2969751.0, "krw": 3952737095.0, "units": 30}, {"year": 2024, "q": "24Q2", "product": "Others", "usd": 50714.0, "krw": 67500000.0, "units": 5}, {"year": 2024, "q": "24Q2", "product": "PicoWay", "usd": 546634.0, "krw": 727570182.0, "units": 6}, {"year": 2024, "q": "24Q2", "product": "VBP", "usd": 811379.0, "krw": 1079944550.0, "units": 10}, {"year": 2024, "q": "24Q3", "product": "Gentle Series", "usd": 2936251.0, "krw": 3908149003.0, "units": 29}, {"year": 2024, "q": "24Q3", "product": "Others", "usd": 207479.0, "krw": 276154549.0, "units": 8}, {"year": 2024, "q": "24Q3", "product": "PicoWay", "usd": 278271.0, "krw": 370378273.0, "units": 3}, {"year": 2024, "q": "24Q3", "product": "VBP", "usd": 714983.0, "krw": 951642367.0, "units": 9}, {"year": 2024, "q": "24Q4", "product": "Gentle Series", "usd": 3474048.0, "krw": 4623956012.0, "units": 34}, {"year": 2024, "q": "24Q4", "product": "Others", "usd": 75883.0, "krw": 101000000.0, "units": 8}, {"year": 2024, "q": "24Q4", "product": "PicoWay", "usd": 322055.0, "krw": 428655546.0, "units": 3}, {"year": 2024, "q": "24Q4", "product": "VBP", "usd": 563634.0, "krw": 750197185.0, "units": 7}, {"year": 2025, "q": "25Q1", "product": "Gentle Series", "usd": 3600618.0, "krw": 5001073373.0, "units": 37}, {"year": 2025, "q": "25Q1", "product": "Others", "usd": 194761.0, "krw": 270512455.0, "units": 11}, {"year": 2025, "q": "25Q1", "product": "PicoWay", "usd": 539413.0, "krw": 749216819.0, "units": 5}, {"year": 2025, "q": "25Q1", "product": "VBP", "usd": 554856.0, "krw": 770666275.0, "units": 7}, {"year": 2025, "q": "25Q2", "product": "Gentle Series", "usd": 3834891.0, "krw": 5313326271.0, "units": 39}, {"year": 2025, "q": "25Q2", "product": "Others", "usd": 310222.0, "krw": 425976091.0, "units": 17}, {"year": 2025, "q": "25Q2", "product": "PicoWay", "usd": 227277.0, "krw": 320561273.0, "units": 2}, {"year": 2025, "q": "25Q2", "product": "VBP", "usd": 539134.0, "krw": 755137185.0, "units": 7}, {"year": 2025, "q": "25Q3", "product": "Gentle Series", "usd": 3442103.0, "krw": 4778925180.0, "units": 35}, {"year": 2025, "q": "25Q3", "product": "Others", "usd": 259991.0, "krw": 360645457.0, "units": 21}, {"year": 2025, "q": "25Q3", "product": "PicoWay", "usd": 397683.0, "krw": 552472547.0, "units": 4}, {"year": 2025, "q": "25Q3", "product": "VBP", "usd": 766141.0, "krw": 1060407550.0, "units": 10}, {"year": 2025, "q": "25Q4", "product": "Gentle Series", "usd": 3447773.0, "krw": 5020638184.0, "units": 36}, {"year": 2025, "q": "25Q4", "product": "Others", "usd": 83098.0, "krw": 121100000.0, "units": 9}, {"year": 2025, "q": "25Q4", "product": "PicoWay", "usd": 412912.0, "krw": 598600001.0, "units": 4}, {"year": 2025, "q": "25Q4", "product": "VBP", "usd": 905097.0, "krw": 1311156550.0, "units": 12}, {"year": 2026, "q": "26Q1", "product": "Gentle Series", "usd": 5175060.0, "krw": 7629272458.0, "units": 52}, {"year": 2026, "q": "26Q1", "product": "Others", "usd": 180660.0, "krw": 266290908.0, "units": 19}, {"year": 2026, "q": "26Q1", "product": "PicoWay", "usd": 276639.0, "krw": 417281818.0, "units": 3}, {"year": 2026, "q": "26Q1", "product": "VBP", "usd": 519627.0, "krw": 768153365.0, "units": 7}], "region_by_year": [{"year": 2023, "region": "경기도", "krw": 3414678820.0, "usd": 2611464.0}, {"year": 2023, "region": "경상남도", "krw": 380604637.0, "usd": 290918.0}, {"year": 2023, "region": "경상북도", "krw": 183965091.0, "usd": 140965.0}, {"year": 2023, "region": "광주", "krw": 657955092.0, "usd": 502245.0}, {"year": 2023, "region": "대구 광역시", "krw": 1163612455.0, "usd": 891853.0}, {"year": 2023, "region": "대전", "krw": 264577091.0, "usd": 198820.0}, {"year": 2023, "region": "부산", "krw": 1983302909.0, "usd": 1512390.0}, {"year": 2023, "region": "서울시", "krw": 6365396913.0, "usd": 4864795.0}, {"year": 2023, "region": "세종", "krw": 275774182.0, "usd": 207123.0}, {"year": 2023, "region": "울산", "krw": 324616909.0, "usd": 248845.0}, {"year": 2023, "region": "인천", "krw": 372861454.0, "usd": 287138.0}, {"year": 2023, "region": "충청남도", "krw": 348941636.0, "usd": 262900.0}, {"year": 2023, "region": "충청북도", "krw": 822553638.0, "usd": 620484.0}, {"year": 2024, "region": "강원도", "krw": 303292364.0, "usd": 227868.0}, {"year": 2024, "region": "경기도", "krw": 4397700559.0, "usd": 3304058.0}, {"year": 2024, "region": "경상남도", "krw": 518390728.0, "usd": 389475.0}, {"year": 2024, "region": "경상북도", "krw": 360140910.0, "usd": 270579.0}, {"year": 2024, "region": "광주", "krw": 932196002.0, "usd": 700373.0}, {"year": 2024, "region": "대구 광역시", "krw": 1701896365.0, "usd": 1278660.0}, {"year": 2024, "region": "대전", "krw": 763799274.0, "usd": 573854.0}, {"year": 2024, "region": "부산", "krw": 2210984730.0, "usd": 1661146.0}, {"year": 2024, "region": "서울시", "krw": 7252874833.0, "usd": 5449194.0}, {"year": 2024, "region": "울산", "krw": 695668456.0, "usd": 522666.0}, {"year": 2024, "region": "인천", "krw": 999307911.0, "usd": 750795.0}, {"year": 2024, "region": "전라남도", "krw": 128163182.0, "usd": 96291.0}, {"year": 2024, "region": "전라북도", "krw": 364643727.0, "usd": 273962.0}, {"year": 2024, "region": "충청남도", "krw": 244595000.0, "usd": 183768.0}, {"year": 2024, "region": "충청북도", "krw": 388426819.0, "usd": 291831.0}, {"year": 2025, "region": "강원도", "krw": 414601727.0, "usd": 291822.0}, {"year": 2025, "region": "경기도", "krw": 5939288732.0, "usd": 4258692.0}, {"year": 2025, "region": "경상남도", "krw": 1146985182.0, "usd": 810191.0}, {"year": 2025, "region": "경상북도", "krw": 290882637.0, "usd": 204329.0}, {"year": 2025, "region": "광주", "krw": 799268638.0, "usd": 565077.0}, {"year": 2025, "region": "대구 광역시", "krw": 1321574364.0, "usd": 949781.0}, {"year": 2025, "region": "대전", "krw": 433043909.0, "usd": 309161.0}, {"year": 2025, "region": "부산", "krw": 2518462004.0, "usd": 1777913.0}, {"year": 2025, "region": "서울시", "krw": 10420511196.0, "usd": 7409455.0}, {"year": 2025, "region": "세종", "krw": 154566909.0, "usd": 107374.0}, {"year": 2025, "region": "울산", "krw": 948185364.0, "usd": 689435.0}, {"year": 2025, "region": "인천", "krw": 1046242183.0, "usd": 732705.0}, {"year": 2025, "region": "전라남도", "krw": 456345092.0, "usd": 320535.0}, {"year": 2025, "region": "전라북도", "krw": 423489273.0, "usd": 304388.0}, {"year": 2025, "region": "제주도", "krw": 128061182.0, "usd": 92781.0}, {"year": 2025, "region": "충청남도", "krw": 547174546.0, "usd": 392205.0}, {"year": 2025, "region": "충청북도", "krw": 421732273.0, "usd": 300124.0}, {"year": 2026, "region": "강원도", "krw": 108895455.0, "usd": 72193.0}, {"year": 2026, "region": "경기도", "krw": 2952392093.0, "usd": 1997565.0}, {"year": 2026, "region": "경상남도", "krw": 316385091.0, "usd": 216735.0}, {"year": 2026, "region": "경상북도", "krw": 133239636.0, "usd": 89100.0}, {"year": 2026, "region": "광주", "krw": 256056637.0, "usd": 175973.0}, {"year": 2026, "region": "대구 광역시", "krw": 305355364.0, "usd": 209134.0}, {"year": 2026, "region": "대전", "krw": 162188455.0, "usd": 110982.0}, {"year": 2026, "region": "부산", "krw": 410533819.0, "usd": 274027.0}, {"year": 2026, "region": "서울시", "krw": 2983765362.0, "usd": 2025145.0}, {"year": 2026, "region": "울산", "krw": 146243000.0, "usd": 99394.0}, {"year": 2026, "region": "인천", "krw": 304588364.0, "usd": 204100.0}, {"year": 2026, "region": "전라북도", "krw": 122504545.0, "usd": 82255.0}, {"year": 2026, "region": "충청남도", "krw": 612738364.0, "usd": 411498.0}, {"year": 2026, "region": "충청북도", "krw": 266112364.0, "usd": 183886.0}], "pivot_region_total": {"서울시": 27022548304, "경기도": 16704060204, "부산": 7123283462, "대구 광역시": 4492438548, "인천": 2722999912, "광주": 2645476369, "경상남도": 2362365638, "울산": 2114713729, "충청북도": 1898825094, "충청남도": 1753449546, "대전": 1623608729, "경상북도": 968228274, "전라북도": 910637545, "강원도": 826789546, "전라남도": 584508274, "세종": 430341091, "제주도": 128061182}, "sr_total": [{"sr": "Baek Seung Chul", "krw": 18725314757.0, "usd": 13608530.0}, {"sr": "Oh Sang Geol", "krw": 18392834843.0, "usd": 13399215.0}, {"sr": "LIM YONG CHUL", "krw": 12612083556.0, "usd": 9275667.0}, {"sr": "Kim Sung Hoon", "krw": 6183859097.0, "usd": 4361479.0}, {"sr": "Lee Garam", "krw": 3991025366.0, "usd": 2834285.0}], "pivot_sr": [{"sr": "Baek Seung Chul", "krw": 18725314757}, {"sr": "Oh Sang Geol", "krw": 18392834843}, {"sr": "LIM YONG CHUL", "krw": 12612083556}, {"sr": "Kim Sung Hoon", "krw": 6183859097}, {"sr": "Lee Garam", "krw": 3991025366}], "sr_by_year": [{"year": 2023, "sr": "Baek Seung Chul", "krw": 2711106730.0, "usd": 2066531.0}, {"year": 2023, "sr": "LIM YONG CHUL", "krw": 6452652456.0, "usd": 4927131.0}, {"year": 2023, "sr": "Oh Sang Geol", "krw": 2945985458.0, "usd": 2234279.0}, {"year": 2024, "sr": "Baek Seung Chul", "krw": 6335480381.0, "usd": 4759941.0}, {"year": 2024, "sr": "LIM YONG CHUL", "krw": 1238102275.0, "usd": 930205.0}, {"year": 2024, "sr": "Lee Garam", "krw": 815417092.0, "usd": 612635.0}, {"year": 2024, "sr": "Oh Sang Geol", "krw": 6138985650.0, "usd": 4612312.0}, {"year": 2025, "sr": "Baek Seung Chul", "krw": 6456850734.0, "usd": 4597620.0}, {"year": 2025, "sr": "Kim Sung Hoon", "krw": 4700228366.0, "usd": 3353675.0}, {"year": 2025, "sr": "LIM YONG CHUL", "krw": 3376047097.0, "usd": 2375484.0}, {"year": 2025, "sr": "Lee Garam", "krw": 2244488638.0, "usd": 1587436.0}, {"year": 2025, "sr": "Oh Sang Geol", "krw": 7408774193.0, "usd": 5269940.0}, {"year": 2026, "sr": "Baek Seung Chul", "krw": 3221876912.0, "usd": 2184438.0}, {"year": 2026, "sr": "Kim Sung Hoon", "krw": 1483630731.0, "usd": 1007804.0}, {"year": 2026, "sr": "LIM YONG CHUL", "krw": 1545281728.0, "usd": 1042846.0}, {"year": 2026, "sr": "Lee Garam", "krw": 931119636.0, "usd": 634214.0}, {"year": 2026, "sr": "Oh Sang Geol", "krw": 1899089542.0, "usd": 1282684.0}], "new_vs_existing": [{"year": 2023, "q": "23Q1", "type": "Existing Business", "usd": 1454302.0, "krw": 1872329454.0}, {"year": 2023, "q": "23Q1", "type": "New Business", "usd": 1234493.0, "krw": 1602886364.0}, {"year": 2023, "q": "23Q2", "type": "Existing Business", "usd": 1462648.0, "krw": 1916448545.0}, {"year": 2023, "q": "23Q2", "type": "New Business", "usd": 1912326.0, "krw": 2510886273.0}, {"year": 2023, "q": "23Q3", "type": "Existing Business", "usd": 973404.0, "krw": 1285371637.0}, {"year": 2023, "q": "23Q3", "type": "New Business", "usd": 2219076.0, "krw": 2927805367.0}, {"year": 2023, "q": "23Q4", "type": "Existing Business", "usd": 1242568.0, "krw": 1635216001.0}, {"year": 2023, "q": "23Q4", "type": "New Business", "usd": 2141123.0, "krw": 2807897186.0}, {"year": 2024, "q": "24Q1", "type": "Existing Business", "usd": 896778.0, "krw": 1193611638.0}, {"year": 2024, "q": "24Q1", "type": "New Business", "usd": 2126661.0, "krw": 2830584460.0}, {"year": 2024, "q": "24Q2", "type": "Existing Business", "usd": 1527124.0, "krw": 2032601275.0}, {"year": 2024, "q": "24Q2", "type": "New Business", "usd": 2851354.0, "krw": 3795150552.0}, {"year": 2024, "q": "24Q3", "type": "Existing Business", "usd": 961867.0, "krw": 1280244913.0}, {"year": 2024, "q": "24Q3", "type": "New Business", "usd": 3175117.0, "krw": 4226079279.0}, {"year": 2024, "q": "24Q4", "type": "Existing Business", "usd": 770119.0, "krw": 1025028183.0}, {"year": 2024, "q": "24Q4", "type": "New Business", "usd": 3665501.0, "krw": 4878780560.0}, {"year": 2025, "q": "25Q1", "type": "Existing Business", "usd": 922448.0, "krw": 1281233547.0}, {"year": 2025, "q": "25Q1", "type": "New Business", "usd": 3967199.0, "krw": 5510235375.0}, {"year": 2025, "q": "25Q2", "type": "Existing Business", "usd": 1489016.0, "krw": 2054647274.0}, {"year": 2025, "q": "25Q2", "type": "New Business", "usd": 3422508.0, "krw": 4760353546.0}, {"year": 2025, "q": "25Q3", "type": "Existing Business", "usd": 1033668.0, "krw": 1435417733.0}, {"year": 2025, "q": "25Q3", "type": "New Business", "usd": 3832250.0, "krw": 5317033001.0}, {"year": 2025, "q": "25Q4", "type": "Existing Business", "usd": 1102688.0, "krw": 1607970638.0}, {"year": 2025, "q": "25Q4", "type": "New Business", "usd": 3746192.0, "krw": 5443524097.0}, {"year": 2026, "q": "26Q1", "type": "Existing Business", "usd": 1798502.0, "krw": 2664820905.0}, {"year": 2026, "q": "26Q1", "type": "New Business", "usd": 4353484.0, "krw": 6416177644.0}], "direct_dealer": [{"year": 2023, "seg": "Dealer", "usd": 3551564.0, "krw": 4643758732.0}, {"year": 2023, "seg": "Direct", "usd": 9088376.0, "krw": 11915082095.0}, {"year": 2024, "seg": "Dealer", "usd": 7103414.0, "krw": 9454641563.0}, {"year": 2024, "seg": "Direct", "usd": 8871106.0, "krw": 11807439297.0}, {"year": 2025, "seg": "Dealer", "usd": 8011133.0, "krw": 11219143911.0}, {"year": 2025, "seg": "Direct", "usd": 11504836.0, "krw": 16191271300.0}, {"year": 2026, "seg": "Dealer", "usd": 1081995.0, "krw": 1608457545.0}, {"year": 2026, "seg": "Direct", "usd": 5069991.0, "krw": 7472541004.0}], "recurring_detail": [{"year": 2023, "cat": "consumables", "usd": 344310.0, "krw": 446913761.0}, {"year": 2023, "cat": "service", "usd": 2053257.0, "krw": 2686528275.0}, {"year": 2024, "cat": "consumables", "usd": 881470.0, "krw": 1173236221.0}, {"year": 2024, "cat": "service", "usd": 1794775.0, "krw": 2388844584.0}, {"year": 2025, "cat": "consumables", "usd": 859727.0, "krw": 1222877154.0}, {"year": 2025, "cat": "service", "usd": 2339107.0, "krw": 3321762539.0}, {"year": 2026, "cat": "consumables", "usd": 268971.0, "krw": 395248093.0}, {"year": 2026, "cat": "service", "usd": 613911.0, "krw": 897385598.0}], "meta": {"years": [2023, 2024, 2025, 2026], "quarters": ["Q1", "Q2", "Q3", "Q4"], "products": ["Gentle Series", "VBP", "PicoWay", "Others"]}, "product_detail": [{"prod": "GentleMax Pro+", "usd": 33936978.0, "krw": 46582885857.0, "units": 338}, {"prod": "Vbeam Perfecta", "usd": 10503659.0, "krw": 14190196576.0, "units": 133}, {"prod": "Picoway", "usd": 5492944.0, "krw": 7414058006.0, "units": 51}, {"prod": "Gmax Pro", "usd": 1979209.0, "krw": 2644946820.0, "units": 22}, {"prod": "Zimmer", "usd": 657379.0, "krw": 917186364.0, "units": 71}, {"prod": "FRAX PRO", "usd": 501069.0, "krw": 662590911.0, "units": 12}, {"prod": "Profound", "usd": 418583.0, "krw": 554709094.0, "units": 13}, {"prod": "GLP", "usd": 357244.0, "krw": 471209637.0, "units": 5}, {"prod": "HP", "usd": 296935.0, "krw": 405381819.0, "units": 28}, {"prod": "Nordlys Mini", "usd": 186299.0, "krw": 256381818.0, "units": 5}, {"prod": "Nordlys", "usd": 156930.0, "krw": 212788545.0, "units": 3}], "product_by_year_detail": [{"year": 2023, "prod": "FRAX PRO", "usd": 340861.0, "krw": 447809091.0, "units": 8}, {"year": 2023, "prod": "GLP", "usd": 223917.0, "krw": 293752183.0, "units": 3}, {"year": 2023, "prod": "GentleMax Pro+", "usd": 4544874.0, "krw": 5704294370.0, "units": 43}, {"year": 2023, "prod": "Gmax Pro", "usd": 1007333.0, "krw": 1320942001.0, "units": 11}, {"year": 2023, "prod": "HP", "usd": 105498.0, "krw": 137627272.0, "units": 10}, {"year": 2023, "prod": "Nordlys", "usd": 42651.0, "krw": 55590909.0, "units": 1}, {"year": 2023, "prod": "Picoway", "usd": 2052368.0, "krw": 2664090910.0, "units": 17}, {"year": 2023, "prod": "Profound", "usd": 240576.0, "krw": 313800000.0, "units": 6}, {"year": 2023, "prod": "Vbeam Perfecta", "usd": 4225619.0, "krw": 5540747727.0, "units": 53}, {"year": 2023, "prod": "Zimmer", "usd": 61055.0, "krw": 80186364.0, "units": 6}, {"year": 2024, "prod": "FRAX PRO", "usd": 121064.0, "krw": 161136365.0, "units": 3}, {"year": 2024, "prod": "GLP", "usd": 133326.0, "krw": 177457454.0, "units": 2}, {"year": 2024, "prod": "GentleMax Pro+", "usd": 10310651.0, "krw": 13723473476.0, "units": 101}, {"year": 2024, "prod": "Gmax Pro", "usd": 552883.0, "krw": 735887364.0, "units": 6}, {"year": 2024, "prod": "HP", "usd": 44259.0, "krw": 58909091.0, "units": 4}, {"year": 2024, "prod": "Picoway", "usd": 1586653.0, "krw": 2111834638.0, "units": 16}, {"year": 2024, "prod": "Profound", "usd": 109282.0, "krw": 145454548.0, "units": 4}, {"year": 2024, "prod": "Vbeam Perfecta", "usd": 2993185.0, "krw": 3983927924.0, "units": 37}, {"year": 2024, "prod": "Zimmer", "usd": 123216.0, "krw": 164000000.0, "units": 13}, {"year": 2025, "prod": "FRAX PRO", "usd": 39144.0, "krw": 53645455.0, "units": 1}, {"year": 2025, "prod": "GentleMax Pro+", "usd": 13906393.0, "krw": 19525845553.0, "units": 142}, {"year": 2025, "prod": "Gmax Pro", "usd": 418993.0, "krw": 588117455.0, "units": 5}, {"year": 2025, "prod": "HP", "usd": 101543.0, "krw": 141554548.0, "units": 10}, {"year": 2025, "prod": "Nordlys", "usd": 114279.0, "krw": 157197636.0, "units": 2}, {"year": 2025, "prod": "Nordlys Mini", "usd": 186299.0, "krw": 256381818.0, "units": 5}, {"year": 2025, "prod": "Picoway", "usd": 1577284.0, "krw": 2220850640.0, "units": 15}, {"year": 2025, "prod": "Profound", "usd": 68724.0, "krw": 95454546.0, "units": 3}, {"year": 2025, "prod": "Vbeam Perfecta", "usd": 2765228.0, "krw": 3897367560.0, "units": 36}, {"year": 2025, "prod": "Zimmer", "usd": 338083.0, "krw": 474000000.0, "units": 37}, {"year": 2026, "prod": "GentleMax Pro+", "usd": 5175060.0, "krw": 7629272458.0, "units": 52}, {"year": 2026, "prod": "HP", "usd": 45635.0, "krw": 67290908.0, "units": 4}, {"year": 2026, "prod": "Picoway", "usd": 276639.0, "krw": 417281818.0, "units": 3}, {"year": 2026, "prod": "Vbeam Perfecta", "usd": 519627.0, "krw": 768153365.0, "units": 7}, {"year": 2026, "prod": "Zimmer", "usd": 135025.0, "krw": 199000000.0, "units": 15}], "region_total": [{"region": "서울시", "krw": 27022548304.0, "usd": 19748588.0}, {"region": "경기도", "krw": 16704060204.0, "usd": 12171779.0}, {"region": "부산", "krw": 7123283462.0, "usd": 5225477.0}, {"region": "대구 광역시", "krw": 4492438548.0, "usd": 3329429.0}, {"region": "인천", "krw": 2722999912.0, "usd": 1974738.0}, {"region": "광주", "krw": 2645476369.0, "usd": 1943668.0}, {"region": "경상남도", "krw": 2362365638.0, "usd": 1707319.0}, {"region": "울산", "krw": 2114713729.0, "usd": 1560340.0}, {"region": "충청북도", "krw": 1898825094.0, "usd": 1396325.0}, {"region": "충청남도", "krw": 1753449546.0, "usd": 1250371.0}, {"region": "대전", "krw": 1623608729.0, "usd": 1192817.0}, {"region": "경상북도", "krw": 968228274.0, "usd": 704973.0}, {"region": "전라북도", "krw": 910637545.0, "usd": 660605.0}, {"region": "강원도", "krw": 826789546.0, "usd": 591883.0}, {"region": "전라남도", "krw": 584508274.0, "usd": 416826.0}, {"region": "세종", "krw": 430341091.0, "usd": 314498.0}, {"region": "제주도", "krw": 128061182.0, "usd": 92781.0}], "region_detail": {"강원도": [{"sub": "춘천시", "krw": 431383546.0, "usd": 308587.0}, {"sub": "원주시", "krw": 395406000.0, "usd": 283296.0}], "경기도": [{"sub": "수원시", "krw": 3140978819.0, "usd": 2305040.0}, {"sub": "성남시", "krw": 2782434822.0, "usd": 2004199.0}, {"sub": "평택시", "krw": 1309707910.0, "usd": 916823.0}, {"sub": "고양시", "krw": 1258482274.0, "usd": 915502.0}, {"sub": "화성시", "krw": 1167091728.0, "usd": 871698.0}, {"sub": "안양시", "krw": 1078497638.0, "usd": 781353.0}, {"sub": "용인시", "krw": 913407369.0, "usd": 680261.0}, {"sub": "남양주시", "krw": 694499183.0, "usd": 511779.0}, {"sub": "광명시", "krw": 483889092.0, "usd": 363553.0}, {"sub": "안산시", "krw": 479780182.0, "usd": 341709.0}, {"sub": "의정부시", "krw": 432016546.0, "usd": 307332.0}, {"sub": "하남시", "krw": 406399182.0, "usd": 305079.0}, {"sub": "경기도", "krw": 393621819.0, "usd": 293219.0}, {"sub": "부천시", "krw": 273639182.0, "usd": 202098.0}, {"sub": "시흥시", "krw": 264186182.0, "usd": 195479.0}, {"sub": "구리시", "krw": 237124818.0, "usd": 175660.0}, {"sub": "과천시", "krw": 232631637.0, "usd": 178567.0}, {"sub": "남양주", "krw": 162188455.0, "usd": 118148.0}, {"sub": "김포시", "krw": 151766909.0, "usd": 103148.0}, {"sub": "안성시", "krw": 150021455.0, "usd": 100322.0}, {"sub": "양주시", "krw": 149388455.0, "usd": 105234.0}, {"sub": "군포시", "krw": 149358455.0, "usd": 112215.0}, {"sub": "파주시", "krw": 149358455.0, "usd": 112215.0}, {"sub": "광주시", "krw": 140694182.0, "usd": 102058.0}, {"sub": "굉명시", "krw": 102895455.0, "usd": 69088.0}], "경상남도": [{"sub": "창원시", "krw": 1203096091.0, "usd": 870784.0}, {"sub": "진주시", "krw": 623196910.0, "usd": 454480.0}, {"sub": "김해시", "krw": 290623818.0, "usd": 207820.0}, {"sub": "통영시", "krw": 107545455.0, "usd": 73212.0}, {"sub": "양산시", "krw": 84057909.0, "usd": 60519.0}, {"sub": "진해구", "krw": 53845455.0, "usd": 40504.0}], "경상북도": [{"sub": "김천시", "krw": 306692364.0, "usd": 233172.0}, {"sub": "구미시", "krw": 261933818.0, "usd": 176658.0}, {"sub": "포항시", "krw": 237413637.0, "usd": 178372.0}, {"sub": "경산시", "krw": 162188455.0, "usd": 116771.0}], "광주": [{"sub": "서구", "krw": 1236629366.0, "usd": 903863.0}, {"sub": "남구", "krw": 455413456.0, "usd": 345732.0}, {"sub": "광산구", "krw": 453452819.0, "usd": 321906.0}, {"sub": "북구", "krw": 262922091.0, "usd": 198722.0}, {"sub": "광주시", "krw": 128796182.0, "usd": 98669.0}], "대구 광역시": [{"sub": "수성구", "krw": 1698276547.0, "usd": 1268299.0}, {"sub": "중구", "krw": 1239477002.0, "usd": 911431.0}, {"sub": "달서구", "krw": 788039545.0, "usd": 583505.0}, {"sub": "동구", "krw": 277019636.0, "usd": 204257.0}, {"sub": "북구", "krw": 249941909.0, "usd": 185711.0}, {"sub": "대구시", "krw": 239683909.0, "usd": 176227.0}], "대전": [{"sub": "서구", "krw": 915892546.0, "usd": 670629.0}, {"sub": "유성구", "krw": 707716183.0, "usd": 522188.0}], "부산": [{"sub": "부산광역시", "krw": 1558113457.0, "usd": 1138505.0}, {"sub": "부산진구", "krw": 1194667183.0, "usd": 876330.0}, {"sub": "진구", "krw": 922908728.0, "usd": 669053.0}, {"sub": "부산시", "krw": 783305363.0, "usd": 593243.0}, {"sub": "해운대구", "krw": 765760364.0, "usd": 575017.0}, {"sub": "부산", "krw": 366014637.0, "usd": 266489.0}, {"sub": "동래구", "krw": 227232728.0, "usd": 163601.0}, {"sub": "수영구", "krw": 163336364.0, "usd": 123066.0}, {"sub": "중동", "krw": 159112364.0, "usd": 105483.0}, {"sub": "부산시 연제구", "krw": 140267545.0, "usd": 105385.0}, {"sub": "북구", "krw": 128694182.0, "usd": 89109.0}, {"sub": "중구", "krw": 128694182.0, "usd": 87181.0}, {"sub": "부산시 해운대구", "krw": 128061182.0, "usd": 96214.0}, {"sub": "서구", "krw": 120500000.0, "usd": 92998.0}, {"sub": "연제구", "krw": 109352455.0, "usd": 82158.0}, {"sub": "남구", "krw": 104535455.0, "usd": 80281.0}], "서울시": [{"sub": "강남구", "krw": 8666888004.0, "usd": 6330191.0}, {"sub": "서초구", "krw": 4144168915.0, "usd": 3051657.0}, {"sub": "마포구", "krw": 1885530000.0, "usd": 1364069.0}, {"sub": "강서구", "krw": 1619946729.0, "usd": 1183042.0}, {"sub": "중구", "krw": 1570966461.0, "usd": 1157414.0}, {"sub": "영등포구", "krw": 1505974999.0, "usd": 1079754.0}, {"sub": "송파구", "krw": 1225169731.0, "usd": 867076.0}, {"sub": "용산구", "krw": 965253094.0, "usd": 721854.0}, {"sub": "강동구", "krw": 963315820.0, "usd": 692331.0}, {"sub": "서대문구", "krw": 629174819.0, "usd": 465341.0}, {"sub": "동대문구", "krw": 609724364.0, "usd": 444912.0}, {"sub": "광진구", "krw": 556000909.0, "usd": 396051.0}, {"sub": "성동구", "krw": 523469001.0, "usd": 402451.0}, {"sub": "노원구", "krw": 507332364.0, "usd": 373052.0}, {"sub": "은평구", "krw": 403900728.0, "usd": 310199.0}, {"sub": "강북구", "krw": 299755364.0, "usd": 216406.0}, {"sub": "성북구", "krw": 258283910.0, "usd": 182968.0}, {"sub": "동작구", "krw": 226532455.0, "usd": 171365.0}, {"sub": "양천구", "krw": 212307910.0, "usd": 155275.0}, {"sub": "구로구", "krw": 128031182.0, "usd": 96192.0}, {"sub": "종로구", "krw": 120821545.0, "usd": 86988.0}], "세종": [{"sub": "세종시", "krw": 430341091.0, "usd": 314498.0}], "울산": [{"sub": "남구", "krw": 1548090457.0, "usd": 1150402.0}, {"sub": "동구", "krw": 280500909.0, "usd": 205118.0}, {"sub": "중구", "krw": 146243000.0, "usd": 99394.0}, {"sub": "북구", "krw": 123515727.0, "usd": 92799.0}, {"sub": "울주군", "krw": 16363636.0, "usd": 12627.0}], "인천": [{"sub": "서구", "krw": 794119456.0, "usd": 567208.0}, {"sub": "부평구", "krw": 595269364.0, "usd": 425771.0}, {"sub": "연수구", "krw": 401035364.0, "usd": 294086.0}, {"sub": "인천광역시 부평", "krw": 309839819.0, "usd": 232787.0}, {"sub": "남동구", "krw": 256725364.0, "usd": 183533.0}, {"sub": "인천시 서구", "krw": 132606636.0, "usd": 95158.0}, {"sub": "인천시 연수구", "krw": 128031182.0, "usd": 96192.0}, {"sub": "인천광역시 남동구", "krw": 105372727.0, "usd": 80003.0}], "전라남도": [{"sub": "여수시", "krw": 302249637.0, "usd": 213700.0}, {"sub": "광양시", "krw": 154095455.0, "usd": 106835.0}, {"sub": "순천시", "krw": 128163182.0, "usd": 96291.0}], "전라북도": [{"sub": "전주시", "krw": 532040636.0, "usd": 389147.0}, {"sub": "완주군", "krw": 128061182.0, "usd": 93012.0}, {"sub": "전북 군산", "krw": 128031182.0, "usd": 96192.0}], "제주도": [{"sub": "제주", "krw": 128061182.0, "usd": 92781.0}], "충청남도": [{"sub": "천안시", "krw": 1072533817.0, "usd": 770018.0}, {"sub": "서산시", "krw": 386345092.0, "usd": 272933.0}, {"sub": "아산시", "krw": 294570637.0, "usd": 207420.0}], "충청북도": [{"sub": "청주시", "krw": 1358077457.0, "usd": 1009181.0}, {"sub": "충주시", "krw": 287908546.0, "usd": 205282.0}, {"sub": "충북 청주", "krw": 252839091.0, "usd": 181862.0}]}, "nv_data": {"by_cat": [{"type": "Existing Business", "product": "Gentle Series", "count": 85}, {"type": "Existing Business", "product": "Others", "count": 61}, {"type": "Existing Business", "product": "PicoWay", "count": 26}, {"type": "Existing Business", "product": "VBP", "count": 32}, {"type": "New Business", "product": "Gentle Series", "count": 278}, {"type": "New Business", "product": "Others", "count": 49}, {"type": "New Business", "product": "PicoWay", "count": 19}, {"type": "New Business", "product": "VBP", "count": 101}], "by_year_cat": [{"year": 2023, "type": "Existing Business", "product": "Gentle Series", "count": 20}, {"year": 2023, "type": "Existing Business", "product": "Others", "count": 13}, {"year": 2023, "type": "Existing Business", "product": "PicoWay", "count": 9}, {"year": 2023, "type": "Existing Business", "product": "VBP", "count": 18}, {"year": 2023, "type": "New Business", "product": "Gentle Series", "count": 37}, {"year": 2023, "type": "New Business", "product": "Others", "count": 4}, {"year": 2023, "type": "New Business", "product": "PicoWay", "count": 8}, {"year": 2023, "type": "New Business", "product": "VBP", "count": 35}, {"year": 2024, "type": "Existing Business", "product": "Gentle Series", "count": 27}, {"year": 2024, "type": "Existing Business", "product": "Others", "count": 12}, {"year": 2024, "type": "Existing Business", "product": "PicoWay", "count": 7}, {"year": 2024, "type": "Existing Business", "product": "VBP", "count": 4}, {"year": 2024, "type": "New Business", "product": "Gentle Series", "count": 80}, {"year": 2024, "type": "New Business", "product": "Others", "count": 7}, {"year": 2024, "type": "New Business", "product": "PicoWay", "count": 6}, {"year": 2024, "type": "New Business", "product": "VBP", "count": 33}, {"year": 2025, "type": "Existing Business", "product": "Gentle Series", "count": 25}, {"year": 2025, "type": "Existing Business", "product": "Others", "count": 27}, {"year": 2025, "type": "Existing Business", "product": "PicoWay", "count": 7}, {"year": 2025, "type": "Existing Business", "product": "VBP", "count": 8}, {"year": 2025, "type": "New Business", "product": "Gentle Series", "count": 122}, {"year": 2025, "type": "New Business", "product": "Others", "count": 28}, {"year": 2025, "type": "New Business", "product": "PicoWay", "count": 5}, {"year": 2025, "type": "New Business", "product": "VBP", "count": 28}, {"year": 2026, "type": "Existing Business", "product": "Gentle Series", "count": 13}, {"year": 2026, "type": "Existing Business", "product": "Others", "count": 9}, {"year": 2026, "type": "Existing Business", "product": "PicoWay", "count": 3}, {"year": 2026, "type": "Existing Business", "product": "VBP", "count": 2}, {"year": 2026, "type": "New Business", "product": "Gentle Series", "count": 39}, {"year": 2026, "type": "New Business", "product": "Others", "count": 10}, {"year": 2026, "type": "New Business", "product": "VBP", "count": 5}], "by_q_cat": [{"q": "23Q1", "type": "Existing Business", "product": "Gentle Series", "count": 7}, {"q": "23Q1", "type": "Existing Business", "product": "Others", "count": 4}, {"q": "23Q1", "type": "Existing Business", "product": "PicoWay", "count": 2}, {"q": "23Q1", "type": "Existing Business", "product": "VBP", "count": 2}, {"q": "23Q1", "type": "New Business", "product": "Gentle Series", "count": 4}, {"q": "23Q1", "type": "New Business", "product": "PicoWay", "count": 3}, {"q": "23Q1", "type": "New Business", "product": "VBP", "count": 6}, {"q": "23Q2", "type": "Existing Business", "product": "Gentle Series", "count": 2}, {"q": "23Q2", "type": "Existing Business", "product": "Others", "count": 3}, {"q": "23Q2", "type": "Existing Business", "product": "PicoWay", "count": 6}, {"q": "23Q2", "type": "Existing Business", "product": "VBP", "count": 5}, {"q": "23Q2", "type": "New Business", "product": "Gentle Series", "count": 10}, {"q": "23Q2", "type": "New Business", "product": "Others", "count": 3}, {"q": "23Q2", "type": "New Business", "product": "PicoWay", "count": 2}, {"q": "23Q2", "type": "New Business", "product": "VBP", "count": 9}, {"q": "23Q3", "type": "Existing Business", "product": "Gentle Series", "count": 5}, {"q": "23Q3", "type": "Existing Business", "product": "Others", "count": 2}, {"q": "23Q3", "type": "Existing Business", "product": "VBP", "count": 5}, {"q": "23Q3", "type": "New Business", "product": "Gentle Series", "count": 15}, {"q": "23Q3", "type": "New Business", "product": "VBP", "count": 9}, {"q": "23Q4", "type": "Existing Business", "product": "Gentle Series", "count": 6}, {"q": "23Q4", "type": "Existing Business", "product": "Others", "count": 4}, {"q": "23Q4", "type": "Existing Business", "product": "PicoWay", "count": 1}, {"q": "23Q4", "type": "Existing Business", "product": "VBP", "count": 6}, {"q": "23Q4", "type": "New Business", "product": "Gentle Series", "count": 8}, {"q": "23Q4", "type": "New Business", "product": "Others", "count": 1}, {"q": "23Q4", "type": "New Business", "product": "PicoWay", "count": 3}, {"q": "23Q4", "type": "New Business", "product": "VBP", "count": 11}, {"q": "24Q1", "type": "Existing Business", "product": "Gentle Series", "count": 5}, {"q": "24Q1", "type": "Existing Business", "product": "Others", "count": 2}, {"q": "24Q1", "type": "Existing Business", "product": "PicoWay", "count": 2}, {"q": "24Q1", "type": "Existing Business", "product": "VBP", "count": 2}, {"q": "24Q1", "type": "New Business", "product": "Gentle Series", "count": 10}, {"q": "24Q1", "type": "New Business", "product": "Others", "count": 1}, {"q": "24Q1", "type": "New Business", "product": "PicoWay", "count": 2}, {"q": "24Q1", "type": "New Business", "product": "VBP", "count": 9}, {"q": "24Q2", "type": "Existing Business", "product": "Gentle Series", "count": 10}, {"q": "24Q2", "type": "Existing Business", "product": "Others", "count": 4}, {"q": "24Q2", "type": "Existing Business", "product": "PicoWay", "count": 2}, {"q": "24Q2", "type": "Existing Business", "product": "VBP", "count": 1}, {"q": "24Q2", "type": "New Business", "product": "Gentle Series", "count": 20}, {"q": "24Q2", "type": "New Business", "product": "PicoWay", "count": 1}, {"q": "24Q2", "type": "New Business", "product": "VBP", "count": 9}, {"q": "24Q3", "type": "Existing Business", "product": "Gentle Series", "count": 6}, {"q": "24Q3", "type": "Existing Business", "product": "Others", "count": 3}, {"q": "24Q3", "type": "Existing Business", "product": "PicoWay", "count": 2}, {"q": "24Q3", "type": "New Business", "product": "Gentle Series", "count": 23}, {"q": "24Q3", "type": "New Business", "product": "Others", "count": 2}, {"q": "24Q3", "type": "New Business", "product": "PicoWay", "count": 1}, {"q": "24Q3", "type": "New Business", "product": "VBP", "count": 9}, {"q": "24Q4", "type": "Existing Business", "product": "Gentle Series", "count": 6}, {"q": "24Q4", "type": "Existing Business", "product": "Others", "count": 3}, {"q": "24Q4", "type": "Existing Business", "product": "PicoWay", "count": 1}, {"q": "24Q4", "type": "Existing Business", "product": "VBP", "count": 1}, {"q": "24Q4", "type": "New Business", "product": "Gentle Series", "count": 27}, {"q": "24Q4", "type": "New Business", "product": "Others", "count": 4}, {"q": "24Q4", "type": "New Business", "product": "PicoWay", "count": 2}, {"q": "24Q4", "type": "New Business", "product": "VBP", "count": 6}, {"q": "25Q1", "type": "Existing Business", "product": "Gentle Series", "count": 5}, {"q": "25Q1", "type": "Existing Business", "product": "Others", "count": 2}, {"q": "25Q1", "type": "Existing Business", "product": "PicoWay", "count": 3}, {"q": "25Q1", "type": "New Business", "product": "Gentle Series", "count": 32}, {"q": "25Q1", "type": "New Business", "product": "Others", "count": 7}, {"q": "25Q1", "type": "New Business", "product": "PicoWay", "count": 2}, {"q": "25Q1", "type": "New Business", "product": "VBP", "count": 7}, {"q": "25Q2", "type": "Existing Business", "product": "Gentle Series", "count": 10}, {"q": "25Q2", "type": "Existing Business", "product": "Others", "count": 10}, {"q": "25Q2", "type": "Existing Business", "product": "PicoWay", "count": 1}, {"q": "25Q2", "type": "Existing Business", "product": "VBP", "count": 2}, {"q": "25Q2", "type": "New Business", "product": "Gentle Series", "count": 29}, {"q": "25Q2", "type": "New Business", "product": "Others", "count": 6}, {"q": "25Q2", "type": "New Business", "product": "PicoWay", "count": 1}, {"q": "25Q2", "type": "New Business", "product": "VBP", "count": 5}, {"q": "25Q3", "type": "Existing Business", "product": "Gentle Series", "count": 3}, {"q": "25Q3", "type": "Existing Business", "product": "Others", "count": 12}, {"q": "25Q3", "type": "Existing Business", "product": "PicoWay", "count": 2}, {"q": "25Q3", "type": "Existing Business", "product": "VBP", "count": 3}, {"q": "25Q3", "type": "New Business", "product": "Gentle Series", "count": 32}, {"q": "25Q3", "type": "New Business", "product": "Others", "count": 9}, {"q": "25Q3", "type": "New Business", "product": "VBP", "count": 7}, {"q": "25Q4", "type": "Existing Business", "product": "Gentle Series", "count": 7}, {"q": "25Q4", "type": "Existing Business", "product": "Others", "count": 3}, {"q": "25Q4", "type": "Existing Business", "product": "PicoWay", "count": 1}, {"q": "25Q4", "type": "Existing Business", "product": "VBP", "count": 3}, {"q": "25Q4", "type": "New Business", "product": "Gentle Series", "count": 29}, {"q": "25Q4", "type": "New Business", "product": "Others", "count": 6}, {"q": "25Q4", "type": "New Business", "product": "PicoWay", "count": 2}, {"q": "25Q4", "type": "New Business", "product": "VBP", "count": 9}, {"q": "26Q1", "type": "Existing Business", "product": "Gentle Series", "count": 13}, {"q": "26Q1", "type": "Existing Business", "product": "Others", "count": 9}, {"q": "26Q1", "type": "Existing Business", "product": "PicoWay", "count": 3}, {"q": "26Q1", "type": "Existing Business", "product": "VBP", "count": 2}, {"q": "26Q1", "type": "New Business", "product": "Gentle Series", "count": 39}, {"q": "26Q1", "type": "New Business", "product": "Others", "count": 10}, {"q": "26Q1", "type": "New Business", "product": "VBP", "count": 5}], "units_by_cat": [{"type": "Existing Business", "product": "Gentle Series", "units": 85}, {"type": "Existing Business", "product": "Others", "units": 71}, {"type": "Existing Business", "product": "PicoWay", "units": 32}, {"type": "Existing Business", "product": "VBP", "units": 32}, {"type": "New Business", "product": "Gentle Series", "units": 280}, {"type": "New Business", "product": "Others", "units": 49}, {"type": "New Business", "product": "PicoWay", "units": 19}, {"type": "New Business", "product": "VBP", "units": 101}], "units_by_year": [{"year": 2023, "type": "Existing Business", "product": "Gentle Series", "units": 20}, {"year": 2023, "type": "Existing Business", "product": "Others", "units": 17}, {"year": 2023, "type": "Existing Business", "product": "PicoWay", "units": 9}, {"year": 2023, "type": "Existing Business", "product": "VBP", "units": 18}, {"year": 2023, "type": "New Business", "product": "Gentle Series", "units": 37}, {"year": 2023, "type": "New Business", "product": "Others", "units": 4}, {"year": 2023, "type": "New Business", "product": "PicoWay", "units": 8}, {"year": 2023, "type": "New Business", "product": "VBP", "units": 35}, {"year": 2024, "type": "Existing Business", "product": "Gentle Series", "units": 27}, {"year": 2024, "type": "Existing Business", "product": "Others", "units": 16}, {"year": 2024, "type": "Existing Business", "product": "PicoWay", "units": 10}, {"year": 2024, "type": "Existing Business", "product": "VBP", "units": 4}, {"year": 2024, "type": "New Business", "product": "Gentle Series", "units": 82}, {"year": 2024, "type": "New Business", "product": "Others", "units": 7}, {"year": 2024, "type": "New Business", "product": "PicoWay", "units": 6}, {"year": 2024, "type": "New Business", "product": "VBP", "units": 33}, {"year": 2025, "type": "Existing Business", "product": "Gentle Series", "units": 25}, {"year": 2025, "type": "Existing Business", "product": "Others", "units": 29}, {"year": 2025, "type": "Existing Business", "product": "PicoWay", "units": 10}, {"year": 2025, "type": "Existing Business", "product": "VBP", "units": 8}, {"year": 2025, "type": "New Business", "product": "Gentle Series", "units": 122}, {"year": 2025, "type": "New Business", "product": "Others", "units": 28}, {"year": 2025, "type": "New Business", "product": "PicoWay", "units": 5}, {"year": 2025, "type": "New Business", "product": "VBP", "units": 28}, {"year": 2026, "type": "Existing Business", "product": "Gentle Series", "units": 13}, {"year": 2026, "type": "Existing Business", "product": "Others", "units": 9}, {"year": 2026, "type": "Existing Business", "product": "PicoWay", "units": 3}, {"year": 2026, "type": "Existing Business", "product": "VBP", "units": 2}, {"year": 2026, "type": "New Business", "product": "Gentle Series", "units": 39}, {"year": 2026, "type": "New Business", "product": "Others", "units": 10}, {"year": 2026, "type": "New Business", "product": "VBP", "units": 5}]}, "sr_data": {"total": [{"sr": "Baek Seung Chul", "krw": 18725314757.0, "usd": 13608530.0}, {"sr": "Oh Sang Geol", "krw": 18392834843.0, "usd": 13399215.0}, {"sr": "LIM YONG CHUL", "krw": 12612083556.0, "usd": 9275667.0}, {"sr": "Kim Sung Hoon", "krw": 6183859097.0, "usd": 4361479.0}, {"sr": "Lee Garam", "krw": 3991025366.0, "usd": 2834285.0}], "by_year": [{"year": 2023, "sr": "Baek Seung Chul", "krw": 2711106730.0, "usd": 2066531.0}, {"year": 2023, "sr": "LIM YONG CHUL", "krw": 6452652456.0, "usd": 4927131.0}, {"year": 2023, "sr": "Oh Sang Geol", "krw": 2945985458.0, "usd": 2234279.0}, {"year": 2024, "sr": "Baek Seung Chul", "krw": 6335480381.0, "usd": 4759941.0}, {"year": 2024, "sr": "LIM YONG CHUL", "krw": 1238102275.0, "usd": 930205.0}, {"year": 2024, "sr": "Lee Garam", "krw": 815417092.0, "usd": 612635.0}, {"year": 2024, "sr": "Oh Sang Geol", "krw": 6138985650.0, "usd": 4612312.0}, {"year": 2025, "sr": "Baek Seung Chul", "krw": 6456850734.0, "usd": 4597620.0}, {"year": 2025, "sr": "Kim Sung Hoon", "krw": 4700228366.0, "usd": 3353675.0}, {"year": 2025, "sr": "LIM YONG CHUL", "krw": 3376047097.0, "usd": 2375484.0}, {"year": 2025, "sr": "Lee Garam", "krw": 2244488638.0, "usd": 1587436.0}, {"year": 2025, "sr": "Oh Sang Geol", "krw": 7408774193.0, "usd": 5269940.0}, {"year": 2026, "sr": "Baek Seung Chul", "krw": 3221876912.0, "usd": 2184438.0}, {"year": 2026, "sr": "Kim Sung Hoon", "krw": 1483630731.0, "usd": 1007804.0}, {"year": 2026, "sr": "LIM YONG CHUL", "krw": 1545281728.0, "usd": 1042846.0}, {"year": 2026, "sr": "Lee Garam", "krw": 931119636.0, "usd": 634214.0}, {"year": 2026, "sr": "Oh Sang Geol", "krw": 1899089542.0, "usd": 1282684.0}], "by_prod": [{"sr": "Baek Seung Chul", "product": "FRAX PRO", "krw": 122745455.0, "usd": 94202.0}, {"sr": "Baek Seung Chul", "product": "GLP", "krw": 82708636.0, "usd": 62140.0}, {"sr": "Baek Seung Chul", "product": "GentleMax Pro+", "krw": 12340101109.0, "usd": 8927146.0}, {"sr": "Baek Seung Chul", "product": "Gmax Pro", "krw": 256533364.0, "usd": 192123.0}, {"sr": "Baek Seung Chul", "product": "HP", "krw": 64918182.0, "usd": 47933.0}, {"sr": "Baek Seung Chul", "product": "Nordlys", "krw": 90139727.0, "usd": 66532.0}, {"sr": "Baek Seung Chul", "product": "Nordlys Mini", "krw": 47272727.0, "usd": 33758.0}, {"sr": "Baek Seung Chul", "product": "Picoway", "krw": 1736745274.0, "usd": 1261651.0}, {"sr": "Baek Seung Chul", "product": "Vbeam Perfecta", "krw": 3786650283.0, "usd": 2782151.0}, {"sr": "Baek Seung Chul", "product": "Zimmer", "krw": 197500000.0, "usd": 140894.0}, {"sr": "Kim Sung Hoon", "product": "GentleMax Pro+", "krw": 4523431365.0, "usd": 3183711.0}, {"sr": "Kim Sung Hoon", "product": "Gmax Pro", "krw": 251576909.0, "usd": 178246.0}, {"sr": "Kim Sung Hoon", "product": "Nordlys Mini", "krw": 102736364.0, "usd": 74536.0}, {"sr": "Kim Sung Hoon", "product": "Picoway", "krw": 158007909.0, "usd": 113761.0}, {"sr": "Kim Sung Hoon", "product": "Vbeam Perfecta", "krw": 1069106550.0, "usd": 756206.0}, {"sr": "Kim Sung Hoon", "product": "Zimmer", "krw": 79000000.0, "usd": 55019.0}, {"sr": "LIM YONG CHUL", "product": "FRAX PRO", "krw": 222836364.0, "usd": 169044.0}, {"sr": "LIM YONG CHUL", "product": "GLP", "krw": 293752183.0, "usd": 223917.0}, {"sr": "LIM YONG CHUL", "product": "GentleMax Pro+", "krw": 4335365366.0, "usd": 3065178.0}, {"sr": "LIM YONG CHUL", "product": "Gmax Pro", "krw": 791182909.0, "usd": 596972.0}, {"sr": "LIM YONG CHUL", "product": "HP", "krw": 60000000.0, "usd": 45602.0}, {"sr": "LIM YONG CHUL", "product": "Picoway", "krw": 3429498457.0, "usd": 2561850.0}, {"sr": "LIM YONG CHUL", "product": "Profound", "krw": 240909094.0, "usd": 178006.0}, {"sr": "LIM YONG CHUL", "product": "Vbeam Perfecta", "krw": 3108539183.0, "usd": 2341716.0}, {"sr": "LIM YONG CHUL", "product": "Zimmer", "krw": 130000000.0, "usd": 93381.0}, {"sr": "Lee Garam", "product": "GentleMax Pro+", "krw": 3513306183.0, "usd": 2500626.0}, {"sr": "Lee Garam", "product": "HP", "krw": 37281818.0, "usd": 25338.0}, {"sr": "Lee Garam", "product": "Vbeam Perfecta", "krw": 323437365.0, "usd": 226004.0}, {"sr": "Lee Garam", "product": "Zimmer", "krw": 117000000.0, "usd": 82317.0}, {"sr": "Oh Sang Geol", "product": "FRAX PRO", "krw": 53645455.0, "usd": 40305.0}, {"sr": "Oh Sang Geol", "product": "GentleMax Pro+", "krw": 13483896651.0, "usd": 9781054.0}, {"sr": "Oh Sang Geol", "product": "Gmax Pro", "krw": 890091819.0, "usd": 663929.0}, {"sr": "Oh Sang Geol", "product": "HP", "krw": 51818181.0, "usd": 37529.0}, {"sr": "Oh Sang Geol", "product": "Nordlys Mini", "krw": 41818182.0, "usd": 30738.0}, {"sr": "Oh Sang Geol", "product": "Picoway", "krw": 476061274.0, "usd": 350801.0}, {"sr": "Oh Sang Geol", "product": "Vbeam Perfecta", "krw": 3154503281.0, "usd": 2321587.0}, {"sr": "Oh Sang Geol", "product": "Zimmer", "krw": 241000000.0, "usd": 173273.0}], "by_cat": [{"sr": "Baek Seung Chul", "product": "Gentle Series", "krw": 12679343109.0, "usd": 9181409.0}, {"sr": "Baek Seung Chul", "product": "Others", "krw": 522576091.0, "usd": 383320.0}, {"sr": "Baek Seung Chul", "product": "PicoWay", "krw": 1736745274.0, "usd": 1261651.0}, {"sr": "Baek Seung Chul", "product": "VBP", "krw": 3786650283.0, "usd": 2782151.0}, {"sr": "Kim Sung Hoon", "product": "Gentle Series", "krw": 4775008274.0, "usd": 3361957.0}, {"sr": "Kim Sung Hoon", "product": "Others", "krw": 181736364.0, "usd": 129555.0}, {"sr": "Kim Sung Hoon", "product": "PicoWay", "krw": 158007909.0, "usd": 113761.0}, {"sr": "Kim Sung Hoon", "product": "VBP", "krw": 1069106550.0, "usd": 756206.0}, {"sr": "LIM YONG CHUL", "product": "Gentle Series", "krw": 5420300458.0, "usd": 3886067.0}, {"sr": "LIM YONG CHUL", "product": "Others", "krw": 653745458.0, "usd": 486034.0}, {"sr": "LIM YONG CHUL", "product": "PicoWay", "krw": 3429498457.0, "usd": 2561850.0}, {"sr": "LIM YONG CHUL", "product": "VBP", "krw": 3108539183.0, "usd": 2341716.0}, {"sr": "Lee Garam", "product": "Gentle Series", "krw": 3513306183.0, "usd": 2500626.0}, {"sr": "Lee Garam", "product": "Others", "krw": 154281818.0, "usd": 107655.0}, {"sr": "Lee Garam", "product": "VBP", "krw": 323437365.0, "usd": 226004.0}, {"sr": "Oh Sang Geol", "product": "Gentle Series", "krw": 14373988470.0, "usd": 10444983.0}, {"sr": "Oh Sang Geol", "product": "Others", "krw": 388281818.0, "usd": 281844.0}, {"sr": "Oh Sang Geol", "product": "PicoWay", "krw": 476061274.0, "usd": 350801.0}, {"sr": "Oh Sang Geol", "product": "VBP", "krw": 3154503281.0, "usd": 2321587.0}], "by_year_cat": [{"year": 2023, "sr": "Baek Seung Chul", "product": "Gentle Series", "krw": 1080369457.0, "usd": 818478.0}, {"year": 2023, "sr": "Baek Seung Chul", "product": "Others", "krw": 114918182.0, "usd": 88892.0}, {"year": 2023, "sr": "Baek Seung Chul", "product": "PicoWay", "krw": 656927273.0, "usd": 504668.0}, {"year": 2023, "sr": "Baek Seung Chul", "product": "VBP", "krw": 858891818.0, "usd": 654493.0}, {"year": 2023, "sr": "LIM YONG CHUL", "product": "Gentle Series", "krw": 1713690637.0, "usd": 1299739.0}, {"year": 2023, "sr": "LIM YONG CHUL", "product": "Others", "krw": 321836364.0, "usd": 244376.0}, {"year": 2023, "sr": "LIM YONG CHUL", "product": "PicoWay", "krw": 1839281819.0, "usd": 1419910.0}, {"year": 2023, "sr": "LIM YONG CHUL", "product": "VBP", "krw": 2577843636.0, "usd": 1963105.0}, {"year": 2023, "sr": "Oh Sang Geol", "product": "Gentle Series", "krw": 2270953639.0, "usd": 1719731.0}, {"year": 2023, "sr": "Oh Sang Geol", "product": "Others", "krw": 23900000.0, "usd": 18798.0}, {"year": 2023, "sr": "Oh Sang Geol", "product": "VBP", "krw": 651131819.0, "usd": 495750.0}, {"year": 2024, "sr": "Baek Seung Chul", "product": "Gentle Series", "krw": 4568309101.0, "usd": 3432239.0}, {"year": 2024, "sr": "Baek Seung Chul", "product": "Others", "krw": 123145455.0, "usd": 92521.0}, {"year": 2024, "sr": "Baek Seung Chul", "product": "PicoWay", "krw": 139462455.0, "usd": 104780.0}, {"year": 2024, "sr": "Baek Seung Chul", "product": "VBP", "krw": 1504563370.0, "usd": 1130401.0}, {"year": 2024, "sr": "LIM YONG CHUL", "product": "Gentle Series", "krw": 244231454.0, "usd": 183495.0}, {"year": 2024, "sr": "LIM YONG CHUL", "product": "Others", "krw": 145454548.0, "usd": 109282.0}, {"year": 2024, "sr": "LIM YONG CHUL", "product": "PicoWay", "krw": 637111091.0, "usd": 478671.0}, {"year": 2024, "sr": "LIM YONG CHUL", "product": "VBP", "krw": 211305182.0, "usd": 158757.0}, {"year": 2024, "sr": "Lee Garam", "product": "Gentle Series", "krw": 815417092.0, "usd": 612635.0}, {"year": 2024, "sr": "Oh Sang Geol", "product": "Gentle Series", "krw": 4518527463.0, "usd": 3394837.0}, {"year": 2024, "sr": "Oh Sang Geol", "product": "Others", "krw": 139554546.0, "usd": 104849.0}, {"year": 2024, "sr": "Oh Sang Geol", "product": "PicoWay", "krw": 183136364.0, "usd": 137593.0}, {"year": 2024, "sr": "Oh Sang Geol", "product": "VBP", "krw": 1297767277.0, "usd": 975032.0}, {"year": 2025, "sr": "Baek Seung Chul", "product": "Gentle Series", "krw": 4391813729.0, "usd": 3140180.0}, {"year": 2025, "sr": "Baek Seung Chul", "product": "Others", "krw": 198412454.0, "usd": 143650.0}, {"year": 2025, "sr": "Baek Seung Chul", "product": "PicoWay", "krw": 795351001.0, "usd": 556072.0}, {"year": 2025, "sr": "Baek Seung Chul", "product": "VBP", "krw": 1071273550.0, "usd": 757718.0}, {"year": 2025, "sr": "Kim Sung Hoon", "product": "Gentle Series", "krw": 3542818453.0, "usd": 2524499.0}, {"year": 2025, "sr": "Kim Sung Hoon", "product": "Others", "krw": 140736364.0, "usd": 101755.0}, {"year": 2025, "sr": "Kim Sung Hoon", "product": "PicoWay", "krw": 158007909.0, "usd": 113761.0}, {"year": 2025, "sr": "Kim Sung Hoon", "product": "VBP", "krw": 858665640.0, "usd": 613661.0}, {"year": 2025, "sr": "LIM YONG CHUL", "product": "Gentle Series", "krw": 2318269367.0, "usd": 1626877.0}, {"year": 2025, "sr": "LIM YONG CHUL", "product": "Others", "krw": 160454546.0, "usd": 114448.0}, {"year": 2025, "sr": "LIM YONG CHUL", "product": "PicoWay", "krw": 680828274.0, "usd": 482761.0}, {"year": 2025, "sr": "LIM YONG CHUL", "product": "VBP", "krw": 216494910.0, "usd": 151399.0}, {"year": 2025, "sr": "Lee Garam", "product": "Gentle Series", "krw": 1830051273.0, "usd": 1296740.0}, {"year": 2025, "sr": "Lee Garam", "product": "Others", "krw": 91000000.0, "usd": 64692.0}, {"year": 2025, "sr": "Lee Garam", "product": "VBP", "krw": 323437365.0, "usd": 226004.0}, {"year": 2025, "sr": "Oh Sang Geol", "product": "Gentle Series", "krw": 5838222371.0, "usd": 4150531.0}, {"year": 2025, "sr": "Oh Sang Geol", "product": "Others", "krw": 174918182.0, "usd": 124485.0}, {"year": 2025, "sr": "Oh Sang Geol", "product": "PicoWay", "krw": 292924910.0, "usd": 213208.0}, {"year": 2025, "sr": "Oh Sang Geol", "product": "VBP", "krw": 1102708730.0, "usd": 781716.0}, {"year": 2026, "sr": "Baek Seung Chul", "product": "Gentle Series", "krw": 2638850822.0, "usd": 1790511.0}, {"year": 2026, "sr": "Baek Seung Chul", "product": "Others", "krw": 86100000.0, "usd": 58256.0}, {"year": 2026, "sr": "Baek Seung Chul", "product": "PicoWay", "krw": 145004545.0, "usd": 96131.0}, {"year": 2026, "sr": "Baek Seung Chul", "product": "VBP", "krw": 351921545.0, "usd": 239539.0}, {"year": 2026, "sr": "Kim Sung Hoon", "product": "Gentle Series", "krw": 1232189821.0, "usd": 837458.0}, {"year": 2026, "sr": "Kim Sung Hoon", "product": "Others", "krw": 41000000.0, "usd": 27801.0}, {"year": 2026, "sr": "Kim Sung Hoon", "product": "VBP", "krw": 210440910.0, "usd": 142545.0}, {"year": 2026, "sr": "LIM YONG CHUL", "product": "Gentle Series", "krw": 1144109000.0, "usd": 775956.0}, {"year": 2026, "sr": "LIM YONG CHUL", "product": "Others", "krw": 26000000.0, "usd": 17928.0}, {"year": 2026, "sr": "LIM YONG CHUL", "product": "PicoWay", "krw": 272277273.0, "usd": 180507.0}, {"year": 2026, "sr": "LIM YONG CHUL", "product": "VBP", "krw": 102895455.0, "usd": 68455.0}, {"year": 2026, "sr": "Lee Garam", "product": "Gentle Series", "krw": 867837818.0, "usd": 591250.0}, {"year": 2026, "sr": "Lee Garam", "product": "Others", "krw": 63281818.0, "usd": 42964.0}, {"year": 2026, "sr": "Oh Sang Geol", "product": "Gentle Series", "krw": 1746284997.0, "usd": 1179884.0}, {"year": 2026, "sr": "Oh Sang Geol", "product": "Others", "krw": 49909090.0, "usd": 33712.0}, {"year": 2026, "sr": "Oh Sang Geol", "product": "VBP", "krw": 102895455.0, "usd": 69088.0}], "by_year_prod": [{"year": 2023, "sr": "Baek Seung Chul", "product": "Gentle Series", "krw": 1080369457.0, "usd": 818478.0}, {"year": 2023, "sr": "Baek Seung Chul", "product": "Others", "krw": 114918182.0, "usd": 88892.0}, {"year": 2023, "sr": "Baek Seung Chul", "product": "PicoWay", "krw": 656927273.0, "usd": 504668.0}, {"year": 2023, "sr": "Baek Seung Chul", "product": "VBP", "krw": 858891818.0, "usd": 654493.0}, {"year": 2023, "sr": "LIM YONG CHUL", "product": "Gentle Series", "krw": 1713690637.0, "usd": 1299739.0}, {"year": 2023, "sr": "LIM YONG CHUL", "product": "Others", "krw": 321836364.0, "usd": 244376.0}, {"year": 2023, "sr": "LIM YONG CHUL", "product": "PicoWay", "krw": 1839281819.0, "usd": 1419910.0}, {"year": 2023, "sr": "LIM YONG CHUL", "product": "VBP", "krw": 2577843636.0, "usd": 1963105.0}, {"year": 2023, "sr": "Oh Sang Geol", "product": "Gentle Series", "krw": 2270953639.0, "usd": 1719731.0}, {"year": 2023, "sr": "Oh Sang Geol", "product": "Others", "krw": 23900000.0, "usd": 18798.0}, {"year": 2023, "sr": "Oh Sang Geol", "product": "VBP", "krw": 651131819.0, "usd": 495750.0}, {"year": 2024, "sr": "Baek Seung Chul", "product": "Gentle Series", "krw": 4568309101.0, "usd": 3432239.0}, {"year": 2024, "sr": "Baek Seung Chul", "product": "Others", "krw": 123145455.0, "usd": 92521.0}, {"year": 2024, "sr": "Baek Seung Chul", "product": "PicoWay", "krw": 139462455.0, "usd": 104780.0}, {"year": 2024, "sr": "Baek Seung Chul", "product": "VBP", "krw": 1504563370.0, "usd": 1130401.0}, {"year": 2024, "sr": "LIM YONG CHUL", "product": "Gentle Series", "krw": 244231454.0, "usd": 183495.0}, {"year": 2024, "sr": "LIM YONG CHUL", "product": "Others", "krw": 145454548.0, "usd": 109282.0}, {"year": 2024, "sr": "LIM YONG CHUL", "product": "PicoWay", "krw": 637111091.0, "usd": 478671.0}, {"year": 2024, "sr": "LIM YONG CHUL", "product": "VBP", "krw": 211305182.0, "usd": 158757.0}, {"year": 2024, "sr": "Lee Garam", "product": "Gentle Series", "krw": 815417092.0, "usd": 612635.0}, {"year": 2024, "sr": "Oh Sang Geol", "product": "Gentle Series", "krw": 4518527463.0, "usd": 3394837.0}, {"year": 2024, "sr": "Oh Sang Geol", "product": "Others", "krw": 139554546.0, "usd": 104849.0}, {"year": 2024, "sr": "Oh Sang Geol", "product": "PicoWay", "krw": 183136364.0, "usd": 137593.0}, {"year": 2024, "sr": "Oh Sang Geol", "product": "VBP", "krw": 1297767277.0, "usd": 975032.0}, {"year": 2025, "sr": "Baek Seung Chul", "product": "Gentle Series", "krw": 4391813729.0, "usd": 3140180.0}, {"year": 2025, "sr": "Baek Seung Chul", "product": "Others", "krw": 198412454.0, "usd": 143650.0}, {"year": 2025, "sr": "Baek Seung Chul", "product": "PicoWay", "krw": 795351001.0, "usd": 556072.0}, {"year": 2025, "sr": "Baek Seung Chul", "product": "VBP", "krw": 1071273550.0, "usd": 757718.0}, {"year": 2025, "sr": "Kim Sung Hoon", "product": "Gentle Series", "krw": 3542818453.0, "usd": 2524499.0}, {"year": 2025, "sr": "Kim Sung Hoon", "product": "Others", "krw": 140736364.0, "usd": 101755.0}, {"year": 2025, "sr": "Kim Sung Hoon", "product": "PicoWay", "krw": 158007909.0, "usd": 113761.0}, {"year": 2025, "sr": "Kim Sung Hoon", "product": "VBP", "krw": 858665640.0, "usd": 613661.0}, {"year": 2025, "sr": "LIM YONG CHUL", "product": "Gentle Series", "krw": 2318269367.0, "usd": 1626877.0}, {"year": 2025, "sr": "LIM YONG CHUL", "product": "Others", "krw": 160454546.0, "usd": 114448.0}, {"year": 2025, "sr": "LIM YONG CHUL", "product": "PicoWay", "krw": 680828274.0, "usd": 482761.0}, {"year": 2025, "sr": "LIM YONG CHUL", "product": "VBP", "krw": 216494910.0, "usd": 151399.0}, {"year": 2025, "sr": "Lee Garam", "product": "Gentle Series", "krw": 1830051273.0, "usd": 1296740.0}, {"year": 2025, "sr": "Lee Garam", "product": "Others", "krw": 91000000.0, "usd": 64692.0}, {"year": 2025, "sr": "Lee Garam", "product": "VBP", "krw": 323437365.0, "usd": 226004.0}, {"year": 2025, "sr": "Oh Sang Geol", "product": "Gentle Series", "krw": 5838222371.0, "usd": 4150531.0}, {"year": 2025, "sr": "Oh Sang Geol", "product": "Others", "krw": 174918182.0, "usd": 124485.0}, {"year": 2025, "sr": "Oh Sang Geol", "product": "PicoWay", "krw": 292924910.0, "usd": 213208.0}, {"year": 2025, "sr": "Oh Sang Geol", "product": "VBP", "krw": 1102708730.0, "usd": 781716.0}, {"year": 2026, "sr": "Baek Seung Chul", "product": "Gentle Series", "krw": 2638850822.0, "usd": 1790511.0}, {"year": 2026, "sr": "Baek Seung Chul", "product": "Others", "krw": 86100000.0, "usd": 58256.0}, {"year": 2026, "sr": "Baek Seung Chul", "product": "PicoWay", "krw": 145004545.0, "usd": 96131.0}, {"year": 2026, "sr": "Baek Seung Chul", "product": "VBP", "krw": 351921545.0, "usd": 239539.0}, {"year": 2026, "sr": "Kim Sung Hoon", "product": "Gentle Series", "krw": 1232189821.0, "usd": 837458.0}, {"year": 2026, "sr": "Kim Sung Hoon", "product": "Others", "krw": 41000000.0, "usd": 27801.0}, {"year": 2026, "sr": "Kim Sung Hoon", "product": "VBP", "krw": 210440910.0, "usd": 142545.0}, {"year": 2026, "sr": "LIM YONG CHUL", "product": "Gentle Series", "krw": 1144109000.0, "usd": 775956.0}, {"year": 2026, "sr": "LIM YONG CHUL", "product": "Others", "krw": 26000000.0, "usd": 17928.0}, {"year": 2026, "sr": "LIM YONG CHUL", "product": "PicoWay", "krw": 272277273.0, "usd": 180507.0}, {"year": 2026, "sr": "LIM YONG CHUL", "product": "VBP", "krw": 102895455.0, "usd": 68455.0}, {"year": 2026, "sr": "Lee Garam", "product": "Gentle Series", "krw": 867837818.0, "usd": 591250.0}, {"year": 2026, "sr": "Lee Garam", "product": "Others", "krw": 63281818.0, "usd": 42964.0}, {"year": 2026, "sr": "Oh Sang Geol", "product": "Gentle Series", "krw": 1746284997.0, "usd": 1179884.0}, {"year": 2026, "sr": "Oh Sang Geol", "product": "Others", "krw": 49909090.0, "usd": 33712.0}, {"year": 2026, "sr": "Oh Sang Geol", "product": "VBP", "krw": 102895455.0, "usd": 69088.0}]}};
 
 /* ════════════════════════════════════════
    PASSWORD
    ════════════════════════════════════════ */
 const PW_HASH = btoa('candela2026'); // base64 of password
+// datalabels 플러그인 등록 (있을 때만)
+if(typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
 function tryUnlock(){
   const v = document.getElementById('pw-input').value;
   if(btoa(v) === PW_HASH){
@@ -491,58 +431,23 @@ function fmtB(v){ return currency==='KRW'?fmtKRW_large(v):'$'+(v/1e8).toFixed(1)
 function curLabel(){ return currency==='KRW'?'Shipped Local':'Shipped USD'; }
 function tickCur(v){ return currency==='KRW'?tickKRW(v):tickY(v); }
 
-/* ── 도넛/파이 상시 라벨 플러그인 ─────────────────────── */
-function donutLabelPlugin(fmtFn){
+// 공통 도넛 옵션 — datalabels 상시 표시
+function mkDonutOpts(){
+  const hasDL = typeof ChartDataLabels !== 'undefined';
   return {
-    id:'donutAlwaysLabel',
-    afterDraw(chart){
-      try{
-        const {ctx,chartArea,data}=chart;
-        const ds=data.datasets[0];
-        if(!ds)return;
-        const total=ds.data.reduce((a,b)=>a+(b||0),0);
-        if(!total)return;
-        const meta=chart.getDatasetMeta(0);
-        ctx.save();
-        meta.data.forEach((arc,i)=>{
-          const v=ds.data[i];
-          if(!v||v/total<0.03)return; // 3% 미만은 생략
-          const pct=(v/total*100).toFixed(1)+'%';
-          const label=data.labels[i];
-          // 중심각
-          const midAngle=(arc.startAngle+arc.endAngle)/2;
-          const outerR=arc.outerRadius;
-          const innerR=arc.innerRadius||0;
-          const midR=(outerR+innerR)/2;
-          // 지시선 시작 (호 바깥)
-          const lineR=outerR+4;
-          const tipR=outerR+16;
-          const lx1=arc.x+lineR*Math.cos(midAngle);
-          const ly1=arc.y+lineR*Math.sin(midAngle);
-          const lx2=arc.x+tipR*Math.cos(midAngle);
-          const ly2=arc.y+tipR*Math.sin(midAngle);
-          const right=midAngle<-Math.PI/2||midAngle>Math.PI/2?false:true;
-          // 수평 연장
-          const ext=right?12:-12;
-          const lx3=lx2+ext;
-          const ly3=ly2;
-          ctx.strokeStyle=ds.backgroundColor[i]||'#999';
-          ctx.lineWidth=1;
-          ctx.globalAlpha=0.7;
-          ctx.beginPath();
-          ctx.moveTo(lx1,ly1);
-          ctx.lineTo(lx2,ly2);
-          ctx.lineTo(lx3,ly3);
-          ctx.stroke();
-          ctx.globalAlpha=1;
-          ctx.font='bold 9px -apple-system,sans-serif';
-          ctx.fillStyle=ds.backgroundColor[i]||'#333';
-          ctx.textAlign=right?'left':'right';
-          ctx.textBaseline='middle';
-          ctx.fillText(`${label} ${pct}`,lx3+(right?3:-3),ly3);
-        });
-        ctx.restore();
-      }catch(e){}
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:8,color:'#9e9e98'}},
+      tooltip:{callbacks:{label:c=>`${c.label}: ${fmtSm(c.raw)} (${(c.raw/(c.dataset.data.reduce((a,b)=>a+b,0)||1)*100).toFixed(1)}%)`}},
+      datalabels: hasDL ? {
+        color:'#fff', font:{size:10,weight:'bold'},
+        formatter:(v,ctx)=>{
+          const tot=ctx.dataset.data.reduce((a,b)=>a+b,0)||1;
+          const pct=(v/tot*100);
+          return pct>=5 ? pct.toFixed(0)+'%' : '';
+        },
+        anchor:'center', align:'center',
+      } : {display:false}
     }
   };
 }
@@ -582,10 +487,6 @@ function setKPI(id, items){
    ════════════════════════════════════════ */
 function init(){
   buildFilters();
-  // 초기 탭(overview)에서 구분 필터 표시
-  document.getElementById('cat-sep').style.display='';
-  document.getElementById('cat-label').style.display='';
-  document.getElementById('cat-filter-group').style.display='';
   buildCurrentTab();
 }
 
@@ -621,11 +522,15 @@ function goTab(t){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.tab').forEach(b=>{if(b.getAttribute('onclick').includes("'"+t+"'"))b.classList.add('on');});
   document.getElementById('page-'+t).classList.add('on');
-  // Sales/Recurring 버튼은 총괄 매출 탭에서만 노출
-  const showCat = t==='overview';
-  document.getElementById('cat-sep').style.display = showCat?'':'none';
-  document.getElementById('cat-label').style.display = showCat?'':'none';
-  document.getElementById('cat-filter-group').style.display = showCat?'':'none';
+  // SALES/RECURRING 필터는 총괄 매출 탭에서만 표시
+  const catVis = t==='overview' ? '' : 'none';
+  const lbl=document.getElementById('cat-filter-label');
+  const grp=document.getElementById('cat-filter-group');
+  const sep=grp?.previousElementSibling?.previousElementSibling;
+  if(lbl) lbl.style.display=catVis;
+  if(grp) grp.style.display=catVis;
+  // filter-sep도 같이 숨기기
+  document.querySelectorAll('.filter-sep').forEach((s,i)=>{ if(i===1) s.style.display=catVis; });
   buildCurrentTab();
 }
 
@@ -637,7 +542,6 @@ function buildCurrentTab(){
     case 'region':   buildRegion();   break;
     case 'sr':       buildSR();       break;
     case 'detail':   buildDetail();   break;
-    case 'srdetail': buildSRDetail(); break;
   }
 }
 
@@ -711,7 +615,6 @@ function buildOverview(){
     },
     options:{
       responsive:true, maintainAspectRatio:false,
-      layout:{padding:{top:24}},
       interaction:{mode:'index', intersect:false},
       plugins:{
         legend:{display:false},
@@ -734,37 +637,10 @@ function buildOverview(){
           title:{display:true, text:'QoQ (%)', color:'#F59E0B', font:{size:10}},
         }
       }
-    },
-    plugins:[{
-      id:'qStackedLabel',
-      afterDatasetsDraw(chart){
-        try{
-          const {ctx,scales,data}=chart;
-          const x=scales.x, y=scales.y;
-          if(!x||!y)return;
-          // label 이름으로 안전하게 찾기
-          const salesDs=data.datasets.find(d=>d.label==='SALES');
-          const recDs=data.datasets.find(d=>d.label==='RECURRING');
-          if(!salesDs||!recDs)return;
-          salesDs.data.forEach((_,i)=>{
-            const tot=(salesDs.data[i]||0)+(recDs.data[i]||0);
-            if(!tot)return;
-            const px=x.getPixelForTick(i);
-            const py=y.getPixelForValue(tot);
-            ctx.save();
-            ctx.font='bold 8.5px -apple-system,sans-serif';
-            ctx.fillStyle='#6a6960';
-            ctx.textAlign='center';
-            ctx.textBaseline='bottom';
-            ctx.fillText(tickCur(tot),px,py-3);
-            ctx.restore();
-          });
-        }catch(e){}
-      }
-    }]
+    }
   });
 
-  // 연도별 YoY + 총액 라벨 플러그인
+  // 연도별 YoY 플러그인
   const yoyData = yrs.map((y,i)=>{
     if(i===0) return null;
     const prev=DATA.yearly_total[yrs[i-1]]?.[tk]||0;
@@ -779,24 +655,12 @@ function buildOverview(){
         if(!xS||!yS)return;
         const ctx=chart.ctx;
         const ds=chart.data.datasets;
-        const salesDs=ds.find(d=>d.label==='SALES');
-        const recDs=ds.find(d=>d.label==='RECURRING');
-        if(!salesDs||!recDs)return;
         yrs.forEach((y,i)=>{
-          const tot=(salesDs.data[i]||0)+(recDs.data[i]||0);
-          const px=xS.getPixelForTick(i);
-          const py=yS.getPixelForValue(tot);
-          // 총액 라벨
-          ctx.save();
-          ctx.font='9px -apple-system,sans-serif';
-          ctx.fillStyle='#6a6960';
-          ctx.textAlign='center';
-          ctx.textBaseline='bottom';
-          ctx.fillText(tickCur(tot), px, py-18);
-          ctx.restore();
-          // YoY % 라벨
           const v=yoyData[i];
           if(v===null||v===undefined)return;
+          const tot=(ds[0]?.data[i]||0)+(ds[1]?.data[i]||0);
+          const px=xS.getPixelForTick(i);
+          const py=yS.getPixelForValue(tot);
           const sign=v>=0?'▲':'▼';
           ctx.save();
           ctx.font='bold 9.5px -apple-system,sans-serif';
@@ -818,7 +682,7 @@ function buildOverview(){
     ]},
     options:{
       responsive:true,maintainAspectRatio:false,
-      layout:{padding:{top:36}},
+      layout:{padding:{top:22}},
       plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtSm(c.raw)}}},
       scales:{x:{stacked:true,grid:{display:false},ticks:TK},y:{stacked:true,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}}}
     },
@@ -830,8 +694,7 @@ function buildOverview(){
   charts.recDonut=new Chart(document.getElementById('c-rec-donut'),{
     type:'doughnut',
     data:{labels:['Service','Consumables'],datasets:[{data:[svcTot,consTot],backgroundColor:['#10B981','#F59E0B'],borderWidth:0,hoverOffset:4}]},
-    options:{responsive:true,maintainAspectRatio:false,layout:{padding:40},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtSm(c.raw)} (${(c.raw/(svcTot+consTot)*100).toFixed(1)}%)`}}}},
-    plugins:[donutLabelPlugin(fmtSm)]
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtSm(c.raw)} (${(c.raw/(svcTot+consTot)*100).toFixed(1)}%)`}}}}
   });
 }
 
@@ -932,18 +795,16 @@ function buildProduct(){
   ]);
 
   // ── 도넛 차트 ────────────────────────────────────────────
-  const donutOpts={responsive:true,maintainAspectRatio:false,layout:{padding:40},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtSm(c.raw)} (${(c.raw/(c.dataset.data.reduce((a,b)=>a+b,0)||1)*100).toFixed(1)}%)`}}}};
+  const donutOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtSm(c.raw)} (${(c.raw/(c.dataset.data.reduce((a,b)=>a+b,0)||1)*100).toFixed(1)}%)`}}}};
   charts.prodDonut=new Chart(document.getElementById('c-prod-donut'),{
     type:'doughnut',
     data:{labels:prods,datasets:[{data:prods.map(p=>getProdVal(p)),backgroundColor:prods.map(p=>PROD_COLORS[p]),borderWidth:0,hoverOffset:4}]},
-    options:donutOpts,
-    plugins:[donutLabelPlugin(fmtSm)]
+    options:donutOpts
   });
   charts.unitDonut=new Chart(document.getElementById('c-unit-donut'),{
     type:'doughnut',
     data:{labels:prods,datasets:[{data:prods.map(p=>getProdUnits(p)),backgroundColor:prods.map(p=>PROD_COLORS[p]),borderWidth:0,hoverOffset:4}]},
-    options:{responsive:true,maintainAspectRatio:false,layout:{padding:40},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw}대 (${(c.raw/(c.dataset.data.reduce((a,b)=>a+b,0)||1)*100).toFixed(1)}%)`}}}},
-    plugins:[donutLabelPlugin(v=>v+'대')]
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw}대 (${(c.raw/(c.dataset.data.reduce((a,b)=>a+b,0)||1)*100).toFixed(1)}%)`}}}}
   });
 
   renderProdTable();
@@ -964,31 +825,7 @@ function buildProduct(){
       borderColor:PROD_COLORS[p],pointBackgroundColor:PROD_COLORS[p],
       tension:0.35,fill:false,borderWidth:2,pointRadius:3
     }))},
-    options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:18,right:10}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtSm(c.raw)}}},scales:{x:{grid:{display:false},ticks:{...TK,maxRotation:0}},y:{grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}}}},
-    plugins:[{
-      id:'prodLineLabel',
-      afterDatasetsDraw(chart){
-        try{
-          const {ctx,scales,data}=chart; const x=scales.x,y=scales.y; if(!x||!y)return;
-          data.datasets.forEach((ds,di)=>{
-            // 마지막 포인트에만 라벨 표기
-            const lastIdx=ds.data.length-1;
-            if(lastIdx<0)return;
-            const v=ds.data[lastIdx];
-            if(!v)return;
-            const px=x.getPixelForTick(lastIdx);
-            const py=y.getPixelForValue(v);
-            ctx.save();
-            ctx.font='bold 8px -apple-system,sans-serif';
-            ctx.fillStyle=ds.borderColor||'#333';
-            ctx.textAlign='left';
-            ctx.textBaseline='middle';
-            ctx.fillText(ds.label,px+6,py);
-            ctx.restore();
-          });
-        }catch(e){}
-      }
-    }]
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtSm(c.raw)}}},scales:{x:{grid:{display:false},ticks:{...TK,maxRotation:0}},y:{grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}}}}
   });
 
   // ── GMPP 점유율 ──────────────────────────────────────────
@@ -1000,28 +837,7 @@ function buildProduct(){
   charts.gmppShare=new Chart(document.getElementById('c-gmpp-share'),{
     type:'line',
     data:{labels:qKeys.map(qLabel),datasets:[{label:'GMPP 점유율',data:gmppShare,borderColor:'#3B82F6',backgroundColor:'rgba(59,130,246,0.08)',pointBackgroundColor:'#3B82F6',pointRadius:4,fill:true,tension:0.35,borderWidth:2}]},
-    options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:16}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' Gentle: '+c.raw+'%'}}},scales:{x:{grid:{display:false},ticks:{...TK,maxRotation:0}},y:{min:0,max:100,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:v=>v+'%'}}}},
-    plugins:[{
-      id:'gmppLabel',
-      afterDatasetsDraw(chart){
-        try{
-          const {ctx,scales,data}=chart; const x=scales.x,y=scales.y; if(!x||!y)return;
-          const ds=data.datasets[0];
-          ds.data.forEach((v,i)=>{
-            if(v===null||v===undefined)return;
-            const px=x.getPixelForTick(i);
-            const py=y.getPixelForValue(v);
-            ctx.save();
-            ctx.font='bold 8.5px -apple-system,sans-serif';
-            ctx.fillStyle='#3B82F6';
-            ctx.textAlign='center';
-            ctx.textBaseline='bottom';
-            ctx.fillText(v+'%',px,py-5);
-            ctx.restore();
-          });
-        }catch(e){}
-      }
-    }]
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' Gentle: '+c.raw+'%'}}},scales:{x:{grid:{display:false},ticks:{...TK,maxRotation:0}},y:{min:0,max:100,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:v=>v+'%'}}}}
   });
 }
 
@@ -1057,34 +873,9 @@ function buildRegion(){
       backgroundColor:col4[i],borderRadius:3
     }))},
     options:{responsive:true,maintainAspectRatio:false,
-      layout:{padding:{top:20,right:10}},
       plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:10,color:'#9e9e98'}},
         tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtSm(c.raw)}}},
-      scales:{x:{grid:{display:false},ticks:TK},y:{grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}}}},
-    plugins:[{
-      id:'regYrLabel',
-      afterDatasetsDraw(chart){
-        try{
-          const {ctx,scales,data}=chart; const x=scales.x,y=scales.y; if(!x||!y)return;
-          data.datasets.forEach(ds=>{
-            // 최대값 데이터셋만 라벨 표기 (혼잡 방지 — 1위 지역만)
-            if(ds.label!==top4Reg[0])return;
-            ds.data.forEach((v,i)=>{
-              if(!v)return;
-              const px=x.getPixelForTick(i);
-              const py=y.getPixelForValue(v);
-              ctx.save();
-              ctx.font='bold 8px -apple-system,sans-serif';
-              ctx.fillStyle=col4[0];
-              ctx.textAlign='center';
-              ctx.textBaseline='bottom';
-              ctx.fillText(tickCur(v),px,py-3);
-              ctx.restore();
-            });
-          });
-        }catch(e){}
-      }
-    }]
+      scales:{x:{grid:{display:false},ticks:TK},y:{grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}}}}
   });
 }
 
@@ -1112,15 +903,7 @@ function renderRegionBar(drillRegion){
   const wrapper = document.getElementById('c-reg-bar')?.parentElement;
   if(wrapper) wrapper.style.height = canvasH+'px';
 
-  // canvas 교체로 destroy 후 잔여 콜백 오류 원천 차단
   if(charts.regBar){ charts.regBar.destroy(); delete charts.regBar; }
-  const regWrapper = document.getElementById('c-reg-bar')?.parentElement;
-  if(regWrapper){
-    const oldCanvas = document.getElementById('c-reg-bar');
-    const newCanvas = document.createElement('canvas');
-    newCanvas.id = 'c-reg-bar';
-    oldCanvas.replaceWith(newCanvas);
-  }
   charts.regBar=new Chart(document.getElementById('c-reg-bar'),{
     type:'bar',
     data:{
@@ -1133,7 +916,6 @@ function renderRegionBar(drillRegion){
     },
     options:{
       indexAxis:'y', responsive:true, maintainAspectRatio:false,
-      layout:{padding:{right:80}},
       onClick(evt,els){
         if(!drillRegion && els.length){
           const region=items[els[0].index].name;
@@ -1151,30 +933,7 @@ function renderRegionBar(drillRegion){
         x:{grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}},
         y:{grid:{display:false},ticks:{...TK,font:{size:11}}}
       }
-    },
-    plugins:[{
-      id:'regBarLabel',
-      afterDatasetsDraw(chart){
-        try{
-          const {ctx,scales,data}=chart;
-          const x=scales.x, y=scales.y;
-          if(!x||!y||!data.datasets[0])return;
-          data.datasets[0].data.forEach((v,i)=>{
-            if(!v)return;
-            const px=x.getPixelForValue(v);
-            const py=y.getPixelForTick(i);
-            if(isNaN(px)||isNaN(py))return;
-            ctx.save();
-            ctx.font='bold 9px -apple-system,sans-serif';
-            ctx.fillStyle='#6a6960';
-            ctx.textAlign='left';
-            ctx.textBaseline='middle';
-            ctx.fillText(tickCur(v),px+5,py);
-            ctx.restore();
-          });
-        }catch(e){}
-      }
-    }]
+    }
   });
 }
 
@@ -1186,214 +945,216 @@ function regDrillUp(){
 
 
 /* ════════════════════════════════════════
-   TAB: SR (담당자) — KRW/USD 통화 전환 지원
+   TAB: SR (담당자)
    ════════════════════════════════════════ */
+let srDrillSR = null;
+
 function buildSR(){
-  const yrs=[...selYears].sort();
-  const isK=currency==='KRW';
-  const valKey=isK?'krw':'usd';
+  srDrillSR = null;
+  renderSRBar(null);
+  renderSRProdDonut(null);
+}
 
-  // 필터 변경·탭 재진입 시 상세 패널 초기화
-  const panel=document.getElementById('sr-detail-panel');
-  if(panel) panel.style.display='none';
+function renderSRBar(drillSR){
+  const ck = currency==='KRW'?'krw':'usd';
+  const yrs = [...selYears].sort();
+  const PRODS = ['Gentle Series','VBP','PicoWay','Others'];
+  const PCOLS = {'Gentle Series':'#3B82F6','VBP':'#10B981','PicoWay':'#F59E0B','Others':'#6B7280'};
 
-  // 담당자별 집계 — KRW/USD 모두 합산
-  const srMap={};
-  DATA.sr_by_year.forEach(d=>{
-    if(!selYears.has(d.year))return;
-    const key=d.sr==='GR lee'?'GR Lee':d.sr;
-    if(!srMap[key]) srMap[key]={krw:0,usd:0};
-    srMap[key].krw+=(d.krw||0);
-    srMap[key].usd+=(d.usd||0);
-  });
-  const srList=Object.entries(srMap).sort((a,b)=>b[1][valKey]-a[1][valKey]);
-  const topSR=srList[0];
-  const totVal=srList.reduce((s,[,v])=>s+v[valKey],0);
+  if(drillSR){
+    // 드릴다운: 특정 담당자의 제품별 매출 — by_prod(피벗 #11 기준 제품명)
+    const prodMap = {};
+    DATA.sr_data.by_prod.forEach(d=>{
+      if(d.sr!==drillSR) return;
+      prodMap[d.product]=(prodMap[d.product]||0)+(d[ck]||0);
+    });
+    const prodList = Object.entries(prodMap).sort((a,b)=>b[1]-a[1]);
+    const totVal = prodList.reduce((s,[,v])=>s+v,0);
 
-  const fmtSR=v=>isK?fmtKRW_large(v):fmtMK(v);
-  const fmtSRlg=v=>isK?fmtKRW_large(v):'$'+(v/1e6).toFixed(2)+'M';
-  const tickSR=v=>isK?tickKRW(v):tickY(v);
+    // 제품 색상 (raw 이름 기준)
+    const PROD_COLOR_MAP = {
+      'GentleMax Pro+':'#3B82F6','Gmax Pro':'#60A5FA','GLP':'#93C5FD',
+      'Vbeam Perfecta':'#10B981','Picoway':'#F59E0B',
+      'Zimmer':'#6B7280','FRAX PRO':'#8B5CF6','Profound':'#EC4899',
+      'HP':'#14B8A6','Nordlys Mini':'#F97316','Nordlys':'#EF4444',
+    };
 
-  setKPI('kpi-sr',[
-    {lbl:`담당자 총매출 (${currency})`,val:fmtSRlg(totVal),badge:'Real revenue 기준',cls:'neu'},
-    {lbl:'1위 담당자',val:topSR?.[0]||'-',badge:fmtSR(topSR?.[1]?.[valKey]||0),cls:'up'},
-    {lbl:'담당자 수',val:srList.length+'명',badge:'현 기준',cls:'neu'},
-    {lbl:'1인 평균',val:fmtSR(totVal/(srList.length||1)),badge:currency+' 기준',cls:'neu'},
-  ]);
+    const titleEl=document.getElementById('sr-bar-title');
+    const subEl=document.getElementById('sr-bar-sub');
+    const backEl=document.getElementById('sr-back-btn');
+    if(titleEl) titleEl.textContent=drillSR+' · 제품별 매출';
+    if(subEl)   subEl.textContent=currency+' 기준 · 피벗 기준';
+    if(backEl)  backEl.style.display='inline-block';
 
-  // 담당자 카드 제목 통화 표기 갱신 — HTML에서 직접 id로 관리
-  const srBarTitleEl=document.getElementById('sr-bar-title');
-  if(srBarTitleEl) srBarTitleEl.textContent=`담당자별 매출 (${currency})`;
-  const srBarSubEl=document.getElementById('sr-bar-sub');
-  if(srBarSubEl) srBarSubEl.textContent=currency==='KRW'?'Real revenue 기준 · 현 재직자 중심':'Shipped USD 기준 · 현 재직자 중심';
-  const rankSubEl=document.getElementById('sr-rank-sub');
-  if(rankSubEl) rankSubEl.textContent=currency+' 기준';
+    setKPI('kpi-sr',[
+      {lbl:drillSR+' 총매출',val:fmt(totVal),badge:currency+' 기준',cls:'hi'},
+      {lbl:'1위 제품',val:prodList[0]?.[0]||'-',badge:fmt(prodList[0]?.[1]||0),cls:'up'},
+      {lbl:'제품 수',val:prodList.length+'종',badge:'',cls:'neu'},
+      {lbl:'GentleMax Pro+ 비중',val:(prodMap['GentleMax Pro+']||0)>0?`${((prodMap['GentleMax Pro+']+( prodMap['Gmax Pro']||0))/totVal*100).toFixed(1)}%`:'-',badge:'Gmax Pro 포함',cls:'neu'},
+    ]);
 
-  // 선택된 담당자 하이라이트 상태
-  const selSRColors=srList.map(()=>'#3B82F6');
-  charts.srBar=new Chart(document.getElementById('c-sr-bar'),{
-    type:'bar',
-    data:{labels:srList.map(([k])=>k),datasets:[{label:`매출 (${currency})`,data:srList.map(([,v])=>v[valKey]),backgroundColor:selSRColors,borderRadius:4}]},
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      layout:{padding:{top:28}},
-      cursor:'pointer',
-      onClick(evt,els){
-        if(!els.length)return;
-        const idx=els[0].index;
-        const srName=srList[idx][0];
-        // 클릭된 바 강조
-        selSRColors.fill('#3B82F6');
-        selSRColors[idx]='#1D4ED8';
-        charts.srBar.update('none');
-        renderSRDetail(srName, srList[idx][1]);
-      },
-      plugins:{
-        legend:{display:false},
-        tooltip:{callbacks:{label:c=>' '+fmtSR(c.raw)+' — 클릭하면 제품별 상세'}},
-      },
-      scales:{x:{grid:{display:false},ticks:{...TK,font:{size:10}}},y:{grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickSR}}}
-    },
-    plugins:[{
-      id:'srBarLabel',
-      afterDatasetsDraw(chart){
-        const {ctx,scales,data}=chart; const x=scales.x,y=scales.y; if(!x||!y)return;
-        try{
-          data.datasets[0].data.forEach((v,i)=>{
-            if(!v)return;
-            const px=x.getPixelForTick(i);
-            const py=y.getPixelForValue(v);
-            if(isNaN(px)||isNaN(py))return;
-            ctx.save();
-            ctx.font='bold 9px -apple-system,sans-serif';
-            ctx.fillStyle='#6a6960';
-            ctx.textAlign='center';
-            ctx.textBaseline='bottom';
-            ctx.fillText(fmtSR(v),px,py-4);
-            ctx.restore();
-          });
-        }catch(e){}
+    if(charts.srBar){try{charts.srBar.destroy();}catch(e){} delete charts.srBar;}
+    charts.srBar=new Chart(document.getElementById('c-sr-bar'),{
+      type:'bar',
+      data:{labels:prodList.map(([k])=>k),datasets:[{
+        label:'매출',
+        data:prodList.map(([,v])=>v),
+        backgroundColor:prodList.map(([k])=>PROD_COLOR_MAP[k]||'#94A3B8'),
+        borderRadius:4,
+      }]},
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{
+          legend:{display:false},
+          tooltip:{callbacks:{label:c=>' '+fmtSm(c.raw)}},
+          datalabels:{display:false}
+        },
+        scales:{x:{grid:{display:false},ticks:{...TK}},y:{grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}}}
       }
-    }]
-  });
+    });
 
-  const mx=srList[0]?.[1]?.[valKey]||1;
-  document.getElementById('rank-sr').innerHTML=srList.slice(0,8).map(([k,v],i)=>`
-    <li class="ri"><span class="rn">${i+1}</span><span class="rname">${k}</span>
-    <div class="rbg"><div class="rfill" style="width:${(v[valKey]/mx*100).toFixed(1)}%"></div></div>
-    <span class="rv">${fmtSR(v[valKey])}</span></li>`).join('');
+    const mx=prodList[0]?.[1]||1;
+    const rnkEl=document.getElementById('rank-sr');
+    const rtEl=document.getElementById('rank-sr-title');
+    const rsEl=document.getElementById('rank-sr-sub');
+    if(rtEl) rtEl.textContent=drillSR+' 제품 순위';
+    if(rsEl) rsEl.textContent=currency+' 기준 · 피벗 수치 일치';
+    if(rnkEl) rnkEl.innerHTML=`
+      <li class="ri" style="font-size:10px;color:var(--text3);cursor:default;border-bottom:.5px solid var(--border2)">
+        <span class="rn">#</span><span class="rname">제품명</span>
+        <div class="rbg"></div>
+        <span class="rv">${currency==='KRW'?'KRW':'USD'}</span>
+      </li>`+
+      prodList.map(([k,v],i)=>`
+      <li class="ri">
+        <span class="rn">${i+1}</span>
+        <span class="rname" style="font-size:11px">${k}</span>
+        <div class="rbg"><div class="rfill" style="width:${(v/mx*100).toFixed(1)}%;background:${PROD_COLOR_MAP[k]||'#3B82F6'}"></div></div>
+        <span class="rv">${fmt(v)}</span>
+      </li>`).join('')+`
+      <li class="ri" style="border-top:.5px solid var(--border);margin-top:4px">
+        <span class="rn"></span><span class="rname" style="font-weight:500">합계</span>
+        <div class="rbg"></div>
+        <span class="rv" style="font-weight:500">${fmt(totVal)}</span>
+      </li>`;
 
-  // Direct vs Dealer — 통화 전환 적용
-  const ck=currency==='KRW'?'krw':'usd';
-  const dirTot=yrs.reduce((s,y)=>s+(DATA.direct_dealer.find(d=>d.year===y&&d.seg==='Direct')?.[ck]||0),0);
-  const dealTot=yrs.reduce((s,y)=>s+(DATA.direct_dealer.find(d=>d.year===y&&d.seg==='Dealer')?.[ck]||0),0);
-  charts.ddDonut=new Chart(document.getElementById('c-dd-donut'),{
-    type:'doughnut',
-    data:{labels:['Direct','Dealer'],datasets:[{data:[dirTot,dealTot],backgroundColor:['#7C3AED','#D1D5DB'],borderWidth:0,hoverOffset:4}]},
-    options:{responsive:true,maintainAspectRatio:false,layout:{padding:40},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${fmtSm(c.raw)} (${(c.raw/(dirTot+dealTot)*100).toFixed(1)}%)`}}}},
-    plugins:[donutLabelPlugin(fmtSm)]
-  });
-}
+    renderSRProdDonut(drillSR);
 
-/* ════════════════════════════════════════
-   SR 담당자 제품별 상세 테이블
-   ════════════════════════════════════════ */
-function renderSRDetail(srName, srVals){
-  const panel=document.getElementById('sr-detail-panel');
-  const titleEl=document.getElementById('sr-detail-title');
-  const subEl=document.getElementById('sr-detail-sub');
-  const tblEl=document.getElementById('sr-detail-table');
-  if(!panel||!tblEl)return;
+  } else {
+    // 전체: 담당자별 매출
+    const srMap={};
+    DATA.sr_data.by_year.forEach(d=>{
+      if(!selYears.has(d.year)) return;
+      srMap[d.sr]=(srMap[d.sr]||0)+(d[ck]||0);
+    });
+    const srList=Object.entries(srMap).sort((a,b)=>b[1]-a[1]);
+    const topSR=srList[0];
+    const tot=srList.reduce((s,[,v])=>s+v,0);
 
-  const isK=currency==='KRW';
-  const valKey=isK?'krw':'usd';
-  const fmtSRd=v=>isK?fmtKRW_large(v):fmtMK(v);
+    const titleEl=document.getElementById('sr-bar-title');
+    const subEl=document.getElementById('sr-bar-sub');
+    const backEl=document.getElementById('sr-back-btn');
+    if(titleEl) titleEl.textContent='담당자별 매출';
+    if(subEl)   subEl.textContent='BI Data 기준 · 현 재직자 · '+currency;
+    if(backEl)  backEl.style.display='none';
 
-  // 선택 연도 기준 전체 매출 합산 (담당자별 비중 계산용)
-  const srTotVal=srVals[valKey]||0;
+    setKPI('kpi-sr',[
+      {lbl:`담당자 총매출 · ${currency}`,val:fmt(tot),badge:'선택 기간',cls:'neu'},
+      {lbl:'1위 담당자',val:topSR?.[0]||'-',badge:fmt(topSR?.[1]||0),cls:'up'},
+      {lbl:'담당자 수',val:srList.length+'명',badge:'현 재직자',cls:'neu'},
+      {lbl:'1인 평균',val:fmt(tot/(srList.length||1)),badge:currency,cls:'neu'},
+    ]);
 
-  // product_by_year_detail에서 선택 연도 합산 → 전체 대비 비중으로 담당자 추정
-  // (담당자별 제품 분리 데이터가 없으므로 담당자 매출비중 × 제품별 전체매출로 추정)
-  const allSRTot={krw:0,usd:0};
-  const srMap={};
-  DATA.sr_by_year.forEach(d=>{
-    if(!selYears.has(d.year))return;
-    const key=d.sr==='GR lee'?'GR Lee':d.sr;
-    if(!srMap[key])srMap[key]={krw:0,usd:0};
-    srMap[key].krw+=(d.krw||0);
-    srMap[key].usd+=(d.usd||0);
-  });
-  Object.values(srMap).forEach(v=>{allSRTot.krw+=v.krw;allSRTot.usd+=v.usd;});
-  const srRatio=allSRTot[valKey]?srTotVal/allSRTot[valKey]:0;
+    if(charts.srBar){try{charts.srBar.destroy();}catch(e){} delete charts.srBar;}
+    charts.srBar=new Chart(document.getElementById('c-sr-bar'),{
+      type:'bar',
+      data:{labels:srList.map(([k])=>k),datasets:[{
+        label:'매출',data:srList.map(([,v])=>v),
+        backgroundColor:['#3B82F6','#60A5FA','#93C5FD','#BFDBFE','#E0EFFF'],
+        borderRadius:4,
+      }]},
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        onClick(evt,els){
+          if(els.length){
+            const sr=srList[els[0].index][0];
+            srDrillSR=sr;
+            renderSRBar(sr);
+          }
+        },
+        plugins:{
+          legend:{display:false},
+          tooltip:{callbacks:{label:c=>' '+fmtSm(c.raw)}}
+        },
+        scales:{x:{grid:{display:false},ticks:{...TK,font:{size:11}}},y:{grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}}}
+      }
+    });
 
-  // 제품별 합산 (선택 연도)
-  const prodMap={};
-  DATA.product_by_year_detail.forEach(d=>{
-    if(!selYears.has(d.year))return;
-    if(!prodMap[d.prod])prodMap[d.prod]={krw:0,usd:0,units:0};
-    prodMap[d.prod].krw+=(d.krw||0);
-    prodMap[d.prod].usd+=(d.usd||0);
-    prodMap[d.prod].units+=(d.units||0);
-  });
+    const mx=srList[0]?.[1]||1;
+    const rnkEl=document.getElementById('rank-sr');
+    const rtEl=document.getElementById('rank-sr-title');
+    const rsEl=document.getElementById('rank-sr-sub');
+    if(rtEl) rtEl.textContent='담당자 순위';
+    if(rsEl) rsEl.textContent=currency+' 기준 · 클릭 → 제품별 상세';
+    if(rnkEl) rnkEl.innerHTML=srList.map(([k,v],i)=>`
+      <li class="ri" onclick="srDrillDown('${k}')" style="cursor:pointer">
+        <span class="rn">${i+1}</span><span class="rname">${k}</span>
+        <div class="rbg"><div class="rfill" style="width:${(v/mx*100).toFixed(1)}%"></div></div>
+        <span class="rv">${fmt(v)}</span>
+      </li>`).join('');
 
-  // 담당자 추정 매출 = 제품별 전체 × 담당자 비중
-  const rows=Object.entries(prodMap)
-    .map(([prod,v])=>({prod, units:Math.round(v.units*srRatio), val:v[valKey]*srRatio, usd:v.usd*srRatio, krw:v.krw*srRatio}))
-    .filter(d=>d.units>0||d.val>0)
-    .sort((a,b)=>b.val-a.val);
-
-  const totUnits=rows.reduce((s,d)=>s+d.units,0);
-  const totVal=rows.reduce((s,d)=>s+d.val,0);
-  const maxVal=rows[0]?.val||1;
-
-  titleEl.textContent=`${srName} — 제품별 상세`;
-  subEl.textContent=`${[...selYears].sort().join('/')}년 · ${currency} · 담당자 매출비중(${(srRatio*100).toFixed(1)}%) 기준 추정치`;
-
-  tblEl.innerHTML=`<table>
-    <thead><tr>
-      <th style="padding:7px 10px">제품명</th>
-      <th class="r" style="padding:7px 10px">판매 대수</th>
-      <th style="padding:7px 10px;width:100px">비중</th>
-      <th class="r" style="padding:7px 10px">매출 (${currency})</th>
-    </tr></thead>
-    <tbody>${rows.map(d=>{
-      const sh=totVal?(d.val/totVal*100).toFixed(1):'0.0';
-      const bw=(d.val/maxVal*100).toFixed(1);
-      return `<tr>
-        <td style="font-weight:500;padding:7px 10px">${d.prod}</td>
-        <td class="r" style="padding:7px 10px">${d.units}대</td>
-        <td style="padding:7px 10px">
-          <div style="display:flex;align-items:center;gap:6px">
-            <div style="width:60px;height:5px;background:var(--surface3);border-radius:2px;flex-shrink:0">
-              <div style="width:${bw}%;height:100%;background:#3B82F6;border-radius:2px"></div>
-            </div>
-            <span style="font-size:11px;color:var(--text3)">${sh}%</span>
-          </div>
-        </td>
-        <td class="r" style="padding:7px 10px">${fmtSRd(d.val)}</td>
-      </tr>`;
-    }).join('')}</tbody>
-    <tfoot><tr style="border-top:.5px solid var(--border);background:var(--surface2)">
-      <td style="font-weight:500;padding:7px 10px">합계</td>
-      <td class="r" style="padding:7px 10px;font-weight:500">${totUnits}대</td>
-      <td style="padding:7px 10px"></td>
-      <td class="r" style="padding:7px 10px;font-weight:500">${fmtSRd(totVal)}</td>
-    </tr></tfoot>
-  </table>`;
-
-  panel.style.display='';
-  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-
-function closeSRDetail(){
-  const panel=document.getElementById('sr-detail-panel');
-  if(panel) panel.style.display='none';
-  // 바 차트 색상 초기화
-  if(charts.srBar){
-    charts.srBar.data.datasets[0].backgroundColor=
-      charts.srBar.data.datasets[0].backgroundColor.map(()=>'#3B82F6');
-    charts.srBar.update('none');
+    renderSRProdDonut(null);
   }
+}
+
+function renderSRProdDonut(drillSR){
+  const ck=currency==='KRW'?'krw':'usd';
+  const PRODS=['Gentle Series','VBP','PicoWay','Others'];
+  const PCOLS=['#3B82F6','#10B981','#F59E0B','#6B7280'];
+  const prodMap={};
+  PRODS.forEach(p=>prodMap[p]=0);
+
+  // by_year_cat 사용 (연도 필터 적용)
+  DATA.sr_data.by_year_cat.forEach(d=>{
+    if(!selYears.has(d.year)) return;
+    if(drillSR && d.sr!==drillSR) return;
+    if(prodMap[d.product]!==undefined) prodMap[d.product]+=(d[ck]||0);
+  });
+
+  const titleEl=document.getElementById('sr-prod-title');
+  const subEl=document.getElementById('sr-prod-sub');
+  if(titleEl) titleEl.textContent=(drillSR?drillSR+' ':'')+'제품별 비중';
+  if(subEl)   subEl.textContent=currency+' 기준';
+
+  if(charts.srProdDonut){try{charts.srProdDonut.destroy();}catch(e){} delete charts.srProdDonut;}
+  charts.srProdDonut=new Chart(document.getElementById('c-sr-prod-donut'),{
+    type:'doughnut',
+    data:{labels:PRODS,datasets:[{data:PRODS.map(p=>prodMap[p]),backgroundColor:PCOLS,borderWidth:0,hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:8,color:'#9e9e98'}},
+        tooltip:{callbacks:{label:c=>`${c.label}: ${fmtSm(c.raw)} (${(c.raw/(c.dataset.data.reduce((a,b)=>a+b,0)||1)*100).toFixed(1)}%)`}},
+        datalabels: typeof ChartDataLabels!=='undefined' ? {
+          color:'#fff', font:{size:11,weight:'bold'},
+          formatter:(v,ctx)=>{
+            const tot=ctx.dataset.data.reduce((a,b)=>a+b,0)||1;
+            const pct=(v/tot*100);
+            return pct>=5 ? pct.toFixed(0)+'%' : '';
+          },
+          anchor:'center', align:'center',
+        } : {display:false}
+      }}
+  });
+}
+
+function srDrillDown(sr){
+  srDrillSR=sr;
+  renderSRBar(sr);
+}
+
+function srDrillUp(){
+  srDrillSR=null;
+  renderSRBar(null);
 }
 
 /* ════════════════════════════════════════
@@ -1467,21 +1228,19 @@ function buildDetail(){
   }
 
   // ── New Business 도넛 ──
-  const donutOpts=(title)=>({responsive:true,maintainAspectRatio:false,layout:{padding:40},plugins:{
-    legend:{display:false},
+  const donutOpts=(title)=>({responsive:true,maintainAspectRatio:false,plugins:{
+    legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,boxHeight:10,padding:8,color:'#9e9e98'}},
     tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw}건 (${(c.raw/(c.dataset.data.reduce((a,b)=>a+b,0)||1)*100).toFixed(1)}%)`}}
   }});
   charts.newDonut=new Chart(document.getElementById('c-new-donut'),{
     type:'doughnut',
     data:{labels:prods,datasets:[{data:prods.map(p=>nvCount['New Business'][p]),backgroundColor:prods.map(p=>COLORS[p]),borderWidth:0,hoverOffset:4}]},
-    options:donutOpts('New'),
-    plugins:[donutLabelPlugin(v=>v+'건')]
+    options:donutOpts('New')
   });
   charts.exDonut=new Chart(document.getElementById('c-ex-donut'),{
     type:'doughnut',
     data:{labels:prods,datasets:[{data:prods.map(p=>nvCount['Existing Business'][p]),backgroundColor:prods.map(p=>COLORS[p]),borderWidth:0,hoverOffset:4}]},
-    options:donutOpts('Existing'),
-    plugins:[donutLabelPlugin(v=>v+'건')]
+    options:donutOpts('Existing')
   });
 
   // ── New% 분기별 추이 ──
@@ -1505,309 +1264,10 @@ function buildDetail(){
       pointBackgroundColor:'#3B82F6',pointRadius:4,fill:true,tension:0.35,borderWidth:2
     }]},
     options:{responsive:true,maintainAspectRatio:false,
-      layout:{padding:{top:16}},
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' New: '+c.raw+'%'}}},
       scales:{x:{grid:{display:false},ticks:{...TK,maxRotation:0}},
-        y:{min:0,max:100,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:v=>v+'%'}}}},
-    plugins:[{
-      id:'nvPctLabel',
-      afterDatasetsDraw(chart){
-        try{
-          const {ctx,scales,data}=chart; const x=scales.x,y=scales.y; if(!x||!y)return;
-          const ds=data.datasets[0];
-          ds.data.forEach((v,i)=>{
-            if(v===null||v===undefined)return;
-            const px=x.getPixelForTick(i);
-            const py=y.getPixelForValue(v);
-            ctx.save();
-            ctx.font='bold 8.5px -apple-system,sans-serif';
-            ctx.fillStyle='#3B82F6';
-            ctx.textAlign='center';
-            ctx.textBaseline='bottom';
-            ctx.fillText(v+'%',px,py-5);
-            ctx.restore();
-          });
-        }catch(e){}
-      }
-    }]
+        y:{min:0,max:100,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:v=>v+'%'}}}}
   });
-}
-
-
-/* ════════════════════════════════════════
-   TAB: SR DETAIL (담당자 상세) — 왼쪽 사이드바 + 오른쪽 상세
-   ════════════════════════════════════════ */
-const SR_PERSONS = ['Baek Seung Chul','Oh Sang Geol','LIM YONG CHUL','Kim Sung Hoon','Lee Garam'];
-const SR_COLORS  = ['#3B82F6','#10B981','#F59E0B','#7C3AED','#DC2626'];
-const SR_INITIALS = {'Baek Seung Chul':'BSC','Oh Sang Geol':'OSG','LIM YONG CHUL':'LYC','Kim Sung Hoon':'KSH','Lee Garam':'LGR'};
-const PROD_CAT4 = ['Gentle Series','VBP','PicoWay','Others'];
-const PROD_CAT4_COLORS = {'Gentle Series':'#3B82F6','VBP':'#10B981','PicoWay':'#F59E0B','Others':'#6B7280'};
-let selSRPerson = 'Baek Seung Chul';
-
-function buildSRDetail(){
-  // ── 사이드바 버튼 렌더 ──
-  const listEl = document.getElementById('sr-person-list');
-  const isK = currency==='KRW';
-  const vk = isK?'krw':'usd';
-  // pivot 기준 전체 합계
-  const pivotMap = {};
-  DATA.sr_total.forEach(d=>{ pivotMap[d.sr]={krw:d.krw,usd:d.usd}; });
-
-  if(listEl){
-    listEl.innerHTML = SR_PERSONS.map((name,i)=>{
-      const tot = pivotMap[name]?.[vk]||0;
-      const label = isK ? fmtKRW_large(tot) : fmtMK(tot);
-      const initials = SR_INITIALS[name]||name.slice(0,2).toUpperCase();
-      const active = name===selSRPerson?' active':'';
-      const avatarColor = SR_COLORS[i];
-      return `<button class="sr-person-btn${active}" onclick="selectSRPerson('${name}')">
-        <div class="sr-person-avatar" style="background:${avatarColor}">${initials}</div>
-        <div class="sr-person-info">
-          <div class="sr-person-name">${name}</div>
-          <div class="sr-person-val">${label}</div>
-        </div>
-      </button>`;
-    }).join('');
-  }
-
-  renderSRPersonDetail(selSRPerson);
-}
-
-function selectSRPerson(name){
-  selSRPerson = name;
-  buildSRDetail();
-}
-
-function renderSRPersonDetail(srName){
-  const isK = currency==='KRW';
-  const vk  = isK?'krw':'usd';
-  const fmtV = v=> isK?fmtKRW_large(v):fmtMK(v);
-  const fmtVlg = v=> isK?fmtKRW_large(v):'$'+(v/1e6).toFixed(2)+'M';
-  const tickV = v=> isK?tickKRW(v):tickY(v);
-  const pivotMap = {};
-  DATA.sr_total.forEach(d=>{ pivotMap[d.sr]={krw:d.krw,usd:d.usd}; });
-
-  // ── 연도별 데이터 ──
-  const yrs = [2023,2024,2025,2026];
-  const yrData = yrs.map(y=>{
-    const d = DATA.sr_by_year.find(r=>r.year===y&&r.sr===srName);
-    return d?{krw:d.krw,usd:d.usd}:{krw:0,usd:0};
-  });
-  const yrVals = yrData.map(d=>d[vk]||0);
-
-  // pivot 기준 전체 합산
-  const totKRW = pivotMap[srName]?.krw||0;
-  const totUSD = pivotMap[srName]?.usd||0;
-  const totVal = isK?totKRW:totUSD;
-
-  // YoY 성장률 (2024 vs 2023 등)
-  const yoyArr = yrVals.map((v,i)=>{
-    if(i===0) return null;
-    const prev=yrVals[i-1];
-    return prev?Math.round((v-prev)/Math.abs(prev)*100*10)/10:null;
-  });
-
-  // 최고 연도
-  const bestYr = yrs[yrVals.indexOf(Math.max(...yrVals))];
-  const bestVal = Math.max(...yrVals);
-
-  // ── KPI ──
-  const kpiEl = document.getElementById('srd-kpi');
-  if(kpiEl){
-    const rank = SR_PERSONS.slice().sort((a,b)=>{
-      const av=pivotMap[a]?.[vk]||0, bv=pivotMap[b]?.[vk]||0;
-      return bv-av;
-    }).indexOf(srName)+1;
-    const totAllSR = DATA.sr_total.reduce((s,d)=>s+(d[vk]||0),0);
-    const share = totAllSR?((totVal/totAllSR)*100).toFixed(1):'0.0';
-    // 최근 연도 데이터(2026 or 2025)
-    const lastYrVal = yrVals[3]>0?yrVals[3]:yrVals[2];
-    const lastYr = yrVals[3]>0?2026:2025;
-    const yoy2025 = yoyArr[2]; // 2025 vs 2024
-    kpiEl.innerHTML = [
-      {lbl:'누적 총매출 (pivot 기준)',val:fmtVlg(totVal),badge:`전체 ${share}% 비중`,cls:'hi'},
-      {lbl:'담당자 순위',val:`${rank}위`,badge:`전체 ${SR_PERSONS.length}명 중`,cls:'up'},
-      {lbl:'2025 YoY 성장률',val:yoy2025!==null?(yoy2025>=0?'▲':'▼')+Math.abs(yoy2025)+'%':'-',badge:'vs 2024',cls:yoy2025>=0?'up':'dn'},
-      {lbl:`${lastYr}년 매출`,val:fmtV(lastYrVal),badge:`${lastYr}년 실적`,cls:'neu'},
-    ].map(({lbl,val,badge,cls})=>`<div class="kpi"><div class="kpi-lbl">${lbl}</div><div class="kpi-val">${val}</div><span class="kpi-badge ${cls}">${badge}</span></div>`).join('');
-  }
-
-  // ── 연도별 막대 그래프 ──
-  const titleEl=document.getElementById('srd-bar-title');
-  const subEl=document.getElementById('srd-bar-sub');
-  if(titleEl) titleEl.textContent=`${srName} — 연도별 매출 추이`;
-  if(subEl) subEl.textContent=`pivot.csv 기준 · ${currency} · Real revenue`;
-
-  // destroy existing
-  if(charts.srdYrBar){try{charts.srdYrBar.destroy();}catch(e){} delete charts.srdYrBar;}
-  if(charts.srdProdDonut){try{charts.srdProdDonut.destroy();}catch(e){} delete charts.srdProdDonut;}
-
-  const yoyPlugin={
-    id:'srdYoyLabel',
-    afterDraw(chart){
-      try{
-        const {ctx,scales,data}=chart;
-        const xS=chart.scales.x, yS=chart.scales.y;
-        if(!xS||!yS)return;
-        data.datasets[0].data.forEach((v,i)=>{
-          if(!v)return;
-          const px=xS.getPixelForTick(i);
-          const py=yS.getPixelForValue(v);
-          // 수치 라벨
-          ctx.save();
-          ctx.font='bold 9px -apple-system,sans-serif';
-          ctx.fillStyle='#6a6960';
-          ctx.textAlign='center';
-          ctx.textBaseline='bottom';
-          ctx.fillText(fmtV(v), px, py-18);
-          ctx.restore();
-          // YoY
-          const yv=yoyArr[i];
-          if(yv===null||yv===undefined)return;
-          const sign=yv>=0?'▲':'▼';
-          ctx.save();
-          ctx.font='bold 9px -apple-system,sans-serif';
-          ctx.fillStyle=yv>=0?'#059669':'#DC2626';
-          ctx.textAlign='center';
-          ctx.textBaseline='bottom';
-          ctx.fillText(`${sign}${Math.abs(yv)}%`, px, py-4);
-          ctx.restore();
-        });
-      }catch(e){}
-    }
-  };
-
-  const srColor = SR_COLORS[SR_PERSONS.indexOf(srName)]||'#3B82F6';
-  charts.srdYrBar = new Chart(document.getElementById('c-srd-yr-bar'),{
-    type:'bar',
-    data:{
-      labels:yrs.map(String),
-      datasets:[{
-        label:'매출',
-        data:yrVals,
-        backgroundColor: yrVals.map((v,i)=>yrs[i]===bestYr?srColor:srColor+'88'),
-        borderRadius:5,
-        borderSkipped:false,
-      }]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      layout:{padding:{top:40}},
-      plugins:{
-        legend:{display:false},
-        tooltip:{callbacks:{label:c=>' 매출: '+fmtV(c.raw)+' | KRW: '+fmtKRW_large(yrData[c.dataIndex].krw)+' / USD: $'+(yrData[c.dataIndex].usd/1e6).toFixed(2)+'M'}}
-      },
-      scales:{
-        x:{grid:{display:false}, ticks:{...TK,font:{size:11}}},
-        y:{grid:{color:GC,drawBorder:false}, ticks:{...TK,callback:tickV}, beginAtZero:true}
-      }
-    },
-    plugins:[yoyPlugin]
-  });
-
-  // ── 제품별 비중 (sr 전체 비중 기준 추정) ──
-  // 전체 sr 합산 대비 이 sr의 비중 → 전체 제품별 매출에 곱함
-  const allSRTot = {krw:0,usd:0};
-  const srMap2 = {};
-  DATA.sr_by_year.forEach(d=>{
-    if(!selYears.has(d.year))return;
-    const k=d.sr==='GR lee'?'GR Lee':d.sr;
-    if(!srMap2[k])srMap2[k]={krw:0,usd:0};
-    srMap2[k].krw+=(d.krw||0);
-    srMap2[k].usd+=(d.usd||0);
-  });
-  Object.values(srMap2).forEach(v=>{allSRTot.krw+=v.krw;allSRTot.usd+=v.usd;});
-  const srFiltered = srMap2[srName]||{krw:0,usd:0};
-  const ratio = allSRTot[vk]?srFiltered[vk]/allSRTot[vk]:0;
-
-  // 선택 연도 기반 제품별 집계 (카테고리 4종)
-  const prodMap4 = {};
-  PROD_CAT4.forEach(p=>{ prodMap4[p]={krw:0,usd:0,units:0}; });
-  DATA.product_by_quarter.forEach(d=>{
-    if(!selYears.has(d.year))return;
-    if(!prodMap4[d.product])return;
-    prodMap4[d.product].krw+=(d.krw||0);
-    prodMap4[d.product].usd+=(d.usd||0);
-    prodMap4[d.product].units+=(d.units||0);
-  });
-
-  // 추정치 적용
-  const srProdVals = PROD_CAT4.map(p=>({
-    prod:p,
-    krw: prodMap4[p].krw*ratio,
-    usd: prodMap4[p].usd*ratio,
-    units: Math.round(prodMap4[p].units*ratio),
-  }));
-  const totProdVal = srProdVals.reduce((s,d)=>s+(d[vk]||0),0);
-
-  // 도넛 차트
-  const donutSub = document.getElementById('srd-donut-sub');
-  if(donutSub) donutSub.textContent=`${[...selYears].sort().join('/')}년 선택 · 담당자 매출비중 ${(ratio*100).toFixed(1)}% 추정치`;
-
-  charts.srdProdDonut = new Chart(document.getElementById('c-srd-prod-donut'),{
-    type:'doughnut',
-    data:{
-      labels:PROD_CAT4,
-      datasets:[{
-        data:srProdVals.map(d=>d[vk]||0),
-        backgroundColor:PROD_CAT4.map(p=>PROD_CAT4_COLORS[p]),
-        borderWidth:0, hoverOffset:4
-      }]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      layout:{padding:40},
-      plugins:{
-        legend:{display:false},
-        tooltip:{callbacks:{label:c=>`${c.label}: ${fmtV(c.raw)} (${(c.raw/(totProdVal||1)*100).toFixed(1)}%)`}}
-      }
-    },
-    plugins:[donutLabelPlugin(fmtV)]
-  });
-
-  // 상세 제품 테이블 (product_by_year_detail 기반, KRW+USD 이중 표기)
-  const detailMap = {};
-  DATA.product_by_year_detail.forEach(d=>{
-    if(!selYears.has(d.year))return;
-    if(!detailMap[d.prod])detailMap[d.prod]={krw:0,usd:0,units:0};
-    detailMap[d.prod].krw+=(d.krw||0);
-    detailMap[d.prod].usd+=(d.usd||0);
-    detailMap[d.prod].units+=(d.units||0);
-  });
-  const detailRows = Object.entries(detailMap)
-    .map(([prod,v])=>({prod, krw:v.krw*ratio, usd:v.usd*ratio, units:Math.round(v.units*ratio)}))
-    .filter(d=>d.units>0||d.krw>0)
-    .sort((a,b)=>b[vk]-a[vk]);
-  const totU = detailRows.reduce((s,d)=>s+d.units,0);
-  const totKRWd = detailRows.reduce((s,d)=>s+d.krw,0);
-  const totUSDd = detailRows.reduce((s,d)=>s+d.usd,0);
-
-  const tblSub = document.getElementById('srd-tbl-sub');
-  if(tblSub) tblSub.textContent=`${[...selYears].sort().join('/')}년 · KRW(억 원) / USD`;
-
-  const tblEl = document.getElementById('srd-prod-table');
-  if(tblEl){
-    tblEl.innerHTML=`<table>
-      <thead><tr>
-        <th style="padding:6px 8px">제품</th>
-        <th class="r" style="padding:6px 8px">대수</th>
-        <th class="r" style="padding:6px 8px;color:#6B7280">KRW</th>
-        <th class="r" style="padding:6px 8px;color:#3B82F6">USD</th>
-      </tr></thead>
-      <tbody>${detailRows.map(d=>`<tr>
-        <td style="padding:6px 8px;font-weight:500;font-size:11px">${d.prod}</td>
-        <td class="r" style="padding:6px 8px;font-size:11px">${d.units}대</td>
-        <td class="r" style="padding:6px 8px;font-size:11px;color:#6B7280">${fmtKRW_large(d.krw)}</td>
-        <td class="r" style="padding:6px 8px;font-size:11px;color:#3B82F6">$${(d.usd/1e6).toFixed(2)}M</td>
-      </tr>`).join('')}</tbody>
-      <tfoot><tr style="border-top:.5px solid var(--border);background:var(--surface2)">
-        <td style="padding:6px 8px;font-weight:600;font-size:11px">합계</td>
-        <td class="r" style="padding:6px 8px;font-weight:600;font-size:11px">${totU}대</td>
-        <td class="r" style="padding:6px 8px;font-weight:600;font-size:11px;color:#6B7280">${fmtKRW_large(totKRWd)}</td>
-        <td class="r" style="padding:6px 8px;font-weight:600;font-size:11px;color:#3B82F6">$${(totUSDd/1e6).toFixed(2)}M</td>
-      </tr></tfoot>
-    </table>`;
-  }
 }
 
 /* ════════════════════════════════════════
