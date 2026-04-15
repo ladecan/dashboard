@@ -877,16 +877,26 @@ function buildOverview(){
             ctx.restore();
           }
 
-          // 막대 아래 총합 금액
+          // 막대 아래 총합 금액 (연도 레이블 아래에 표기)
           const totStr = isK
             ? (tot>=1e8?(tot/1e8).toFixed(1)+'억':(tot/1e4).toFixed(0)+'만')
             : (tot>=1e6?'$'+(tot/1e6).toFixed(1)+'M':'$'+(tot/1e3).toFixed(0)+'K');
           ctx.save();
-          ctx.font='11px -apple-system,sans-serif';
-          ctx.fillStyle='#555';
+          ctx.font='10px -apple-system,sans-serif';
+          ctx.fillStyle='#777';
           ctx.textAlign='center';
           ctx.textBaseline='top';
-          ctx.fillText(totStr, px, yBot+4);
+          // 연도 + 금액을 막대 하단 안쪽에 표기
+          ctx.save();
+          ctx.font='10px -apple-system,sans-serif';
+          ctx.fillStyle='rgba(255,255,255,0.85)';
+          ctx.textAlign='center';
+          ctx.textBaseline='bottom';
+          ctx.fillText(String(yrs[i]), px, yBot-18);
+          ctx.font='9px -apple-system,sans-serif';
+          ctx.fillStyle='rgba(255,255,255,0.7)';
+          ctx.fillText(totStr, px, yBot-6);
+          ctx.restore();
           ctx.restore();
         });
       }catch(e){}
@@ -901,19 +911,76 @@ function buildOverview(){
     ]},
     options:{
       responsive:true,maintainAspectRatio:false,
-      layout:{padding:{top:38,bottom:18}},
+      layout:{padding:{top:38,bottom:2}},
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtSm(c.raw)}}},
-      scales:{x:{stacked:true,grid:{display:false},ticks:TK},y:{stacked:true,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}}}
+      scales:{x:{stacked:true,grid:{display:false},ticks:{display:false,padding:0}},y:{stacked:true,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}}}
     },
     plugins:[yoyPlugin]
   });
 
-  const svcTot=DATA.recurring_by_q.filter(d=>qKeys.includes(d.q)&&d.cat==='service').reduce((s,d)=>s+(d[ck]||0),0);
-  const consTot=DATA.recurring_by_q.filter(d=>qKeys.includes(d.q)&&d.cat==='consumables').reduce((s,d)=>s+(d[ck]||0),0);
+  // RECURRING 연도별 stacked bar (YoY 라벨 포함)
+  const recYrData=yrs.map(y=>({
+    svc: DATA.recurring_detail.find(d=>d.year===y&&d.cat==='service')?.[ck]||0,
+    cons: DATA.recurring_detail.find(d=>d.year===y&&d.cat==='consumables')?.[ck]||0,
+  }));
+  const recYoyData=yrs.map((y,i)=>{
+    if(i===0) return null;
+    const cur=recYrData[i].svc+recYrData[i].cons;
+    const prev=recYrData[i-1].svc+recYrData[i-1].cons;
+    return prev?Math.round((cur-prev)/Math.abs(prev)*100*10)/10:null;
+  });
+  const recYoyPlugin={
+    id:'recYoyPlugin',
+    afterDraw(chart){
+      try{
+        const xS=chart.scales.x,yS=chart.scales.y;
+        if(!xS||!yS)return;
+        const ctx2=chart.ctx;
+        const ds2=chart.data.datasets;
+        const isK2=currency==='KRW';
+        yrs.forEach((y,i)=>{
+          const tot2=(ds2[0]?.data[i]||0)+(ds2[1]?.data[i]||0);
+          const px2=xS.getPixelForTick(i);
+          const py2=yS.getPixelForValue(tot2);
+          const yBot2=yS.getPixelForValue(0);
+          const v2=recYoyData[i];
+          if(v2!==null&&v2!==undefined){
+            const sign2=v2>=0?'▲':'▼';
+            ctx2.save();
+            ctx2.font='bold 10px -apple-system,sans-serif';
+            ctx2.fillStyle=v2>=0?'#059669':'#DC2626';
+            ctx2.textAlign='center';
+            ctx2.textBaseline='bottom';
+            ctx2.fillText(`${sign2}${Math.abs(v2)}%`,px2,py2-14);
+            ctx2.restore();
+          }
+          const totStr2=isK2?(tot2>=1e8?(tot2/1e8).toFixed(1)+'억':(tot2/1e4).toFixed(0)+'만')
+            :('$'+(tot2/1e6).toFixed(1)+'M');
+          ctx2.save();
+          ctx2.font='10px -apple-system,sans-serif';
+          ctx2.fillStyle='#777';
+          ctx2.textAlign='center';
+          ctx2.textBaseline='top';
+          ctx2.fillText(totStr2,px2,yBot2+22);
+          ctx2.restore();
+        });
+      }catch(e){}
+    }
+  };
+  if(charts.recDonut){try{charts.recDonut.destroy();}catch(e){} delete charts.recDonut;}
   charts.recDonut=new Chart(document.getElementById('c-rec-donut'),{
-    type:'doughnut',
-    data:{labels:['Service','Consumables'],datasets:[{data:[svcTot,consTot],backgroundColor:['#10B981','#F59E0B'],borderWidth:0,hoverOffset:4}]},
-    options:{responsive:true,maintainAspectRatio:false,layout:{padding:55},plugins:{legend:{display:false},tooltip:{enabled:false}}}
+    type:'bar',
+    data:{labels:yrs.map(String),datasets:[
+      {label:'Service',data:recYrData.map(d=>d.svc),backgroundColor:'#10B981',borderRadius:3,stack:'r'},
+      {label:'Consumables',data:recYrData.map(d=>d.cons),backgroundColor:'#F59E0B',borderRadius:3,stack:'r'},
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      layout:{padding:{top:32,bottom:2}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+fmtSm(c.raw)}}},
+      scales:{x:{stacked:true,grid:{display:false},ticks:{display:false,padding:0}},y:{stacked:true,grid:{color:GC,drawBorder:false},ticks:{...TK,callback:tickCur}}}
+    },
+    plugins:[recYoyPlugin]
   });
 }
 
@@ -1005,13 +1072,14 @@ function buildProduct(){
 
   const totAll=prods.reduce((s,p)=>s+getProdVal(p),0);
   const gmppTot=getProdVal('Gentle Series');
+  const totUnits=prods.reduce((s,p)=>s+getProdUnits(p),0);
 
   // ── KPI (선택 기간 기준) ─────────────────────────────────
   setKPI('kpi-prod',[
+    {lbl:`전체 매출 · ${currency}`,val:fmt(totAll),badge:'선택 기간 합산',cls:'neu'},
     {lbl:`Gentle Series 매출 · ${currency}`,val:fmt(gmppTot),badge:totAll?(gmppTot/totAll*100).toFixed(1)+'% 점유':'0%',cls:'hi'},
     {lbl:`VBP 매출 · ${currency}`,val:fmt(getProdVal('VBP')),badge:totAll?(getProdVal('VBP')/totAll*100).toFixed(1)+'% 점유':'0%',cls:'neu'},
     {lbl:`PicoWay 매출 · ${currency}`,val:fmt(getProdVal('PicoWay')),badge:totAll?(getProdVal('PicoWay')/totAll*100).toFixed(1)+'% 점유':'0%',cls:'neu'},
-    {lbl:'총 판매 대수',val:prods.reduce((s,p)=>s+getProdUnits(p),0)+'대',badge:'선택 기간 기준',cls:'neu'},
   ]);
 
   // ── 도넛 차트 ────────────────────────────────────────────
