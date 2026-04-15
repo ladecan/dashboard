@@ -289,7 +289,7 @@ footer{text-align:center;font-size:11px;color:var(--text3);padding:2rem;margin-t
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
         <div>
           <div class="cl" id="sr-bar-title">담당자별 매출</div>
-          <div class="cs" id="sr-bar-sub">BI Data 기준 · 현 재직자</div>
+          <div class="cs" id="sr-bar-sub">BI Data 기준 · 재직자 · 선택 기간</div>
         </div>
         <button id="sr-back-btn2" onclick="srDrillUp()" style="display:none;font-size:12px;font-family:inherit;padding:6px 16px;border:.5px solid var(--border);border-radius:999px;background:var(--surface2);color:var(--text);cursor:pointer;font-weight:500">🔙 목록으로</button>
       </div>
@@ -1365,11 +1365,11 @@ function renderSRBar(drillSR){
     const subEl=document.getElementById('sr-bar-sub');
     const backEl=document.getElementById('sr-back-btn');
     if(titleEl) titleEl.textContent='담당자별 매출';
-    if(subEl)   subEl.textContent='BI Data 기준 · 현 재직자 · '+currency;
+    if(subEl)   subEl.textContent='BI Data 기준 · 재직자 · 선택 기간 · '+currency;
     if(backEl)  backEl.style.display='none';
 
     setKPI('kpi-sr',[
-      {lbl:`담당자 총매출 · ${currency}`,val:fmt(tot),badge:'선택 기간',cls:'neu'},
+      {lbl:`재직자 기간별 총매출 · ${currency}`,val:fmt(tot),badge:'선택 기간',cls:'neu'},
       {lbl:'1위 담당자',val:topSR?.[0]||'-',badge:fmt(topSR?.[1]||0),cls:'up'},
       {lbl:'담당자 수',val:srList.length+'명',badge:'현 재직자',cls:'neu'},
       {lbl:'1인 평균',val:fmt(tot/(srList.length||1)),badge:currency,cls:'neu'},
